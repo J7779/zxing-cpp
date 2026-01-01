@@ -3,7 +3,77 @@
 <head>
 	<title>zxing-cpp/wasm live demo</title>
 	<link rel="shortcut icon" href="#" />
-	<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.min.js"></script>
+	
+	<!-- DEBUG CONSOLE - Must be first to capture all logs -->
+	<script>
+		// Debug console log capture - EARLY INIT
+		window.debugLogs = [];
+		window.maxLogs = 500;
+		
+		window.addDebugLog = function(type, args) {
+			var timestamp = new Date().toLocaleTimeString();
+			var message = '';
+			for (var i = 0; i < args.length; i++) {
+				var a = args[i];
+				if (typeof a === 'object') {
+					try { message += JSON.stringify(a, null, 2); }
+					catch (e) { message += String(a); }
+				} else {
+					message += String(a);
+				}
+				if (i < args.length - 1) message += ' ';
+			}
+			
+			window.debugLogs.push({ type: type, timestamp: timestamp, message: message });
+			if (window.debugLogs.length > window.maxLogs) window.debugLogs.shift();
+			
+			// Update modal if visible
+			if (window.renderDebugLog) window.renderDebugLog();
+		};
+		
+		window.renderDebugLog = function() {
+			var logEl = document.getElementById('consoleLog');
+			if (!logEl) return;
+			var html = '';
+			for (var i = 0; i < window.debugLogs.length; i++) {
+				var l = window.debugLogs[i];
+				html += '<div class="log-entry ' + l.type + '">[' + l.timestamp + '] [' + l.type.toUpperCase() + '] ' + l.message.replace(/</g, '&lt;') + '</div>';
+			}
+			logEl.innerHTML = html;
+			logEl.scrollTop = logEl.scrollHeight;
+		};
+		
+		window.clearDebugLog = function() {
+			window.debugLogs = [];
+			window.renderDebugLog();
+		};
+		
+		// Intercept console methods IMMEDIATELY
+		(function() {
+			var origLog = console.log;
+			var origError = console.error;
+			var origWarn = console.warn;
+			var origInfo = console.info;
+			
+			console.log = function() { window.addDebugLog('log', arguments); origLog.apply(console, arguments); };
+			console.error = function() { window.addDebugLog('error', arguments); origError.apply(console, arguments); };
+			console.warn = function() { window.addDebugLog('warn', arguments); origWarn.apply(console, arguments); };
+			console.info = function() { window.addDebugLog('info', arguments); origInfo.apply(console, arguments); };
+		})();
+		
+		// Capture unhandled errors
+		window.onerror = function(msg, url, line, col, error) {
+			window.addDebugLog('error', ['Uncaught: ' + msg + ' at ' + url + ':' + line + ':' + col, error ? error.stack : '']);
+		};
+		window.onunhandledrejection = function(e) {
+			window.addDebugLog('error', ['Unhandled Promise:', e.reason ? (e.reason.message || e.reason) : 'unknown', e.reason ? e.reason.stack : '']);
+		};
+		
+		console.log('Debug console initialized (early)');
+	</script>
+	
+	<!-- Use WebGPU build for GPU acceleration support -->
+	<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.webgpu.min.js"></script>
 	<script src="zxing_reader.js"></script>
 	<style>
 		body { font-family: Arial, sans-serif; text-align: center; margin: 10px; background: #1a1a2e; color: #eee; }
@@ -48,14 +118,51 @@
 		.model-status.loading { color: #ffaa00; }
 		.model-status.ready { color: #00ff00; }
 		.model-status.error { color: #ff4444; }
+		.debug-btn { background: #e94560; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 10px; }
+		.debug-btn:hover { background: #ff6b6b; }
+		.console-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; overflow: auto; }
+		.console-modal.show { display: block; }
+		.console-content { background: #1a1a2e; margin: 20px auto; padding: 20px; max-width: 90%; border-radius: 8px; border: 2px solid #00d4ff; }
+		.console-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+		.console-header h3 { margin: 0; color: #00d4ff; }
+		.console-close { background: #e94560; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+		.console-log { background: #0a0a15; padding: 15px; border-radius: 4px; max-height: 60vh; overflow-y: auto; font-family: monospace; font-size: 12px; text-align: left; white-space: pre-wrap; word-break: break-all; }
+		.console-log .log-entry { padding: 4px 0; border-bottom: 1px solid #222; }
+		.console-log .log-entry.error { color: #ff4444; }
+		.console-log .log-entry.warn { color: #ffaa00; }
+		.console-log .log-entry.info { color: #00d4ff; }
+		.console-log .log-entry.log { color: #aaa; }
+		.console-clear { background: #333; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px; }
 	</style>
 </head>
 <body>
 	<h2>zxing-cpp/wasm Barcode Scanner</h2>
+	
+	<!-- Debug Console Modal -->
+	<div id="consoleModal" class="console-modal">
+		<div class="console-content">
+			<div class="console-header">
+				<h3>🔧 Debug Console</h3>
+				<div>
+					<button class="console-clear" onclick="clearDebugLog()">Clear</button>
+					<button class="console-close" onclick="document.getElementById('consoleModal').classList.remove('show')">Close</button>
+				</div>
+			</div>
+			<div id="consoleLog" class="console-log"></div>
+		</div>
+	</div>
+	
 	<div class="controls">
 		<div id="modelStatus" class="model-status loading">Loading NanoDet ONNX model...</div>
+		<button class="debug-btn" onclick="document.getElementById('consoleModal').classList.add('show')">📋 Debug Log</button>
 		<div>
 			Camera: <select id="cameraSelector"><option value="user">Front</option><option value="environment" selected>Back</option></select>
+			AI Backend: <select id="aiBackend" onchange="reloadONNX()">
+				<option value="auto" selected>Auto (WASM)</option>
+				<option value="webgpu">WebGPU (experimental)</option>
+				<option value="wasm-mt">WASM Multi-thread</option>
+				<option value="wasm-st">WASM Single-thread</option>
+			</select>
 			Format: <select id="format">
 				<option value="" selected>Any</option>
 				<option value="LinearCodes">Linear Codes</option>
@@ -84,9 +191,10 @@
 			<label><input type="checkbox" id="liveDebugStream" checked> Live Debug View</label>
 			<label><input type="checkbox" id="preprocess"> Preprocess</label>
 			<label><input type="checkbox" id="showDetections" checked> Show Detection Boxes</label>
+			<label><input type="checkbox" id="showOnlyOnDecode"> Only on Decode</label>
 		</div>
 		<div class="zone-slider">
-			Zone: <input type="range" id="zoneSize" min="20" max="100" value="50"> <span id="zoneSizeLabel">50%</span>
+			Zone: <input type="range" id="zoneSize" min="15" max="100" value="15"> <span id="zoneSizeLabel">15%</span>
 			&nbsp;|&nbsp;
 			NanoDet Confidence: <input type="range" id="nanodetConfidence" min="10" max="95" value="30"> <span id="nanodetConfidenceLabel">30%</span>
 			&nbsp;|&nbsp;
@@ -273,9 +381,39 @@
 			<h3>Scan History <button class="clear-btn" id="clearBtn">Clear</button></h3>
 			<div id="historyList"><i>No barcodes scanned yet</i></div>
 		</div>
+		
+		<!-- VISIBLE DEBUG CONSOLE (always shown) -->
+		<div class="history-panel" style="width:400px;">
+			<h3>🔧 Debug Console <button class="clear-btn" onclick="clearDebugLog();renderVisibleLog();">Clear</button></h3>
+			<div id="visibleConsoleLog" style="background:#0a0a15;padding:10px;border-radius:4px;max-height:300px;overflow-y:auto;font-family:monospace;font-size:11px;text-align:left;white-space:pre-wrap;word-break:break-all;"></div>
+		</div>
 	</div>
 
 	<script>
+		// Render to visible console (always updated)
+		function renderVisibleLog() {
+			var logEl = document.getElementById('visibleConsoleLog');
+			if (!logEl) return;
+			var html = '';
+			var logs = window.debugLogs || [];
+			for (var i = 0; i < logs.length; i++) {
+				var l = logs[i];
+				var color = l.type === 'error' ? '#ff4444' : l.type === 'warn' ? '#ffaa00' : l.type === 'info' ? '#00d4ff' : '#aaa';
+				html += '<div style="padding:2px 0;border-bottom:1px solid #222;color:' + color + ';">[' + l.timestamp + '] ' + l.message.replace(/</g, '&lt;') + '</div>';
+			}
+			logEl.innerHTML = html || '<i style="color:#666;">No logs yet</i>';
+			logEl.scrollTop = logEl.scrollHeight;
+		}
+		
+		// Override the addDebugLog to also update visible console
+		var origAddDebugLog = window.addDebugLog;
+		window.addDebugLog = function(type, args) {
+			origAddDebugLog(type, args);
+			renderVisibleLog();
+		};
+		
+		// Initial render
+		setTimeout(renderVisibleLog, 100);
 		// ===== ONNX Runtime Web + NanoDet Integration =====
 		let onnxSession = null;
 		let modelInputSize = 640;
@@ -293,30 +431,134 @@
 		let nanodetFrameCount = 0;
 		let lastDetections = []; // Cache last detections for skipped frames
 		
+		// Reload ONNX with new backend setting
+		async function reloadONNX() {
+			if (onnxSession) {
+				console.log('Releasing old ONNX session...');
+				onnxSession = null;
+			}
+			await initONNX();
+		}
+		
 		// Initialize ONNX Runtime
 		async function initONNX() {
 			try {
 				$('modelStatus').textContent = 'Loading NanoDet ONNX model...';
 				$('modelStatus').className = 'model-status loading';
 				
-				// Configure ONNX Runtime - use WASM backend (WebGL has issues with dynamic operations)
+				// Configure ONNX Runtime paths for WebGPU build
 				ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/';
 				
-				// Use WASM backend only - more compatible with dynamic models
-				const options = {
-					executionProviders: ['wasm'],
-					graphOptimizationLevel: 'all'
-				};
+				// Detect iOS/Safari
+				const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+					(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+				const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+				console.log('Device detection - iOS:', isIOS, 'Safari:', isSafari);
+				console.log('navigator.gpu available:', !!navigator.gpu);
 				
-				// Use original model - will decode GFL output in JS
-				onnxSession = await ort.InferenceSession.create('nanodet_barcode.onnx', options);
+				// Check if Cross-Origin Isolated for multi-threading
+				const isCOI = crossOriginIsolated;
+				console.log('Cross-Origin Isolated:', isCOI);
+				
+				// Get selected backend
+				const backendSelect = $('aiBackend');
+				const selectedBackend = backendSelect ? backendSelect.value : 'auto';
+				console.log('Selected backend:', selectedBackend);
+				
+				let usedBackend = 'wasm';
+				let options;
+				
+				// WebGPU backend (experimental - may cause incorrect predictions)
+				if (selectedBackend === 'webgpu') {
+					if (navigator.gpu) {
+						try {
+							console.log('Requesting WebGPU adapter...');
+							const adapter = await navigator.gpu.requestAdapter();
+							if (adapter) {
+								console.log('WebGPU adapter found:', adapter.name || 'unnamed');
+								console.log('Creating WebGPU session...');
+								
+								options = {
+									executionProviders: ['webgpu'],
+									graphOptimizationLevel: 'all'
+								};
+								
+								onnxSession = await ort.InferenceSession.create('nanodet_barcode.onnx', options);
+								usedBackend = 'webgpu';
+								console.log('WebGPU backend loaded!');
+							} else {
+								throw new Error('No WebGPU adapter available');
+							}
+						} catch (e) {
+							console.error('WebGPU failed:', e.message || e);
+							$('modelStatus').textContent = 'WebGPU failed: ' + e.message;
+							$('modelStatus').className = 'model-status error';
+							return false;
+						}
+					} else {
+						$('modelStatus').textContent = 'WebGPU not available in this browser';
+						$('modelStatus').className = 'model-status error';
+						return false;
+					}
+				}
+				// WASM Multi-threaded
+				else if (selectedBackend === 'wasm-mt') {
+					if (!isCOI) {
+						console.warn('Multi-threading requires Cross-Origin Isolation');
+						$('modelStatus').textContent = 'Multi-thread needs COOP/COEP headers';
+						$('modelStatus').className = 'model-status error';
+						return false;
+					}
+					const cores = Math.max(2, Math.floor((navigator.hardwareConcurrency || 4) / 2));
+					ort.env.wasm.numThreads = cores;
+					usedBackend = `wasm (${cores} threads)`;
+					console.log('WASM multi-threading:', cores, 'threads');
+					
+					options = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' };
+					onnxSession = await ort.InferenceSession.create('nanodet_barcode.onnx', options);
+				}
+				// WASM Single-threaded (forced)
+				else if (selectedBackend === 'wasm-st') {
+					ort.env.wasm.numThreads = 1;
+					usedBackend = 'wasm (single-thread)';
+					console.log('WASM single-threaded (forced)');
+					
+					options = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' };
+					onnxSession = await ort.InferenceSession.create('nanodet_barcode.onnx', options);
+				}
+				// Auto (default) - WASM with auto thread detection
+				else {
+					// iOS/Safari: force single-threaded (no SharedArrayBuffer)
+					if (isIOS || isSafari) {
+						console.log('iOS/Safari: using single-threaded WASM');
+						ort.env.wasm.numThreads = 1;
+						usedBackend = 'wasm (single-thread, iOS/Safari)';
+					} else if (isCOI) {
+						// Multi-threaded for other browsers with COI
+						const halfCores = Math.max(2, Math.floor((navigator.hardwareConcurrency || 4) / 2));
+						ort.env.wasm.numThreads = halfCores;
+						usedBackend = `wasm (${halfCores}/${navigator.hardwareConcurrency} threads)`;
+						console.log('WASM multi-threading enabled:', halfCores, 'threads');
+					} else {
+						// No COI, single thread
+						ort.env.wasm.numThreads = 1;
+						usedBackend = 'wasm (single-thread, no COI)';
+						console.log('No Cross-Origin Isolation - single thread');
+					}
+					
+					console.log('Creating WASM session...');
+					options = { executionProviders: ['wasm'], graphOptimizationLevel: 'all' };
+					onnxSession = await ort.InferenceSession.create('nanodet_barcode.onnx', options);
+					console.log('WASM session created');
+				}
 				
 				// Log model info
 				console.log('NanoDet Model loaded successfully');
 				console.log('Input names:', onnxSession.inputNames);
 				console.log('Output names:', onnxSession.outputNames);
+				console.log('Backend:', usedBackend);
 				
-				$('modelStatus').textContent = 'NanoDet model ready (640x640 WASM)';
+				$('modelStatus').textContent = `NanoDet ready (${usedBackend})`;
 				$('modelStatus').className = 'model-status ready';
 				
 				// Update scan zone now that model is loaded
@@ -826,6 +1068,7 @@
 		});
 
 		const $ = id => document.getElementById(id);
+		
 		const canvas = $('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
 		const debugCanvas = $('debugCanvas'), debugCtx = debugCanvas.getContext('2d', { willReadFrequently: true });
 		const video = document.createElement('video');
@@ -1180,16 +1423,15 @@
 					detections = lastDetections;
 				}
 				
-				// Draw detection boxes (offset by scan zone position)
-				drawDetectionBoxes(detections, ox, oy);
-				
 				// Only run ZXing if enabled - when disabled, skip ALL ZXing processing for pure AI benchmark
 				const useZXingDecode = $('useZXing').checked;
+				let decodedDetectionIndex = -1; // Track which detection was decoded
 				
 				if (useZXingDecode) {
 					// ONLY process detected bboxes with ZXing - no fallback to full scan zone
 					// This is the whole point of the AI detection!
-					for (const detection of detections) {
+					for (let i = 0; i < detections.length; i++) {
+						const detection = detections[i];
 						// Add padding around detection for better decoding
 						const padding = 15;
 						const cropX = Math.max(0, detection.x1 - padding);
@@ -1236,9 +1478,24 @@
 								cropCode.position.bottomRight.y += oy + cropY;
 							}
 							code = cropCode;
+							decodedDetectionIndex = i; // Mark which detection was successfully decoded
 							break; // Found a barcode, stop processing other detections
 						}
 					}
+				}
+				
+				// Draw detection boxes (offset by scan zone position)
+				// If "Only on Decode" is checked, only show the box that was successfully decoded
+				const showOnlyOnDecode = $('showOnlyOnDecode').checked;
+				if (showOnlyOnDecode && decodedDetectionIndex >= 0) {
+					// Only show the successfully decoded detection
+					drawDetectionBoxes([detections[decodedDetectionIndex]], ox, oy);
+				} else if (!showOnlyOnDecode) {
+					// Show all detections
+					drawDetectionBoxes(detections, ox, oy);
+				} else {
+					// showOnlyOnDecode is true but nothing was decoded - clear the overlay
+					$('detectionOverlay').innerHTML = '';
 				}
 				// When ZXing disabled: skip all cropping, processing, debug - pure AI benchmark mode
 				
@@ -1296,7 +1553,7 @@
 			if (code.format) {
 				$('result').className = 'found';
 				$('result').textContent = code.format + ': ' + code.text;
-				drawResult(code, ox, oy);
+				// ZXing bbox removed - using AI detection boxes instead
 				addToHistory(code.format, code.text, debugUrl);
 			} else {
 				$('result').className = 'not-found';
@@ -1308,58 +1565,75 @@
 		async function startCamera(facingMode) {
 			if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
 			
-			// Detect and use the highest resolution supported by the camera
-			try {
-				// First, get the device capabilities to find max resolution
-				const devices = await navigator.mediaDevices.enumerateDevices();
-				const videoDevices = devices.filter(d => d.kind === 'videoinput');
-				
-				// Try to get a stream to query capabilities
-				const tempStream = await navigator.mediaDevices.getUserMedia({ 
-					video: { facingMode }, 
-					audio: false 
-				});
-				
-				const track = tempStream.getVideoTracks()[0];
-				const capabilities = track.getCapabilities();
-				console.log('Camera capabilities:', capabilities);
-				
-				// Get max width and height
-				const maxWidth = capabilities.width?.max || 3840;
-				const maxHeight = capabilities.height?.max || 2160;
-				console.log(`Detected max resolution: ${maxWidth}x${maxHeight}`);
-				
-				// Stop temp stream
-				tempStream.getTracks().forEach(t => t.stop());
-				
-				// Now request the highest resolution
-				const stream = await navigator.mediaDevices.getUserMedia({ 
-					video: { 
-						facingMode,
-						width: { ideal: maxWidth },
-						height: { ideal: maxHeight }
-					}, 
-					audio: false 
-				});
-				
-				video.srcObject = stream;
-				video.play();
-				video.onloadedmetadata = () => {
-					canvas.width = video.videoWidth; 
-					canvas.height = video.videoHeight;
-					console.log(`Camera using resolution: ${video.videoWidth}x${video.videoHeight}`);
-					// Initialize debug canvas
-					const pct = parseInt($('zoneSize').value) / 100;
-					debugCanvas.width = Math.floor(canvas.width * pct);
-					debugCanvas.height = Math.floor(canvas.height * pct);
-					updateScanZone();
-					updateDebugPanel();
-					processFrame();
-				};
-			} catch (e) {
-				$('result').textContent = 'Camera error: ' + e.message;
-				console.error('Camera error:', e);
+			// Resolutions to try, highest first
+			const resolutions = [
+				{ w: 4096, h: 2160, name: '4K DCI' },
+				{ w: 3840, h: 2160, name: '4K UHD' },
+				{ w: 2560, h: 1440, name: '1440p' },
+				{ w: 1920, h: 1080, name: '1080p' },
+				{ w: 1280, h: 720, name: '720p' },
+				{ w: 640, h: 480, name: '480p' }
+			];
+			
+			console.log('Testing camera resolutions for', facingMode, 'camera...');
+			
+			let stream = null;
+			let usedRes = null;
+			
+			for (const res of resolutions) {
+				try {
+					console.log('Trying', res.name, '(' + res.w + 'x' + res.h + ')...');
+					stream = await navigator.mediaDevices.getUserMedia({ 
+						video: { 
+							facingMode,
+							width: { exact: res.w },
+							height: { exact: res.h }
+						}, 
+						audio: false 
+					});
+					usedRes = res;
+					console.log('SUCCESS:', res.name);
+					break;
+				} catch (e) {
+					console.log('Failed:', res.name, '-', e.message);
+					// Continue to next resolution
+				}
 			}
+			
+			// If exact matches fail, try ideal (let browser pick best)
+			if (!stream) {
+				try {
+					console.log('Exact matches failed, trying ideal 4K...');
+					stream = await navigator.mediaDevices.getUserMedia({ 
+						video: { 
+							facingMode,
+							width: { ideal: 4096 },
+							height: { ideal: 2160 }
+						}, 
+						audio: false 
+					});
+					usedRes = { name: 'ideal (browser selected)' };
+				} catch (e) {
+					$('result').textContent = 'Camera error: ' + e.message;
+					console.error('All camera resolutions failed:', e);
+					return;
+				}
+			}
+			
+			video.srcObject = stream;
+			video.play();
+			video.onloadedmetadata = () => {
+				canvas.width = video.videoWidth; 
+				canvas.height = video.videoHeight;
+				console.log('Final camera resolution:', video.videoWidth, 'x', video.videoHeight, '(' + (usedRes ? usedRes.name : 'unknown') + ')');
+				// Initialize debug canvas
+				const pct = parseInt($('zoneSize').value) / 100;
+				debugCanvas.width = Math.floor(canvas.width * pct);
+				debugCanvas.height = Math.floor(canvas.height * pct);
+				updateScanZone();
+				updateDebugPanel();
+				processFrame();
+			};
 		}
 
 		$('cameraSelector').onchange = function() { startCamera(this.value); };

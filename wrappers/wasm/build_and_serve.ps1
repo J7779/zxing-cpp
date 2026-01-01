@@ -310,15 +310,24 @@ if not os.path.exists(certfile):
 # Change to script directory to serve files
 os.chdir(cert_dir)
 
-# Start HTTPS server
+# Custom handler with Cross-Origin Isolation headers for SharedArrayBuffer/multi-threading
+class COIHandler(http.server.SimpleHTTPRequestHandler):
+    def end_headers(self):
+        # Required for SharedArrayBuffer and WASM multi-threading
+        self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
+        self.send_header('Cross-Origin-Embedder-Policy', 'require-corp')
+        super().end_headers()
+
+# Start HTTPS server with COI headers
 server_address = ('0.0.0.0', PORT_PLACEHOLDER)
-httpd = http.server.HTTPServer(server_address, http.server.SimpleHTTPRequestHandler)
+httpd = http.server.HTTPServer(server_address, COIHandler)
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain(certfile)
 httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
 
 print(f"Serving HTTPS on https://0.0.0.0:{PORT_PLACEHOLDER}/")
+print("Cross-Origin Isolation ENABLED for WASM multi-threading")
 print("Accept the certificate warning in your browser")
 httpd.serve_forever()
 '@
