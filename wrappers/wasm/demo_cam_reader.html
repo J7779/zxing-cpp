@@ -89,8 +89,8 @@
 			&nbsp;|&nbsp;
 			NanoDet Confidence: <input type="range" id="nanodetConfidence" min="10" max="95" value="30"> <span id="nanodetConfidenceLabel">30%</span>
 			&nbsp;|&nbsp;
-			Model Input: <span style="color:#0f0;">416×416 (fixed)</span>
-			<input type="hidden" id="modelInputSize" value="416">
+			Model Input: <span style="color:#0f0;">640x640 (fixed)</span>
+			<input type="hidden" id="modelInputSize" value="640">
 			&nbsp;|&nbsp;
 			Consensus: <input type="range" id="consensusFrames" min="3" max="10" value="3"> <span id="consensusFramesLabel">3</span>
 		</div>
@@ -263,7 +263,7 @@
 	<script>
 		// ===== ONNX Runtime Web + NanoDet Integration =====
 		let onnxSession = null;
-		let modelInputSize = 416;
+		let modelInputSize = 640;
 		let nanodetConfidence = 0.30;
 		
 		// Initialize ONNX Runtime
@@ -281,15 +281,15 @@
 					graphOptimizationLevel: 'all'
 				};
 				
-				// Use decoded model - outputs [x1, y1, x2, y2, score, class_id] directly
-				onnxSession = await ort.InferenceSession.create('nanodet_barcode_decoded.onnx', options);
+				// Use original model - will decode GFL output in JS
+				onnxSession = await ort.InferenceSession.create('nanodet_barcode.onnx', options);
 				
 				// Log model info
 				console.log('NanoDet Model loaded successfully');
 				console.log('Input names:', onnxSession.inputNames);
 				console.log('Output names:', onnxSession.outputNames);
 				
-				$('modelStatus').textContent = 'NanoDet DECODED model ready (WASM)';
+				$('modelStatus').textContent = 'NanoDet model ready (640x640 WASM)';
 				$('modelStatus').className = 'model-status ready';
 				
 				// Update scan zone now that model is loaded
@@ -344,18 +344,18 @@
 			const float32Data = new Float32Array(3 * targetSize * targetSize);
 			const pixels = resizedData.data;
 			
-			// NanoDet typically uses RGB normalized to 0-1 or with mean/std
-			// Common NanoDet normalization: (pixel / 255 - mean) / std
-			// Using ImageNet-style: mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-			const mean = [0.485, 0.456, 0.406];
-			const std = [0.229, 0.224, 0.225];
+			// NanoDet uses BGR order with these normalization values:
+			// mean=[103.53, 116.28, 123.675], std=[57.375, 57.12, 58.395]
+			// Formula: (pixel - mean) / std
+			const mean = [103.53, 116.28, 123.675]; // BGR
+			const std = [57.375, 57.12, 58.395];    // BGR
 			
 			for (let i = 0; i < targetSize * targetSize; i++) {
 				const pixelIdx = i * 4;
-				// NCHW format: all R, then all G, then all B
-				float32Data[i] = (pixels[pixelIdx] / 255 - mean[0]) / std[0];     // R
-				float32Data[targetSize * targetSize + i] = (pixels[pixelIdx + 1] / 255 - mean[1]) / std[1]; // G
-				float32Data[2 * targetSize * targetSize + i] = (pixels[pixelIdx + 2] / 255 - mean[2]) / std[2]; // B
+				// NCHW format in BGR order: all B, then all G, then all R
+				float32Data[i] = (pixels[pixelIdx + 2] - mean[0]) / std[0];     // B (from RGB's B at idx+2)
+				float32Data[targetSize * targetSize + i] = (pixels[pixelIdx + 1] - mean[1]) / std[1]; // G
+				float32Data[2 * targetSize * targetSize + i] = (pixels[pixelIdx] - mean[2]) / std[2]; // R (from RGB's R at idx+0)
 			}
 			
 			return {
@@ -516,12 +516,13 @@
 			return applyNMS(detections.slice(0, 50), 0.45);
 		}
 		
-		// Parse raw GFL output [32 DFL + N class scores]
+		// Parse raw GFL output [N class scores (sigmoid) + 32 DFL]
+		// NanoDet _forward_onnx outputs: cls_preds (with sigmoid) FIRST, then reg_preds
 		function parseGFLOutput(outputData, numBoxes, boxSize, srcWidth, srcHeight, scale, padX, padY, targetSize, confidence, regMax) {
 			const detections = [];
-			const numClasses = boxSize - 32;
-			const classOffset = 32;
-			// NanoDet-Plus uses strides [8, 16, 32, 64] for 416 input
+			const numClasses = boxSize - 32;  // e.g., 34 - 32 = 2 classes
+			const regOffset = numClasses;     // DFL regression starts after class scores
+			// NanoDet-Plus uses strides [8, 16, 32, 64] for 640 input
 			// Output order: all stride-8 points, then stride-16, then stride-32, then stride-64
 			if (!anchorGrid || anchorGrid.targetSize !== targetSize || anchorGrid.numBoxes !== numBoxes) {
 				anchorGrid = { points: [], targetSize: targetSize, numBoxes: numBoxes };
@@ -569,23 +570,20 @@
 			// One-time debug logging
 			if (!outputFormatLogged) {
 				outputFormatLogged = true;
-				console.log(`GFL Output: ${numBoxes} boxes, ${boxSize} values (32 DFL + ${numClasses} classes)`);
-				// Find best scoring box
-				let bestIdx = 0, bestLogit = -Infinity;
+				console.log(`GFL Output: ${numBoxes} boxes, ${boxSize} values (${numClasses} classes + 32 DFL)`);
+				// Find best scoring box - cls scores are FIRST and already have sigmoid applied
+				let bestIdx = 0, bestScore = -Infinity;
 				for (let i = 0; i < Math.min(numBoxes, 500); i++) {
 					for (let c = 0; c < numClasses; c++) {
-						const logit = outputData[i * boxSize + classOffset + c];
-						if (logit > bestLogit) {
-							bestLogit = logit;
+						const score = outputData[i * boxSize + c]; // Class scores at beginning
+						if (score > bestScore) {
+							bestScore = score;
 							bestIdx = i;
 						}
 					}
 				}
-				console.log(`Best box ${bestIdx}: class logit=${bestLogit.toFixed(3)}, score=${(1/(1+Math.exp(-bestLogit))).toFixed(3)}`);
+				console.log(`Best box ${bestIdx}: score=${bestScore.toFixed(3)} (sigmoid already applied)`);
 			}
-			
-			// Pre-compute threshold in logit space for fast filtering
-			const logitThreshold = Math.log(confidence / (1 - confidence));
 			
 			// Pre-compute DFL indices (0 to regMax)
 			const dflIndices = new Float32Array(regMax + 1);
@@ -594,27 +592,26 @@
 			for (let i = 0; i < numBoxes; i++) {
 				const offset = i * boxSize;
 				
-				// Quick check: find max class logit (scores at indices 32+)
-				let maxLogit = -Infinity;
+				// Class scores are at the BEGINNING (indices 0 to numClasses-1)
+				// and already have sigmoid applied
+				let maxScore = -Infinity;
 				let maxClassId = 0;
 				for (let c = 0; c < numClasses; c++) {
-					const logit = outputData[offset + classOffset + c];
-					if (logit > maxLogit) {
-						maxLogit = logit;
+					const score = outputData[offset + c];
+					if (score > maxScore) {
+						maxScore = score;
 						maxClassId = c;
 					}
 				}
 				
-				// Early exit if below threshold
-				if (maxLogit < logitThreshold) continue;
-				
-				// Compute actual confidence score
-				const maxClassScore = 1 / (1 + Math.exp(-maxLogit));
+				// Early exit if below threshold (scores are already 0-1)
+				if (maxScore < confidence) continue;
 				
 				// Get anchor point for this box
 				const anchor = i < anchorGrid.points.length ? anchorGrid.points[i] : { x: 0, y: 0, stride: 8 };
 				
 				// Decode DFL distributions to distances (optimized - inline softmax)
+				// DFL starts at regOffset (after class scores)
 				// Each edge has 8 values (bins 0-7), softmax then weighted sum
 				function decodeDFL(startIdx) {
 					// Softmax
@@ -636,10 +633,12 @@
 					return dist;
 				}
 				
-				const distLeft = decodeDFL(offset);
-				const distTop = decodeDFL(offset + 8);
-				const distRight = decodeDFL(offset + 16);
-				const distBottom = decodeDFL(offset + 24);
+				// DFL regression values start at offset + regOffset (after class scores)
+				const regStart = offset + regOffset;
+				const distLeft = decodeDFL(regStart);
+				const distTop = decodeDFL(regStart + 8);
+				const distRight = decodeDFL(regStart + 16);
+				const distBottom = decodeDFL(regStart + 24);
 				
 				// Convert distances to bbox (distances are in stride units)
 				let x1 = anchor.x - distLeft * anchor.stride;
@@ -649,7 +648,7 @@
 				
 				// Debug first few high-confidence detections
 				if (detections.length < 3) {
-					console.log(`Det ${i}: anchor=(${anchor.x.toFixed(0)},${anchor.y.toFixed(0)},s=${anchor.stride}) dists=[${distLeft.toFixed(2)},${distTop.toFixed(2)},${distRight.toFixed(2)},${distBottom.toFixed(2)}] -> model[${x1.toFixed(0)},${y1.toFixed(0)},${x2.toFixed(0)},${y2.toFixed(0)}] score=${maxClassScore.toFixed(2)}`);
+					console.log(`Det ${i}: anchor=(${anchor.x.toFixed(0)},${anchor.y.toFixed(0)},s=${anchor.stride}) dists=[${distLeft.toFixed(2)},${distTop.toFixed(2)},${distRight.toFixed(2)},${distBottom.toFixed(2)}] -> model[${x1.toFixed(0)},${y1.toFixed(0)},${x2.toFixed(0)},${y2.toFixed(0)}] score=${maxScore.toFixed(2)}`);
 				}
 				
 				// Convert from model coords back to original image coords
@@ -672,7 +671,7 @@
 					y1: Math.round(y1),
 					x2: Math.round(x2),
 					y2: Math.round(y2),
-					score: maxClassScore,
+					score: maxScore,
 					classId: maxClassId
 				});
 			}
