@@ -76,6 +76,7 @@
 			<label><input type="checkbox" id="relaxedTolerance" checked> Relaxed</label>
 			<label><input type="checkbox" id="useScanZone" checked> Scan Zone</label>
 			<label><input type="checkbox" id="useNanoDet" checked> <strong>NanoDet AI</strong></label>
+			<label><input type="checkbox" id="useZXing" checked> <strong>ZXing Decode</strong></label>
 			<label><input type="checkbox" id="useConsensus" checked> Consensus</label>
 		</div>
 		<div style="margin-top:10px;">
@@ -226,6 +227,17 @@
 					<div>Size: <input type="range" id="imgMorphSize" min="0" max="5" value="1" style="width:80px;"> <span id="imgMorphSizeLabel">1</span></div>
 					<div>Iterations: <input type="range" id="imgMorphIter" min="1" max="5" value="1" style="width:80px;"> <span id="imgMorphIterLabel">1</span></div>
 				</div>
+			</fieldset>
+			
+			<!-- 1D BARCODE ENHANCEMENT -->
+			<fieldset style="border:1px solid #ff0;border-radius:4px;margin:10px 0;padding:10px;background:#2a2a00;">
+				<legend style="color:#ff0;font-weight:bold;">1D Barcode Enhancement (Distance Fix)</legend>
+				<div style="font-size:11px;color:#aaa;margin-bottom:8px;">Connect broken bars from distant/noisy captures</div>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div>Vertical Close: <input type="range" id="imgVertClose" min="0" max="5" value="0" style="width:80px;"> <span id="imgVertCloseLabel">0</span></div>
+					<div>Horizontal Close: <input type="range" id="imgHorizClose" min="0" max="3" value="0" style="width:80px;"> <span id="imgHorizCloseLabel">0</span></div>
+				</div>
+				<div style="font-size:10px;color:#888;margin-top:5px;">Tip: Try Vertical=2-3 for distant barcodes. Keep Horizontal low (can merge thin bars)</div>
 			</fieldset>
 			
 			<!-- BLOB REMOVAL -->
@@ -920,6 +932,10 @@
 		$('imgMorphSize').oninput = function() { $('imgMorphSizeLabel').textContent = this.value; setParam('morphSize', parseFloat(this.value)); };
 		$('imgMorphIter').oninput = function() { $('imgMorphIterLabel').textContent = this.value; setParam('morphIterations', parseFloat(this.value)); };
 		
+		// 1D Barcode Enhancement
+		$('imgVertClose').oninput = function() { $('imgVertCloseLabel').textContent = this.value; setParam('verticalCloseSize', parseFloat(this.value)); };
+		$('imgHorizClose').oninput = function() { $('imgHorizCloseLabel').textContent = this.value; setParam('horizontalCloseSize', parseFloat(this.value)); };
+		
 		// Blob Removal
 		$('imgBlobRemove').onchange = function() { setParam('removeSmallBlobs', this.checked ? 1 : 0); };
 		$('imgMinBlobSize').oninput = function() { $('imgMinBlobSizeLabel').textContent = this.value; setParam('minBlobSize', parseFloat(this.value)); };
@@ -965,6 +981,8 @@
 			$('imgMorphKernel').value = '0';
 			$('imgMorphSize').value = 1; $('imgMorphSizeLabel').textContent = '1';
 			$('imgMorphIter').value = 1; $('imgMorphIterLabel').textContent = '1';
+			$('imgVertClose').value = 0; $('imgVertCloseLabel').textContent = '0';
+			$('imgHorizClose').value = 0; $('imgHorizCloseLabel').textContent = '0';
 			$('imgBlobRemove').checked = false;
 			$('imgMinBlobSize').value = 10; $('imgMinBlobSizeLabel').textContent = '10';
 			
@@ -983,6 +1001,8 @@
 				setParam('nlbinRange', 20); setParam('nlbinLow', 5); setParam('nlbinHigh', 90);
 				// Morphology/Blob reset
 				setParam('morphType', 0); setParam('morphKernelType', 0); setParam('morphSize', 1); setParam('morphIterations', 1);
+				// 1D Enhancement reset
+				setParam('verticalCloseSize', 0); setParam('horizontalCloseSize', 0);
 				setParam('removeSmallBlobs', 0); setParam('minBlobSize', 10);
 			}
 		};
@@ -1163,77 +1183,85 @@
 				// Draw detection boxes (offset by scan zone position)
 				drawDetectionBoxes(detections, ox, oy);
 				
-				// ONLY process detected bboxes with ZXing - no fallback to full scan zone
-				// This is the whole point of the AI detection!
-				for (const detection of detections) {
-					// Add padding around detection for better decoding
-					const padding = 15;
-					const cropX = Math.max(0, detection.x1 - padding);
-					const cropY = Math.max(0, detection.y1 - padding);
-					const cropX2 = Math.min(w, detection.x2 + padding);
-					const cropY2 = Math.min(h, detection.y2 + padding);
-					const cropW = cropX2 - cropX;
-					const cropH = cropY2 - cropY;
-					
-					if (cropW <= 0 || cropH <= 0) continue;
-					
-					// Use ImageData directly instead of canvas cropping (faster)
-					// Create cropped ImageData by copying pixels
-					const croppedData = new Uint8ClampedArray(cropW * cropH * 4);
-					for (let row = 0; row < cropH; row++) {
-						const srcOffset = ((cropY + row) * w + cropX) * 4;
-						const dstOffset = row * cropW * 4;
-						croppedData.set(imgData.data.subarray(srcOffset, srcOffset + cropW * 4), dstOffset);
-					}
-					
-					const cropCode = readBarcode(croppedData, cropW, cropH);
-					
-					// Get live debug image if enabled - show what's being sent to ZXing
-					if ($('liveDebugStream').checked) {
-						const buf = zxing._malloc(croppedData.byteLength);
-						zxing.HEAPU8.set(croppedData, buf);
-						const debugImg = zxing.getLiveDebugImage(buf, cropW, cropH, $('binarizer').value, $('preprocess').checked);
-						if (debugImg) {
-							renderDebugImage(debugImg, cropW, cropH);
+				// Only run ZXing if enabled - when disabled, skip ALL ZXing processing for pure AI benchmark
+				const useZXingDecode = $('useZXing').checked;
+				
+				if (useZXingDecode) {
+					// ONLY process detected bboxes with ZXing - no fallback to full scan zone
+					// This is the whole point of the AI detection!
+					for (const detection of detections) {
+						// Add padding around detection for better decoding
+						const padding = 15;
+						const cropX = Math.max(0, detection.x1 - padding);
+						const cropY = Math.max(0, detection.y1 - padding);
+						const cropX2 = Math.min(w, detection.x2 + padding);
+						const cropY2 = Math.min(h, detection.y2 + padding);
+						const cropW = cropX2 - cropX;
+						const cropH = cropY2 - cropY;
+						
+						if (cropW <= 0 || cropH <= 0) continue;
+						
+						// Use ImageData directly instead of canvas cropping (faster)
+						// Create cropped ImageData by copying pixels
+						const croppedData = new Uint8ClampedArray(cropW * cropH * 4);
+						for (let row = 0; row < cropH; row++) {
+							const srcOffset = ((cropY + row) * w + cropX) * 4;
+							const dstOffset = row * cropW * 4;
+							croppedData.set(imgData.data.subarray(srcOffset, srcOffset + cropW * 4), dstOffset);
 						}
-						zxing._free(buf);
-					}
-					
-					if (cropCode.format && cropCode.format !== '__pending__') {
-						// Adjust position to full frame coordinates
-						if (cropCode.position) {
-							cropCode.position.topLeft.x += ox + cropX;
-							cropCode.position.topLeft.y += oy + cropY;
-							cropCode.position.topRight.x += ox + cropX;
-							cropCode.position.topRight.y += oy + cropY;
-							cropCode.position.bottomLeft.x += ox + cropX;
-							cropCode.position.bottomLeft.y += oy + cropY;
-							cropCode.position.bottomRight.x += ox + cropX;
-							cropCode.position.bottomRight.y += oy + cropY;
+						
+						const cropCode = readBarcode(croppedData, cropW, cropH);
+						
+						// Get live debug image if enabled - show what's being sent to ZXing
+						if ($('liveDebugStream').checked) {
+							const buf = zxing._malloc(croppedData.byteLength);
+							zxing.HEAPU8.set(croppedData, buf);
+							const debugImg = zxing.getLiveDebugImage(buf, cropW, cropH, $('binarizer').value, $('preprocess').checked);
+							if (debugImg) {
+								renderDebugImage(debugImg, cropW, cropH);
+							}
+							zxing._free(buf);
 						}
-						code = cropCode;
-						break; // Found a barcode, stop processing other detections
+						
+						if (cropCode && cropCode.format && cropCode.format !== '__pending__') {
+							// Adjust position to full frame coordinates
+							if (cropCode.position) {
+								cropCode.position.topLeft.x += ox + cropX;
+								cropCode.position.topLeft.y += oy + cropY;
+								cropCode.position.topRight.x += ox + cropX;
+								cropCode.position.topRight.y += oy + cropY;
+								cropCode.position.bottomLeft.x += ox + cropX;
+								cropCode.position.bottomLeft.y += oy + cropY;
+								cropCode.position.bottomRight.x += ox + cropX;
+								cropCode.position.bottomRight.y += oy + cropY;
+							}
+							code = cropCode;
+							break; // Found a barcode, stop processing other detections
+						}
 					}
 				}
+				// When ZXing disabled: skip all cropping, processing, debug - pure AI benchmark mode
 				
-				// No fallback - if NanoDet found nothing or ZXing couldn't decode, that's it
-				// The whole point of the AI is to only scan what it detects as a barcode
 			} else {
 				// NanoDet disabled - use scan zone directly with ZXing
-				code = readBarcode(imgData.data, w, h);
+				const useZXingDecode = $('useZXing').checked;
 				
 				// Clear detection overlay
 				$('detectionOverlay').innerHTML = '';
 				
-				// Get live debug image if enabled
-				if ($('liveDebugStream').checked) {
-					const buf = zxing._malloc(imgData.data.byteLength);
-					zxing.HEAPU8.set(imgData.data, buf);
-					const debugImg = zxing.getLiveDebugImage(buf, w, h, $('binarizer').value, $('preprocess').checked);
-					if (debugImg) {
-						renderDebugImage(debugImg, w, h);
+				if (useZXingDecode) {
+					code = readBarcode(imgData.data, w, h);
+					
+					// Get live debug image if enabled
+					if ($('liveDebugStream').checked) {
+						const buf = zxing._malloc(imgData.data.byteLength);
+						zxing.HEAPU8.set(imgData.data, buf);
+						const debugImg = zxing.getLiveDebugImage(buf, w, h, $('binarizer').value, $('preprocess').checked);
+						if (debugImg) {
+							renderDebugImage(debugImg, w, h);
+						}
+						zxing._free(buf);
 					}
-					zxing._free(buf);
 				}
 			}
 

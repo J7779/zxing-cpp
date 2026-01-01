@@ -76,7 +76,7 @@
 2451	3303	7889538036162561	ZXing/CMakeFiles/ZXing.dir/src/maxicode/MCReader.cpp.o	5702f98d5c42caf9
 2427	3505	7889538035932557	ZXing/CMakeFiles/ZXing.dir/src/maxicode/MCDecoder.cpp.o	35ff56270afa0073
 2548	3385	7889538037182558	ZXing/CMakeFiles/ZXing.dir/src/oned/ODCodabarReader.cpp.o	c007450c997a7a96
-50	3188	7889947150050179	CMakeFiles/zxing.dir/BarcodeReader.cpp.o	c01b726295ec5c76
+23	2815	7890020046510737	CMakeFiles/zxing.dir/BarcodeReader.cpp.o	c01b726295ec5c76
 2083	3395	7889538032492556	ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMDecoder.cpp.o	6c067cc27cfe2943
 2582	3433	7889538037472558	ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode39Reader.cpp.o	69d6540f48c557f
 3981	4413	7889538051472569	ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRErrorCorrectionLevel.cpp.o	d1a88e0346ac8f7
@@ -108,11 +108,11 @@
 3831	4676	7889538049972568	ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDetector.cpp.o	c4f5bc0a22820961
 3953	4739	7889538051182569	ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFWriter.cpp.o	947a2b6a379d6f3a
 3928	4802	7889538050932569	ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFReader.cpp.o	3bd7074bc5827941
-55	3202	7889947150090179	CMakeFiles/zxing_reader.dir/BarcodeReader.cpp.o	b4c3a711f234dbee
+44	2811	7890020046718852	CMakeFiles/zxing_reader.dir/BarcodeReader.cpp.o	b4c3a711f234dbee
 3714	5022	7889538048792570	ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDecoder.cpp.o	f6bd3a84580e98a5
 3936	5019	7889538051022566	ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFScanningDecoder.cpp.o	4ccbe300138c3171
 4038	5318	7889538052042570	ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRDetector.cpp.o	835a5993f785bb03
 1063	1306	7889947160176654	ZXing/libZXing.a	cdf5d81ddd48caac
 1306	7609	7889947162596657	zxing_writer.js	ef604d4cae9b52db
-3202	9409	7889947181565599	zxing_reader.js	d8142dcdda6d3f3a
-3188	9642	7889947181425587	zxing.js	ee632ab1cca76648
+2811	9537	7890020074394535	zxing_reader.js	d8142dcdda6d3f3a
+2816	9716	7890020074444535	zxing.js	ee632ab1cca76648

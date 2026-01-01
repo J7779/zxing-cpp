@@ -159,6 +159,11 @@ struct ImageProcessingParams {
 	bool removeSmallBlobs = false;
 	int minBlobSize = 10;
 	
+	// === 1D BARCODE ENHANCEMENT ===
+	// These help connect broken bars from distant/noisy captures
+	int verticalCloseSize = 0;    // Vertical close to connect broken bars (0=off, 1-5 typical)
+	int horizontalCloseSize = 0;  // Horizontal close (careful: can merge thin bars)
+	
 	// === KRAKEN NLBIN (Non-Linear Binarization) ===
 	// Based on kraken.binarization by Benjamin Kiessling & Thomas M. Breuel
 	// Apache License 2.0
@@ -221,6 +226,9 @@ void setImageParam(std::string param, float value) {
 	// Blob removal
 	else if (param == "removeSmallBlobs") g_imgParams.removeSmallBlobs = value > 0.5f;
 	else if (param == "minBlobSize") g_imgParams.minBlobSize = static_cast<int>(value);
+	// 1D Barcode enhancement
+	else if (param == "verticalCloseSize") g_imgParams.verticalCloseSize = static_cast<int>(value);
+	else if (param == "horizontalCloseSize") g_imgParams.horizontalCloseSize = static_cast<int>(value);
 	// Kraken nlbin
 	else if (param == "nlbinEnabled") g_imgParams.nlbinEnabled = value > 0.5f;
 	else if (param == "nlbinThreshold") g_imgParams.nlbinThreshold = value;
@@ -759,6 +767,69 @@ static void applyMorphology(uint8_t* data, int width, int height, int type, int 
 	}
 }
 
+// Vertical close operation specifically for 1D barcodes
+// This helps connect broken vertical bars from distant/noisy captures
+static void applyVerticalClose(uint8_t* data, int width, int height, int size) {
+	if (size < 1) return;
+	
+	std::vector<uint8_t> temp(width * height);
+	
+	// Vertical dilate (only vertical kernel)
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			uint8_t maxVal = 0;
+			for (int dy = -size; dy <= size; ++dy) {
+				int ny = std::max(0, std::min(height - 1, y + dy));
+				maxVal = std::max(maxVal, data[ny * width + x]);
+			}
+			temp[y * width + x] = maxVal;
+		}
+	}
+	
+	// Vertical erode
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			uint8_t minVal = 255;
+			for (int dy = -size; dy <= size; ++dy) {
+				int ny = std::max(0, std::min(height - 1, y + dy));
+				minVal = std::min(minVal, temp[ny * width + x]);
+			}
+			data[y * width + x] = minVal;
+		}
+	}
+}
+
+// Horizontal close operation to connect bars that may be broken horizontally
+static void applyHorizontalClose(uint8_t* data, int width, int height, int size) {
+	if (size < 1) return;
+	
+	std::vector<uint8_t> temp(width * height);
+	
+	// Horizontal dilate
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			uint8_t maxVal = 0;
+			for (int dx = -size; dx <= size; ++dx) {
+				int nx = std::max(0, std::min(width - 1, x + dx));
+				maxVal = std::max(maxVal, data[y * width + nx]);
+			}
+			temp[y * width + x] = maxVal;
+		}
+	}
+	
+	// Horizontal erode
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			uint8_t minVal = 255;
+			for (int dx = -size; dx <= size; ++dx) {
+				int nx = std::max(0, std::min(width - 1, x + dx));
+				minVal = std::min(minVal, temp[y * width + nx]);
+			}
+			data[y * width + x] = minVal;
+		}
+	}
+}
+
 // --- EDGE DETECTION ---
 
 static void applySobel(uint8_t* data, int width, int height, int ksize) {
@@ -1276,7 +1347,16 @@ static void processImage(uint8_t* data, int width, int height) {
 	applyMorphology(data, width, height, g_imgParams.morphType, g_imgParams.morphKernelType,
 	                g_imgParams.morphSize, g_imgParams.morphIterations);
 	
-	// 11. Blob Removal
+	// 11. 1D Barcode Enhancement: Vertical/Horizontal Close
+	// These help connect broken bars from distant/noisy captures
+	if (g_imgParams.verticalCloseSize > 0) {
+		applyVerticalClose(data, width, height, g_imgParams.verticalCloseSize);
+	}
+	if (g_imgParams.horizontalCloseSize > 0) {
+		applyHorizontalClose(data, width, height, g_imgParams.horizontalCloseSize);
+	}
+	
+	// 12. Blob Removal
 	if (g_imgParams.removeSmallBlobs) {
 		removeSmallBlobs(data, width, height, g_imgParams.minBlobSize);
 	}
