@@ -24,3 +24,5 @@ CMakeLists.txt.user
 
 # Visual Studio Code
 /.vscode
+/emsdk
+/wrappers/wasm/build/_deps
