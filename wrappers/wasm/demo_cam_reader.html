@@ -55,7 +55,7 @@
 	</select>
 	<br /><br />
 
-	<canvas id="canvas" width="640" height="480"></canvas>
+	<canvas id="canvas"></canvas>
 	<br /><br />
 
 	<div id="result"></div>
@@ -71,11 +71,9 @@
 		const canvas = document.getElementById("canvas");
 		const resultElement = document.getElementById("result");
 
-		const ctx = canvas.getContext("2d", { willReadFrequently: true });
+		let ctx = canvas.getContext("2d", { willReadFrequently: true });
 		const video = document.createElement("video");
 		video.setAttribute("id", "video");
-		video.setAttribute("width", canvas.width);
-		video.setAttribute("height", canvas.height);
 		video.setAttribute("autoplay", "");
 
 		function readBarcodeFromCanvas(canvas, format, mode) {
@@ -135,16 +133,57 @@
 			// To ensure the camera switch, it is advisable to free up the media resources
 			if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
 
+			// First get basic access to query capabilities
 			navigator.mediaDevices
 				.getUserMedia({ video: { facingMode: deviceId }, audio: false })
+				.then(function (stream) {
+					const track = stream.getVideoTracks()[0];
+					const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+					
+					// Stop this temporary stream
+					stream.getTracks().forEach(t => t.stop());
+					
+					// Determine the best resolution from capabilities
+					let idealWidth = 1280;
+					let idealHeight = 720;
+					
+					if (capabilities.width && capabilities.height) {
+						idealWidth = capabilities.width.max || 1280;
+						idealHeight = capabilities.height.max || 720;
+						console.log("Camera capabilities - Max resolution: " + idealWidth + "x" + idealHeight);
+					} else {
+						console.log("Camera capabilities not available, using default 1280x720");
+					}
+					
+					// Now request with the optimal resolution
+					const constraints = {
+						video: {
+							facingMode: deviceId,
+							width: { ideal: idealWidth },
+							height: { ideal: idealHeight }
+						},
+						audio: false
+					};
+					
+					return navigator.mediaDevices.getUserMedia(constraints);
+				})
 				.then(function (stream) {
 					video.srcObject = stream;
 					video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
 					video.play();
+					
+					// Wait for video metadata to load to get actual resolution
+					video.onloadedmetadata = function () {
+						canvas.width = video.videoWidth;
+						canvas.height = video.videoHeight;
+						ctx = canvas.getContext("2d", { willReadFrequently: true });
+						console.log("Camera resolution: " + video.videoWidth + "x" + video.videoHeight);
+					};
 					processFrame();
 				})
 				.catch(function (error) {
 					console.error("Error accessing camera:", error);
+					resultElement.innerText = "Error: " + error.message;
 				});
 		};
 

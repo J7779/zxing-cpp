@@ -1,0 +1,14 @@
+# Target labels
+ stb-populate
+# Source files and their labels
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/CMakeFiles/stb-populate
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/CMakeFiles/stb-populate.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/CMakeFiles/stb-populate-complete.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/stb-populate-build.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/stb-populate-configure.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/stb-populate-download.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/stb-populate-install.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/stb-populate-mkdir.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/stb-populate-patch.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/stb-populate-test.rule
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/stb-populate-update.rule

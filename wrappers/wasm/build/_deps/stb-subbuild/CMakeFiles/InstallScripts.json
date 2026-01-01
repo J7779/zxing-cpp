@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

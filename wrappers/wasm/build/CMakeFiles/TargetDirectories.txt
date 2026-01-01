@@ -1,0 +1,14 @@
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/CMakeFiles/zxing.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/CMakeFiles/zxing_reader.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/CMakeFiles/zxing_writer.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/CMakeFiles/edit_cache.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/CMakeFiles/rebuild_cache.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/CMakeFiles/list_install_components.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/CMakeFiles/install.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/CMakeFiles/install/local.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/ZXing/CMakeFiles/ZXing.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/ZXing/CMakeFiles/edit_cache.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/ZXing/CMakeFiles/rebuild_cache.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/ZXing/CMakeFiles/list_install_components.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/ZXing/CMakeFiles/install.dir
+C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/ZXing/CMakeFiles/install/local.dir
