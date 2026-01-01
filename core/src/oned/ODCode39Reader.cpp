@@ -77,6 +77,7 @@ Barcode Code39Reader::decodePattern(int rowNumber, PatternView& next, std::uniqu
 {
 	// minimal number of characters that must be present (including start, stop and checksum characters)
 	int minCharCount = _opts.validateCode39CheckSum() ? 4 : 3;
+	bool relaxed = _opts.relaxedLinearTolerance();
 	auto isStartOrStopSymbol = [](char c) { return c == '*'; };
 
 	// provide the indices with the narrow bars/spaces which have to be equally wide
@@ -90,7 +91,7 @@ Barcode Code39Reader::decodePattern(int rowNumber, PatternView& next, std::uniqu
 	if (!next.isValid())
 		return {};
 
-	if (!isStartOrStopSymbol(DecodeNarrowWidePattern(next, CHARACTER_ENCODINGS, ALPHABET))) // read off the start pattern
+	if (!isStartOrStopSymbol(DecodeNarrowWidePattern(next, CHARACTER_ENCODINGS, ALPHABET, relaxed))) // read off the start pattern
 		return {};
 
 	int xStart = next.pixelsInFront();
@@ -104,7 +105,7 @@ Barcode Code39Reader::decodePattern(int rowNumber, PatternView& next, std::uniqu
 		if (!next.skipSymbol() || !next.skipSingle(maxInterCharacterSpace))
 			return {};
 
-		txt += DecodeNarrowWidePattern(next, CHARACTER_ENCODINGS, ALPHABET);
+		txt += DecodeNarrowWidePattern(next, CHARACTER_ENCODINGS, ALPHABET, relaxed);
 		if (txt.back() == 0)
 			return {};
 	} while (!isStartOrStopSymbol(txt.back()));

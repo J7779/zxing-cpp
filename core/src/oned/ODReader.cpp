@@ -9,6 +9,7 @@
 
 #include "BinaryBitmap.h"
 #include "ReaderOptions.h"
+#include "ODAngledScanning.h"
 #include "ODCodabarReader.h"
 #include "ODCode128Reader.h"
 #include "ODCode39Reader.h"
@@ -22,6 +23,7 @@
 #include "Barcode.h"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 
 #ifdef PRINT_DEBUG
@@ -79,6 +81,9 @@ Reader::~Reader() = default;
 * rowStep is bigger as the image is taller, but is always at least 1. We've somewhat arbitrarily
 * decided that moving up and down by about 1/16 of the image is pretty good; we try more of the
 * image if "trying harder".
+* 
+* ENHANCED: When tryHarder is enabled, we now scan significantly more rows (up to 512 divisions)
+* to increase the chance of finding barcodes that may only be visible in certain scan lines.
 */
 static Barcodes DoDecode(const std::vector<std::unique_ptr<RowReader>>& readers, const BinaryBitmap& image, bool tryHarder,
 						 bool rotate, bool isPure, int maxSymbols, int minLineCount, bool returnErrors)
@@ -94,11 +99,12 @@ static Barcodes DoDecode(const std::vector<std::unique_ptr<RowReader>>& readers,
 		std::swap(width, height);
 
 	int middle = height / 2;
-	// TODO: find a better heuristic/parameterization if maxSymbols != 1
-	int rowStep = std::max(1, height / ((tryHarder && !isPure) ? (maxSymbols == 1 ? 256 : 512) : 32));
+	// ENHANCED: Increased scan density for better detection at distance
+	// In tryHarder mode, we now scan up to 512 divisions (was 256/512) and more rows (was 15, now 30)
+	int rowStep = std::max(1, height / ((tryHarder && !isPure) ? (maxSymbols == 1 ? 512 : 1024) : 64));
 	int maxLines = tryHarder ?
 		height :	// Look at the whole image, not just the center
-		15;			// 15 rows spaced 1/32 apart is roughly the middle half of the image
+		30;			// ENHANCED: 30 rows spaced 1/64 apart covers more of the image (was 15)
 
 	if (isPure)
 		minLineCount = 1;
@@ -266,6 +272,239 @@ out:
 	return res;
 }
 
+/**
+ * Decode at a specific angle using interpolated scanning.
+ * This helps detect barcodes that are not perfectly horizontal.
+ * Supports ALL angles from 0° to 90° including fully vertical barcodes.
+ */
+static Barcodes DoDecodeAngled(const std::vector<std::unique_ptr<RowReader>>& readers, const BinaryBitmap& image,
+							   float angleDegrees, bool tryHarder, int maxSymbols, int minLineCount, bool returnErrors)
+{
+	Barcodes res;
+	
+	const ImageView& buffer = image.buffer();
+	if (buffer.format() == ImageFormat::None || buffer.data(0, 0) == nullptr)
+		return res;
+	
+	int width = image.width();
+	int height = image.height();
+	
+	// For near-vertical angles, we scan "columns" instead of "rows"
+	bool isNearVertical = std::abs(angleDegrees) > 80.0f;
+	int scanDimension = isNearVertical ? width : height;
+	
+	int middle = scanDimension / 2;
+	int step = std::max(1, scanDimension / (tryHarder ? 128 : 32));
+	int maxLines = tryHarder ? scanDimension / step : 20;
+	
+	std::vector<std::unique_ptr<RowReader::DecodingState>> decodingState(readers.size());
+	PatternRow bars;
+	bars.reserve(128);
+	
+	for (int i = 0; i < maxLines; ++i) {
+		int stepsAboveOrBelow = (i + 1) / 2;
+		bool isAbove = (i & 0x01) == 0;
+		int scanPos = middle + step * (isAbove ? stepsAboveOrBelow : -stepsAboveOrBelow);
+		
+		if (scanPos < 0 || scanPos >= scanDimension)
+			break;
+		
+		// Sample the line first to estimate threshold adaptively
+		float angleRad = angleDegrees * 3.14159265358979f / 180.0f;
+		float cosA = std::cos(angleRad);
+		float sinA = std::sin(angleRad);
+		
+		// Calculate effective scan length
+		float effectiveLength;
+		if (std::abs(cosA) < 0.01f) {
+			effectiveLength = static_cast<float>(height);
+		} else if (std::abs(sinA) < 0.01f) {
+			effectiveLength = static_cast<float>(width);
+		} else {
+			effectiveLength = std::min(
+				static_cast<float>(width) / std::abs(cosA),
+				static_cast<float>(height) / std::abs(sinA)
+			);
+		}
+		
+		int sampleLength = static_cast<int>(effectiveLength);
+		std::vector<uint8_t> samples;
+		
+		float centerX, centerY;
+		if (isNearVertical) {
+			centerX = static_cast<float>(std::min(scanPos, width - 1));
+			centerY = height / 2.0f;
+		} else {
+			centerX = width / 2.0f;
+			centerY = static_cast<float>(scanPos);
+		}
+		
+		AngledScanner::SampleLineAtAngle(buffer, centerX, centerY, angleDegrees, sampleLength, samples);
+		
+		// Use adaptive threshold estimation
+		int threshold = AngledScanner::EstimateThreshold(samples);
+		
+		if (!AngledScanner::GetAngledPatternRow(buffer, scanPos, angleDegrees, bars, threshold))
+			continue;
+		
+		if (bars.size() < 10)
+			continue;
+		
+		// Try both directions
+		for (bool upsideDown : {false, true}) {
+			if (upsideDown)
+				std::reverse(bars.begin(), bars.end());
+			
+			for (size_t r = 0; r < readers.size(); ++r) {
+				PatternView next(bars);
+				do {
+					Barcode result = readers[r]->decodePattern(scanPos, next, decodingState[r]);
+					if (result.isValid() || (returnErrors && result.error())) {
+						IncrementLineCount(result);
+						
+						// Transform position from angled scan coordinates to image coordinates
+						auto oldPos = result.position();
+						int xStart = oldPos.topLeft().x;
+						int xStop = oldPos.topRight().x;
+						int barcodeHeight = std::max(20, std::abs(oldPos.bottomLeft().y - oldPos.topLeft().y));
+						auto newPos = AngledScanner::TransformPosition(
+							xStart, xStop, scanPos, angleDegrees, 
+							width, barcodeHeight, height);
+						result.setPosition(newPos);
+						
+						bool isDuplicate = false;
+						for (auto& other : res) {
+							if (result == other) {
+								IncrementLineCount(other);
+								isDuplicate = true;
+								break;
+							}
+						}
+						
+						if (!isDuplicate && result.format() != BarcodeFormat::None) {
+							res.push_back(std::move(result));
+							
+							if (maxSymbols && static_cast<int>(res.size()) >= maxSymbols)
+								return res;
+						}
+					}
+					next.shift(2 - (next.index() % 2));
+					next.extend();
+				} while (tryHarder && next.size());
+			}
+		}
+	}
+	
+	// Filter by line count
+#ifdef __cpp_lib_erase_if
+	std::erase_if(res, [&](auto&& r) { return r.lineCount() < minLineCount; });
+#else
+	auto it = std::remove_if(res.begin(), res.end(), [&](auto&& r) { return r.lineCount() < minLineCount; });
+	res.erase(it, res.end());
+#endif
+	
+	return res;
+}
+
+/**
+ * Decode with perspective correction for Z-axis tilted barcodes.
+ * When a barcode is tilted toward/away from camera (like on a curved bottle),
+ * the bars appear non-uniformly spaced. This tries multiple perspective corrections.
+ */
+static Barcodes DoDecodePerspective(const std::vector<std::unique_ptr<RowReader>>& readers, const BinaryBitmap& image,
+									bool tryHarder, int maxSymbols, int minLineCount, bool returnErrors)
+{
+	Barcodes res;
+	
+	const ImageView& buffer = image.buffer();
+	if (buffer.format() == ImageFormat::None || buffer.data(0, 0) == nullptr)
+		return res;
+	
+	int width = image.width();
+	int height = image.height();
+	
+	int middle = height / 2;
+	int step = std::max(1, height / (tryHarder ? 64 : 16));
+	int maxLines = tryHarder ? 32 : 10;
+	
+	std::vector<std::unique_ptr<RowReader::DecodingState>> decodingState(readers.size());
+	PatternRow bars;
+	bars.reserve(128);
+	
+	// Get perspective factors to try
+	auto perspectiveFactors = AngledScanner::GetPerspectiveFactors();
+	
+	for (float perspFactor : perspectiveFactors) {
+		if (maxSymbols && static_cast<int>(res.size()) >= maxSymbols)
+			break;
+			
+		for (int i = 0; i < maxLines; ++i) {
+			int stepsAboveOrBelow = (i + 1) / 2;
+			bool isAbove = (i & 0x01) == 0;
+			int rowNumber = middle + step * (isAbove ? stepsAboveOrBelow : -stepsAboveOrBelow);
+			
+			if (rowNumber < 0 || rowNumber >= height)
+				continue;
+			
+			// Sample with perspective to estimate threshold
+			std::vector<uint8_t> samples;
+			AngledScanner::SampleLineWithPerspective(buffer, width / 2.0f, static_cast<float>(rowNumber),
+													 width, perspFactor, samples);
+			int threshold = AngledScanner::EstimateThreshold(samples);
+			
+			if (!AngledScanner::GetPerspectivePatternRow(buffer, rowNumber, bars, threshold, perspFactor))
+				continue;
+			
+			if (bars.size() < 10)
+				continue;
+			
+			// Try both directions
+			for (bool upsideDown : {false, true}) {
+				if (upsideDown)
+					std::reverse(bars.begin(), bars.end());
+				
+				for (size_t r = 0; r < readers.size(); ++r) {
+					PatternView next(bars);
+					do {
+						Barcode result = readers[r]->decodePattern(rowNumber, next, decodingState[r]);
+						if (result.isValid() || (returnErrors && result.error())) {
+							IncrementLineCount(result);
+							
+							bool isDuplicate = false;
+							for (auto& other : res) {
+								if (result == other) {
+									IncrementLineCount(other);
+									isDuplicate = true;
+									break;
+								}
+							}
+							
+							if (!isDuplicate && result.format() != BarcodeFormat::None) {
+								res.push_back(std::move(result));
+								
+								if (maxSymbols && static_cast<int>(res.size()) >= maxSymbols)
+									return res;
+							}
+						}
+						next.shift(2 - (next.index() % 2));
+						next.extend();
+					} while (tryHarder && next.size());
+				}
+			}
+		}
+	}
+	
+	// Filter by line count
+#ifdef __cpp_lib_erase_if
+	std::erase_if(res, [&](auto&& r) { return r.lineCount() < minLineCount; });
+#else
+	auto it2 = std::remove_if(res.begin(), res.end(), [&](auto&& r) { return r.lineCount() < minLineCount; });
+	res.erase(it2, res.end());
+#endif
+	
+	return res;
+}
+
 Barcode Reader::decode(const BinaryBitmap& image) const
 {
 	auto result =
@@ -273,6 +512,22 @@ Barcode Reader::decode(const BinaryBitmap& image) const
 	
 	if (result.empty() && _opts.tryRotate())
 		result = DoDecode(_readers, image, _opts.tryHarder(), true, _opts.isPure(), 1, _opts.minLineCount(), _opts.returnErrors());
+
+	// ENHANCED: Try angled scanning if enabled and no result found
+	if (result.empty() && _opts.tryAngledScanning()) {
+		for (float angle : AngledScanner::GetScanAngles()) {
+			result = DoDecodeAngled(_readers, image, angle, _opts.tryHarder(), 1, 
+									_opts.minLineCount(), _opts.returnErrors());
+			if (!result.empty())
+				break;
+		}
+	}
+	
+	// ENHANCED: Try perspective correction for Z-axis tilted barcodes
+	if (result.empty() && _opts.tryAngledScanning()) {
+		result = DoDecodePerspective(_readers, image, _opts.tryHarder(), 1, 
+									 _opts.minLineCount(), _opts.returnErrors());
+	}
 
 	return FirstOrDefault(std::move(result));
 }
@@ -286,6 +541,35 @@ Barcodes Reader::decode(const BinaryBitmap& image, int maxSymbols) const
 							 _opts.minLineCount(), _opts.returnErrors());
 		resH.insert(resH.end(), resV.begin(), resV.end());
 	}
+	
+	// ENHANCED: Try angled scanning if enabled and we haven't found enough symbols
+	if ((!maxSymbols || Size(resH) < maxSymbols) && _opts.tryAngledScanning()) {
+		for (float angle : AngledScanner::GetScanAngles()) {
+			auto resA = DoDecodeAngled(_readers, image, angle, _opts.tryHarder(), 
+									   maxSymbols - Size(resH), _opts.minLineCount(), _opts.returnErrors());
+			for (auto& r : resA) {
+				if (!Contains(resH, r)) {
+					resH.push_back(std::move(r));
+					if (maxSymbols && Size(resH) >= maxSymbols)
+						return resH;
+				}
+			}
+		}
+	}
+	
+	// ENHANCED: Try perspective correction for Z-axis tilted barcodes
+	if ((!maxSymbols || Size(resH) < maxSymbols) && _opts.tryAngledScanning()) {
+		auto resP = DoDecodePerspective(_readers, image, _opts.tryHarder(), 
+										maxSymbols - Size(resH), _opts.minLineCount(), _opts.returnErrors());
+		for (auto& r : resP) {
+			if (!Contains(resH, r)) {
+				resH.push_back(std::move(r));
+				if (maxSymbols && Size(resH) >= maxSymbols)
+					return resH;
+			}
+		}
+	}
+	
 	return resH;
 }
 

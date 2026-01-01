@@ -66,10 +66,15 @@ class ReaderOptions
 #ifdef ZXING_EXPERIMENTAL_API
 	bool _tryDenoise               : 1;
 #endif
+	// New 1D enhancement options
+	bool _tryAngledScanning        : 1;  ///< Try scanning at intermediate angles (15, 30, 45, etc.)
+	bool _tryUpscale               : 1;  ///< Try upscaling small images for better 1D detection
+	bool _relaxedLinearTolerance   : 1;  ///< Use more relaxed pattern matching tolerances for 1D
 
 	uint8_t _minLineCount        = 2;
 	uint8_t _maxNumberOfSymbols  = 0xff;
 	uint16_t _downscaleThreshold = 500;
+	uint16_t _upscaleThreshold   = 400;  ///< Image size threshold below which to try upscaling (increased for better distance detection)
 	BarcodeFormats _formats      = BarcodeFormat::None;
 
 public:
@@ -94,6 +99,10 @@ public:
 		  ,
 		  _tryDenoise(0)
 #endif
+		  ,
+		  _tryAngledScanning(0),
+		  _tryUpscale(0),
+		  _relaxedLinearTolerance(0)
 	{}
 
 #define ZX_PROPERTY(TYPE, GETTER, SETTER, ...) \
@@ -121,6 +130,15 @@ public:
 	ZX_PROPERTY(bool, tryDenoise, setTryDenoise)
 #endif
 
+	/// Try scanning 1D barcodes at intermediate angles (15, 30, 45, 60, 75 degrees) for angled barcodes
+	ZX_PROPERTY(bool, tryAngledScanning, setTryAngledScanning)
+
+	/// Try upscaling small images for better 1D barcode detection at distance
+	ZX_PROPERTY(bool, tryUpscale, setTryUpscale)
+
+	/// Use more relaxed pattern matching tolerances for 1D barcodes (helps with blurry/distant images)
+	ZX_PROPERTY(bool, relaxedLinearTolerance, setRelaxedLinearTolerance)
+
 	/// Binarizer to use internally when using the ReadBarcode function
 	ZX_PROPERTY(Binarizer, binarizer, setBinarizer)
 
@@ -134,6 +152,10 @@ public:
 	/// Scale factor used during downscaling, meaningful values are 2, 3 and 4
 	// WARNING: this API is experimental and may change/disappear
 	ZX_PROPERTY(uint8_t, downscaleFactor, setDownscaleFactor)
+
+	/// Image size ( min(width, height) ) threshold below which to try upscaling for 1D barcodes
+	// WARNING: this API is experimental and may change/disappear
+	ZX_PROPERTY(uint16_t, upscaleThreshold, setUpscaleThreshold)
 
 	/// The number of scan lines in a linear barcode that have to be equal to accept the result, default is 2
 	ZX_PROPERTY(uint8_t, minLineCount, setMinLineCount)

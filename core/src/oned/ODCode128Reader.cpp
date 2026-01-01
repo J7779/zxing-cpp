@@ -7,6 +7,7 @@
 #include "ODCode128Reader.h"
 
 #include "ODCode128Patterns.h"
+#include "ReaderOptions.h"
 #include "Barcode.h"
 #include "ZXAlgorithms.h"
 
@@ -18,8 +19,13 @@
 
 namespace ZXing::OneD {
 
+// ENHANCED: Standard tolerances
 static const float MAX_AVG_VARIANCE = 0.25f;
 static const float MAX_INDIVIDUAL_VARIANCE = 0.7f;
+
+// ENHANCED: Relaxed tolerances for distant/blurry barcodes
+static const float RELAXED_MAX_AVG_VARIANCE = 0.35f;
+static const float RELAXED_MAX_INDIVIDUAL_VARIANCE = 0.85f;
 
 static const int CODE_SHIFT = 98;
 
@@ -177,12 +183,16 @@ static auto E2E_PATTERNS = [] {
 
 Barcode Code128Reader::decodePattern(int rowNumber, PatternView& next, std::unique_ptr<DecodingState>&) const
 {
+	// ENHANCED: Use relaxed tolerances if configured for better distance/blur tolerance
+	const float avgVariance = _opts.relaxedLinearTolerance() ? RELAXED_MAX_AVG_VARIANCE : MAX_AVG_VARIANCE;
+	const float indVariance = _opts.relaxedLinearTolerance() ? RELAXED_MAX_INDIVIDUAL_VARIANCE : MAX_INDIVIDUAL_VARIANCE;
+	
 	int minCharCount = 4; // start + payload + checksum + stop
-	auto decodePattern = [](const PatternView& view, bool start = false) {
+	auto decodePattern = [avgVariance, indVariance](const PatternView& view, bool start = false) {
 		// This is basically the reference algorithm from the specification
 		int code = IndexOf(E2E_PATTERNS, ToInt(NormalizedE2EPattern<CHAR_LEN>(view, CHAR_MODS)));
 		if (code == -1 && !start) // if the reference algo fails, give the original upstream version a try (required to decode a few samples)
-			code = DecodeDigit(view, Code128::CODE_PATTERNS, MAX_AVG_VARIANCE, MAX_INDIVIDUAL_VARIANCE);
+			code = DecodeDigit(view, Code128::CODE_PATTERNS, avgVariance, indVariance);
 		return code;
 	};
 

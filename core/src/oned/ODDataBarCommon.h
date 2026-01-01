@@ -75,10 +75,13 @@ inline bool IsGuard(int a, int b)
 	return a > b * 3 / 4 - 2 && a < b * 5 / 4 + 2;
 }
 
-inline bool IsCharacter(const PatternView& view, int modules, float modSizeRef)
+// Standard tolerance: 0.1f (10%)
+// Relaxed tolerance: 0.15f (15%) - better for distant/angled barcodes
+inline bool IsCharacter(const PatternView& view, int modules, float modSizeRef, bool relaxed = false)
 {
 	float err = std::abs(float(view.sum()) / modules / modSizeRef - 1);
-	return err < 0.1f;
+	float tolerance = relaxed ? 0.15f : 0.1f;
+	return err < tolerance;
 }
 
 struct Character

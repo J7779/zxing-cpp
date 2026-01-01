@@ -373,6 +373,7 @@ if (ZXING_READERS AND ZXING_ENABLE_1D)
         src/oned/ODReader.h
         src/oned/ODReader.cpp
         src/oned/ODRowReader.h
+        src/oned/ODAngledScanning.h
     )
 endif()
 if (ZXING_WRITERS_OLD AND ZXING_ENABLE_1D)

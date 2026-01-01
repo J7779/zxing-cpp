@@ -17,13 +17,14 @@ Barcode ITFReader::decodePattern(int rowNumber, PatternView& next, std::unique_p
 {
 	const int minCharCount = _opts.formats().count() == 1 ? 4 : 6; // if we are only looking for ITF, we accept shorter symbols
 	const int minQuietZone = 6; // spec requires 10
+	bool relaxed = _opts.relaxedLinearTolerance();
 
 	next = FindLeftGuard(next, 4 + 10 + 3, FixedPattern<4, 4>{1, 1, 1, 1}, minQuietZone);
 	if (!next.isValid())
 		return {};
 
-	// get threshold of first character pair
-	auto threshold = NarrowWideThreshold(next.subView(4, 10));
+	// get threshold of first character pair (use relaxed mode if enabled)
+	auto threshold = NarrowWideThreshold(next.subView(4, 10), relaxed);
 	if (!threshold.isValid())
 		return {};
 	// check that each bar/space in the start pattern is < threshold
@@ -40,15 +41,20 @@ Barcode ITFReader::decodePattern(int rowNumber, PatternView& next, std::unique_p
 	std::string txt;
 	txt.reserve(20);
 
+	// For relaxed mode, allow wider tolerance in bar/space validation
+	int toleranceFactor = relaxed ? 4 : 3;
+
 	while (next.isValid()) {
-		// look for end-of-symbol
-		if (next[3] > threshold.space * 3)
+		// look for end-of-symbol (relaxed allows wider space tolerance)
+		int endThreshold = relaxed ? 4 : 3;
+		if (next[3] > threshold.space * endThreshold)
 			break;
 
 		BarAndSpace<int> digits, numWide;
 		bool bad = false;
 		for (int i = 0; i < 10; ++i) {
-			bad |= next[i] > threshold[i] * 3 || next[i] < threshold[i] / 3;
+			// Relaxed mode allows more variance from threshold
+			bad |= next[i] > threshold[i] * toleranceFactor || next[i] < threshold[i] / toleranceFactor;
 			numWide[i] += next[i] > threshold[i];
 			digits[i] += weights[i/2] * (next[i] > threshold[i]);
 		}
@@ -60,7 +66,7 @@ Barcode ITFReader::decodePattern(int rowNumber, PatternView& next, std::unique_p
 			txt.push_back(ToDigit(digits[i] == 11 ? 0 : digits[i]));
 
 		// update threshold to support scanning slanted symbols (scanned non-perpendicular)
-		threshold = NarrowWideThreshold(next);
+		threshold = NarrowWideThreshold(next, relaxed);
 
 		next.skipSymbol();
 	}

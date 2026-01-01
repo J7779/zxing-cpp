@@ -143,9 +143,10 @@ public:
 	 * bars/spaces. Where wide ones are between 2 and 3 times as wide as the narrow ones.
 	 *
 	 * @param view containing one character
+	 * @param relaxed if true, use more permissive tolerance for distant/angled barcodes (default: false)
 	 * @return threshold value for bars and spaces
 	 */
-	static BarAndSpaceI NarrowWideThreshold(const PatternView& view)
+	static BarAndSpaceI NarrowWideThreshold(const PatternView& view, bool relaxed = false)
 	{
 		BarAndSpaceI m = {view[0], view[1]};
 		BarAndSpaceI M = m;
@@ -155,15 +156,24 @@ public:
 		// the max-spread check between bar/space depends on whether both have seen narrow and wide
 		int maxSpread = M[0] >= 2 * m[0] && M[1] >= 2 * m[1] ? 2 : 4;
 
+		// With relaxed tolerances, allow more variation in bar/space widths
+		// This helps with distant or angled 1D barcodes where module sizes may vary more
+		int wideNarrowRatioMax = relaxed ? 5 : 4;       // relaxed: wide <= 5 * narrow (vs 4)
+		int spreadMultiplier = relaxed ? 3 : 1;         // relaxed: 3x spread tolerance (vs 1x)
+
 		BarAndSpaceI res;
 		for (int i = 0; i < 2; ++i) {
 			// check that
-			//  a) wide <= 4 * narrow
+			//  a) wide <= wideNarrowRatioMax * narrow (relaxed: 5, standard: 4)
 			//  b) bars and spaces are not more than a factor of spread apart from each other
-			if (M[i] > 4 * (m[i] + 1) || M[i] > maxSpread * M[i + 1] || m[i] > maxSpread * (m[i + 1] + 1))
+			int effectiveMaxSpread = relaxed ? maxSpread * spreadMultiplier : maxSpread;
+			if (M[i] > wideNarrowRatioMax * (m[i] + 1) || M[i] > effectiveMaxSpread * M[i + 1] || m[i] > effectiveMaxSpread * (m[i + 1] + 1))
 				return {};
 			// the threshold is the average of min and max but at least 1.5 * min
-			res[i] = std::max((m[i] + M[i]) / 2, m[i] * 3 / 2);
+			// For relaxed mode, use a slightly lower minimum multiplier (1.4) for better tolerance
+			int minMultiplier = relaxed ? 7 : 3; // 7/5 = 1.4, 3/2 = 1.5
+			int minDivisor = relaxed ? 5 : 2;
+			res[i] = std::max((m[i] + M[i]) / 2, m[i] * minMultiplier / minDivisor);
 		}
 
 		return res;
@@ -172,16 +182,20 @@ public:
 	/**
 	 * @brief ToNarrowWidePattern takes a PatternView, calculates a NarrowWideThreshold and returns int where a '0' bit
 	 * means narrow and a '1' bit means 'wide'.
+	 * @param relaxed if true, use more permissive tolerance for distant/angled barcodes (default: false)
 	 */
-	static int NarrowWideBitPattern(const PatternView& view)
+	static int NarrowWideBitPattern(const PatternView& view, bool relaxed = false)
 	{
-		const auto threshold = NarrowWideThreshold(view);
+		const auto threshold = NarrowWideThreshold(view, relaxed);
 		if (!threshold.isValid())
 			return -1;
 
+		// With relaxed tolerance, allow slightly wider variance from threshold
+		int toleranceFactor = relaxed ? 3 : 2; // relaxed: 3x threshold (vs 2x)
+
 		int pattern = 0;
 		for (int i = 0; i < view.size(); ++i) {
-			if (view[i] > threshold[i] * 2)
+			if (view[i] > threshold[i] * toleranceFactor)
 				return -1;
 			AppendBit(pattern, view[i] > threshold[i]);
 		}
@@ -201,9 +215,9 @@ public:
 	}
 
 	template<typename INDEX, typename ALPHABET>
-	static char DecodeNarrowWidePattern(const PatternView& view, const INDEX& table, const ALPHABET& alphabet)
+	static char DecodeNarrowWidePattern(const PatternView& view, const INDEX& table, const ALPHABET& alphabet, bool relaxed = false)
 	{
-		return LookupBitPattern(NarrowWideBitPattern(view), table, alphabet);
+		return LookupBitPattern(NarrowWideBitPattern(view, relaxed), table, alphabet);
 	}
 };
 

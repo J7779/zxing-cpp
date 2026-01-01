@@ -1,198 +1,1310 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 	<title>zxing-cpp/wasm live demo</title>
 	<link rel="shortcut icon" href="#" />
+	<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.min.js"></script>
 	<script src="zxing_reader.js"></script>
+	<style>
+		body { font-family: Arial, sans-serif; text-align: center; margin: 10px; background: #1a1a2e; color: #eee; }
+		h2 { color: #00d4ff; }
+		a { color: #00d4ff; }
+		.main-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 15px; }
+		.video-section { position: relative; }
+		.video-container { position: relative; display: inline-block; }
+		#canvas { border: 3px solid #333; border-radius: 8px; max-width: 100%; }
+		#detectionOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+		.scan-zone { position: absolute; border: 3px solid #00ff00; background: transparent; pointer-events: none; box-sizing: border-box; z-index: 5; }
+		.scan-zone::before { content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px; border: 3px solid rgba(0,255,0,0.3); animation: pulse 2s infinite; }
+		.scan-zone-label { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); background: #00ff00; color: black; font-size: 10px; padding: 2px 8px; border-radius: 3px; white-space: nowrap; }
+		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+		.controls { background: #16213e; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+		.controls select, .controls input[type="range"] { padding: 5px; margin: 3px; background: #0f3460; color: #eee; border: 1px solid #00d4ff; border-radius: 4px; }
+		.controls label { margin: 0 8px; cursor: pointer; }
+		.controls input[type="checkbox"] { cursor: pointer; }
+		#result { font-size: 20px; font-weight: bold; padding: 15px; background: #0f3460; border-radius: 8px; margin: 10px auto; max-width: 640px; min-height: 30px; }
+		#result.found { background: #1b4332; border: 2px solid #00ff00; color: #00ff00; }
+		#result.not-found { background: #3d0000; border: 2px solid #ff4444; color: #ff6666; }
+		.history-panel { background: #16213e; padding: 15px; border-radius: 8px; width: 320px; text-align: left; max-height: 500px; overflow-y: auto; }
+		.history-panel h3 { margin: 0 0 10px 0; color: #00d4ff; border-bottom: 1px solid #0f3460; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+		.history-item { padding: 10px; margin: 8px 0; background: #0f3460; border-radius: 6px; border-left: 4px solid #00ff00; word-break: break-all; }
+		.history-item .format { font-size: 11px; color: #00d4ff; font-weight: bold; }
+		.history-item .time { font-size: 10px; color: #888; float: right; }
+		.history-item .text { font-family: monospace; font-size: 14px; margin-top: 5px; }
+		.history-item .debug-img { margin-top: 8px; max-width: 100%; border: 1px solid #333; border-radius: 4px; cursor: pointer; }
+		.history-item .debug-img:hover { border-color: #00d4ff; }
+		.clear-btn { background: #e94560; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+		.clear-btn:hover { background: #ff6b6b; }
+		.stats { font-size: 11px; color: #888; margin-top: 8px; }
+		.zone-slider { display: inline-block; margin: 10px 0; }
+		.zone-slider input { width: 120px; vertical-align: middle; }
+		.debug-panel { background: #16213e; padding: 15px; border-radius: 8px; width: 320px; text-align: center; }
+		.debug-panel h3 { margin: 0 0 10px 0; color: #00d4ff; border-bottom: 1px solid #0f3460; padding-bottom: 10px; }
+		#debugCanvas { border: 2px solid #333; border-radius: 4px; max-width: 100%; background: #000; }
+		.debug-label { font-size: 11px; color: #888; margin-top: 5px; }
+		.detection-box { position: absolute; border: 2px solid #ff00ff; background: rgba(255,0,255,0.1); pointer-events: none; box-sizing: border-box; }
+		.detection-label { position: absolute; top: -20px; left: 0; background: #ff00ff; color: white; font-size: 10px; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
+		.model-status { font-size: 12px; padding: 8px; background: #0f3460; border-radius: 4px; margin: 10px 0; }
+		.model-status.loading { color: #ffaa00; }
+		.model-status.ready { color: #00ff00; }
+		.model-status.error { color: #ff4444; }
+	</style>
 </head>
+<body>
+	<h2>zxing-cpp/wasm Barcode Scanner</h2>
+	<div class="controls">
+		<div id="modelStatus" class="model-status loading">Loading NanoDet ONNX model...</div>
+		<div>
+			Camera: <select id="cameraSelector"><option value="user">Front</option><option value="environment" selected>Back</option></select>
+			Format: <select id="format">
+				<option value="" selected>Any</option>
+				<option value="LinearCodes">Linear Codes</option>
+				<option value="MatrixCodes">Matrix Codes</option>
+				<option value="Code128">Code128</option>
+				<option value="EAN13">EAN-13</option>
+				<option value="UPCA">UPC-A</option>
+				<option value="QRCode">QRCode</option>
+				<option value="DataMatrix">DataMatrix</option>
+			</select>
+			Mode: <select id="mode"><option value="true" selected>Normal</option><option value="false">Fast</option></select>
+			Binarizer: <select id="binarizer"><option value="LocalAverage" selected>LocalAverage</option><option value="GlobalHistogram">GlobalHistogram</option><option value="BoolCast">BoolCast</option></select>
+		</div>
+		<div style="margin-top:10px;">
+			<label><input type="checkbox" id="tryRotate" checked> Rotate</label>
+			<label><input type="checkbox" id="tryAngledScanning" checked> Angled</label>
+			<label><input type="checkbox" id="tryUpscale" checked> Upscale</label>
+			<label><input type="checkbox" id="relaxedTolerance" checked> Relaxed</label>
+			<label><input type="checkbox" id="useScanZone" checked> Scan Zone</label>
+			<label><input type="checkbox" id="useNanoDet" checked> <strong>NanoDet AI</strong></label>
+			<label><input type="checkbox" id="useConsensus" checked> Consensus</label>
+		</div>
+		<div style="margin-top:10px;">
+			<label><input type="checkbox" id="showDebugImage" checked> Save Debug to History</label>
+			<label><input type="checkbox" id="liveDebugStream" checked> Live Debug View</label>
+			<label><input type="checkbox" id="preprocess"> Preprocess</label>
+			<label><input type="checkbox" id="showDetections" checked> Show Detection Boxes</label>
+		</div>
+		<div class="zone-slider">
+			Zone: <input type="range" id="zoneSize" min="20" max="100" value="50"> <span id="zoneSizeLabel">50%</span>
+			&nbsp;|&nbsp;
+			NanoDet Confidence: <input type="range" id="nanodetConfidence" min="10" max="95" value="30"> <span id="nanodetConfidenceLabel">30%</span>
+			&nbsp;|&nbsp;
+			Model Input: <span style="color:#0f0;">416×416 (fixed)</span>
+			<input type="hidden" id="modelInputSize" value="416">
+			&nbsp;|&nbsp;
+			Consensus: <input type="range" id="consensusFrames" min="3" max="10" value="3"> <span id="consensusFramesLabel">3</span>
+		</div>
+		
+		<!-- COMPREHENSIVE IMAGE PROCESSING CONTROLS -->
+		<details id="imgProcessControls" style="margin-top:10px;background:#1a1a2e;padding:12px;border-radius:8px;text-align:left;">
+			<summary style="cursor:pointer;color:#0af;font-weight:bold;font-size:14px;">IMAGE PROCESSING (OpenCV-style) - Click to Expand</summary>
+			
+			<!-- BRIGHTNESS/CONTRAST/GAMMA -->
+			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
+				<legend style="color:#0af;font-weight:bold;">Brightness / Contrast / Gamma</legend>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div>Brightness: <input type="range" id="imgBrightness" min="-100" max="100" value="0" style="width:100px;"> <span id="imgBrightnessLabel">0</span></div>
+					<div>Contrast: <input type="range" id="imgContrast" min="5" max="30" value="10" style="width:100px;"> <span id="imgContrastLabel">1.0</span></div>
+					<div>Gamma: <input type="range" id="imgGamma" min="1" max="30" value="10" style="width:100px;"> <span id="imgGammaLabel">1.0</span></div>
+					<div><label><input type="checkbox" id="imgInvert"> Invert Image</label></div>
+				</div>
+			</fieldset>
+			
+			<!-- HISTOGRAM -->
+			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
+				<legend style="color:#0af;font-weight:bold;">Histogram Equalization</legend>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div><label><input type="checkbox" id="imgHistEq"> Histogram Equalize</label></div>
+					<div><label><input type="checkbox" id="imgCLAHE"> CLAHE (Adaptive)</label></div>
+					<div>CLAHE Clip: <input type="range" id="imgCLAHEClip" min="1" max="100" value="40" style="width:80px;"> <span id="imgCLAHEClipLabel">4.0</span></div>
+					<div>CLAHE Tiles: <input type="range" id="imgCLAHETile" min="2" max="16" value="8" style="width:80px;"> <span id="imgCLAHETileLabel">8</span></div>
+				</div>
+			</fieldset>
+			
+			<!-- BLUR -->
+			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
+				<legend style="color:#0af;font-weight:bold;">Blur / Smoothing</legend>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div>Type: <select id="imgBlurType" style="width:120px;">
+						<option value="0">None</option>
+						<option value="1">Box Blur</option>
+						<option value="2">Gaussian Blur</option>
+						<option value="3">Median Blur</option>
+						<option value="4">Bilateral Filter</option>
+					</select></div>
+					<div>Radius: <input type="range" id="imgBlurRadius" min="0" max="10" value="1" style="width:80px;"> <span id="imgBlurRadiusLabel">1</span></div>
+					<div>Gaussian σ: <input type="range" id="imgGaussSigma" min="1" max="50" value="10" style="width:80px;"> <span id="imgGaussSigmaLabel">1.0</span></div>
+					<div>Bilateral Color σ: <input type="range" id="imgBilateralColor" min="1" max="150" value="50" style="width:80px;"> <span id="imgBilateralColorLabel">50</span></div>
+					<div style="grid-column:span 2;">Bilateral Space σ: <input type="range" id="imgBilateralSpace" min="1" max="150" value="50" style="width:80px;"> <span id="imgBilateralSpaceLabel">50</span></div>
+				</div>
+			</fieldset>
+			
+			<!-- SHARPEN -->
+			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
+				<legend style="color:#0af;font-weight:bold;">Sharpening</legend>
+				<div><label><input type="checkbox" id="imgSharpen"> Enable Sharpen</label>
+				Amount: <input type="range" id="imgSharpenAmount" min="0" max="50" value="10" style="width:100px;"> <span id="imgSharpenAmountLabel">1.0</span></div>
+			</fieldset>
+			
+			<!-- EDGE DETECTION -->
+			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
+				<legend style="color:#0af;font-weight:bold;">Edge Detection</legend>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div>Type: <select id="imgEdgeType" style="width:120px;">
+						<option value="0">None</option>
+						<option value="1">Sobel</option>
+						<option value="2">Scharr</option>
+						<option value="3">Laplacian</option>
+						<option value="4">Canny</option>
+					</select></div>
+					<div>Sobel KSize: <input type="range" id="imgSobelK" min="1" max="7" value="3" step="2" style="width:80px;"> <span id="imgSobelKLabel">3</span></div>
+					<div>Canny Low: <input type="range" id="imgCannyLow" min="0" max="255" value="50" style="width:80px;"> <span id="imgCannyLowLabel">50</span></div>
+					<div>Canny High: <input type="range" id="imgCannyHigh" min="0" max="255" value="150" style="width:80px;"> <span id="imgCannyHighLabel">150</span></div>
+				</div>
+			</fieldset>
+			
+			<!-- THRESHOLDING -->
+			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
+				<legend style="color:#0af;font-weight:bold;">Thresholding (OpenCV-style)</legend>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div style="grid-column:span 2;">Type: <select id="imgThreshType" style="width:200px;">
+						<option value="0">None (use ZXing binarizer)</option>
+						<option value="1">Binary (THRESH_BINARY)</option>
+						<option value="2">Binary Inv (THRESH_BINARY_INV)</option>
+						<option value="3">Truncate (THRESH_TRUNC)</option>
+						<option value="4">To Zero (THRESH_TOZERO)</option>
+						<option value="5">To Zero Inv (THRESH_TOZERO_INV)</option>
+						<option value="6">Otsu (automatic)</option>
+						<option value="7">Adaptive Mean</option>
+						<option value="8">Adaptive Gaussian</option>
+					</select></div>
+					<div>Threshold: <input type="range" id="imgThreshValue" min="0" max="255" value="128" style="width:80px;"> <span id="imgThreshValueLabel">128</span></div>
+					<div>Block Size: <input type="range" id="imgAdaptiveBlock" min="3" max="51" value="11" step="2" style="width:80px;"> <span id="imgAdaptiveBlockLabel">11</span></div>
+					<div style="grid-column:span 2;">Adaptive C: <input type="range" id="imgAdaptiveC" min="-20" max="20" value="2" style="width:150px;"> <span id="imgAdaptiveCLabel">2</span></div>
+				</div>
+			</fieldset>
+			
+			<!-- KRAKEN NLBIN -->
+			<fieldset style="border:1px solid #f0a;border-radius:4px;margin:10px 0;padding:10px;background:rgba(255,0,170,0.05);">
+				<legend style="color:#f0a;font-weight:bold;">Kraken NLBin (Non-Linear Binarization)</legend>
+				<p style="font-size:0.75em;color:#888;margin:0 0 8px 0;">Based on kraken.binarization by Kiessling &amp; Breuel (Apache 2.0). Advanced adaptive binarization for documents/barcodes.</p>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div style="grid-column:span 2;"><label><input type="checkbox" id="imgNlbin"> <strong>Enable NLBin</strong> (overrides standard threshold)</label></div>
+					<div>Threshold: <input type="range" id="imgNlbinThresh" min="0" max="100" value="50" style="width:80px;"> <span id="imgNlbinThreshLabel">0.50</span></div>
+					<div>Zoom: <input type="range" id="imgNlbinZoom" min="10" max="100" value="50" style="width:80px;"> <span id="imgNlbinZoomLabel">0.50</span></div>
+					<div>Escale: <input type="range" id="imgNlbinEscale" min="1" max="30" value="10" style="width:80px;"> <span id="imgNlbinEscaleLabel">1.0</span></div>
+					<div>Border: <input type="range" id="imgNlbinBorder" min="0" max="40" value="10" style="width:80px;"> <span id="imgNlbinBorderLabel">0.10</span></div>
+					<div>Percentile: <input type="range" id="imgNlbinPerc" min="50" max="99" value="80" style="width:80px;"> <span id="imgNlbinPercLabel">80</span></div>
+					<div>Range: <input type="range" id="imgNlbinRange" min="5" max="50" value="20" style="width:80px;"> <span id="imgNlbinRangeLabel">20</span></div>
+					<div>Low %: <input type="range" id="imgNlbinLow" min="1" max="30" value="5" style="width:80px;"> <span id="imgNlbinLowLabel">5</span></div>
+					<div>High %: <input type="range" id="imgNlbinHigh" min="70" max="99" value="90" style="width:80px;"> <span id="imgNlbinHighLabel">90</span></div>
+				</div>
+			</fieldset>
+			
+			<!-- MORPHOLOGY -->
+			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
+				<legend style="color:#0af;font-weight:bold;">Morphological Operations</legend>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+					<div>Operation: <select id="imgMorphType" style="width:120px;">
+						<option value="0">None</option>
+						<option value="1">Erode</option>
+						<option value="2">Dilate</option>
+						<option value="3">Open</option>
+						<option value="4">Close</option>
+						<option value="5">Gradient</option>
+						<option value="6">Top Hat</option>
+						<option value="7">Black Hat</option>
+					</select></div>
+					<div>Kernel: <select id="imgMorphKernel" style="width:100px;">
+						<option value="0">Rectangle</option>
+						<option value="1">Cross</option>
+						<option value="2">Ellipse</option>
+					</select></div>
+					<div>Size: <input type="range" id="imgMorphSize" min="0" max="5" value="1" style="width:80px;"> <span id="imgMorphSizeLabel">1</span></div>
+					<div>Iterations: <input type="range" id="imgMorphIter" min="1" max="5" value="1" style="width:80px;"> <span id="imgMorphIterLabel">1</span></div>
+				</div>
+			</fieldset>
+			
+			<!-- BLOB REMOVAL -->
+			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
+				<legend style="color:#0af;font-weight:bold;">Noise / Blob Removal</legend>
+				<div><label><input type="checkbox" id="imgBlobRemove"> Remove Small Blobs</label>
+				Min Size: <input type="range" id="imgMinBlobSize" min="0" max="100" value="10" style="width:100px;"> <span id="imgMinBlobSizeLabel">10</span> px</div>
+			</fieldset>
+			
+			<!-- RESET BUTTON -->
+			<div style="text-align:center;margin-top:10px;">
+				<button id="resetImgParams" style="background:#e94560;color:white;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;">Reset All to Defaults</button>
+			</div>
+		</details>
+	</div>
 
-<body style="text-align: center">
-	<h2>zxing-cpp/wasm live demo</h2>
-	<p>
-		This is a simple demo of the wasm wrapper of <a href="https://github.com/zxing-cpp/zxing-cpp">zxing-cpp</a>
-		scanning for barcodes in a live video stream.
-	</p>
-
-	Camera:
-	<select id="cameraSelector">
-		<option value="user">Front Camera</option>
-		<option value="environment">Back Camera</option>
-	</select>
-	&nbsp;&nbsp;
-
-	Format:
-	<select id="format">
-		<option value="" selected="">Any</option>
-		<option value="Aztec">Aztec</option>
-		<option value="Code39">Codabar</option>
-		<option value="CODE_39">Code39</option>
-		<option value="Code93">Code93</option>
-		<option value="Code128">Code128</option>
-		<option value="DataMatrix">DataMatrix</option>
-		<option value="DataBar">DataBar</option>
-		<option value="DataBarExpanded">DataBarExpanded</option>
-		<option value="DataBarLimited">DataBarLimited</option>
-		<option value="DXFilmEdge">DXFilmEdge</option>
-		<option value="EAN8">EAN-8</option>
-		<option value="EAN13">EAN-13</option>
-		<option value="ITF">ITF</option>
-		<option value="PDF417">PDF417</option>
-		<option value="QRCode">QRCode</option>
-		<option value="MicroQRCode">Micro QRCode</option>
-		<option value="RMQRCode">rMQR Code</option>
-		<option value="UPCA">UPC-A</option>
-		<option value="UPCE">UPC-E</option>
-		<option value="LinearCodes">Linear Codes</option>
-		<option value="MatrixCodes">Matrix Codes</option>
-	</select>
-	&nbsp;&nbsp;
-
-	Mode:
-	<select id="mode">
-		<option value="true" selected="">Normal</option>
-		<option value="false">Fast</option>
-	</select>
-	<br /><br />
-
-	<canvas id="canvas"></canvas>
-	<br /><br />
-
-	<div id="result"></div>
+	<div class="main-container">
+		<div class="video-section">
+			<div class="video-container">
+				<canvas id="canvas"></canvas>
+				<div id="scanZone" class="scan-zone"><div class="scan-zone-label">NanoDet Input Zone</div></div>
+				<div id="detectionOverlay"></div>
+			</div>
+			<div id="result" class="not-found">Initializing...</div>
+			<div class="stats" id="stats">FPS: -- | Process: --ms | NanoDet: --ms</div>
+		</div>
+		<div class="debug-panel" id="debugPanel">
+			<h3>Live Debug View (What ZXing Sees)</h3>
+			<canvas id="debugCanvas"></canvas>
+			<div class="debug-label">Binarized image after processing</div>
+		</div>
+		<div class="history-panel">
+			<h3>Scan History <button class="clear-btn" id="clearBtn">Clear</button></h3>
+			<div id="historyList"><i>No barcodes scanned yet</i></div>
+		</div>
+	</div>
 
 	<script>
-		var zxing = ZXing().then(function (instance) {
-			zxing = instance; // this line is supposedly not required but with current emsdk it is :-/
+		// ===== ONNX Runtime Web + NanoDet Integration =====
+		let onnxSession = null;
+		let modelInputSize = 416;
+		let nanodetConfidence = 0.30;
+		
+		// Initialize ONNX Runtime
+		async function initONNX() {
+			try {
+				$('modelStatus').textContent = 'Loading NanoDet ONNX model...';
+				$('modelStatus').className = 'model-status loading';
+				
+				// Configure ONNX Runtime - use WASM backend (WebGL has issues with dynamic operations)
+				ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/';
+				
+				// Use WASM backend only - more compatible with dynamic models
+				const options = {
+					executionProviders: ['wasm'],
+					graphOptimizationLevel: 'all'
+				};
+				
+				// Use decoded model - outputs [x1, y1, x2, y2, score, class_id] directly
+				onnxSession = await ort.InferenceSession.create('nanodet_barcode_decoded.onnx', options);
+				
+				// Log model info
+				console.log('NanoDet Model loaded successfully');
+				console.log('Input names:', onnxSession.inputNames);
+				console.log('Output names:', onnxSession.outputNames);
+				
+				$('modelStatus').textContent = 'NanoDet DECODED model ready (WASM)';
+				$('modelStatus').className = 'model-status ready';
+				
+				// Update scan zone now that model is loaded
+				updateScanZone();
+				
+				return true;
+			} catch (error) {
+				console.error('Failed to load ONNX model:', error);
+				$('modelStatus').textContent = 'Model load failed: ' + error.message;
+				$('modelStatus').className = 'model-status error';
+				return false;
+			}
+		}
+		
+		// Preprocess image for NanoDet
+		function preprocessForNanoDet(imageData, srcWidth, srcHeight, targetSize) {
+			// Create temporary canvas for resizing
+			const tempCanvas = document.createElement('canvas');
+			tempCanvas.width = targetSize;
+			tempCanvas.height = targetSize;
+			const tempCtx = tempCanvas.getContext('2d');
+			
+			// Calculate letterbox padding to maintain aspect ratio
+			const scale = Math.min(targetSize / srcWidth, targetSize / srcHeight);
+			const newWidth = Math.round(srcWidth * scale);
+			const newHeight = Math.round(srcHeight * scale);
+			
+			// NanoDet uses TOP-LEFT padding (not centered!)
+			const padX = 0;
+			const padY = 0;
+			
+			// Fill with gray (128) for letterbox padding
+			tempCtx.fillStyle = '#808080';
+			tempCtx.fillRect(0, 0, targetSize, targetSize);
+			
+			// Draw source image to temp canvas
+			const srcCanvas = document.createElement('canvas');
+			srcCanvas.width = srcWidth;
+			srcCanvas.height = srcHeight;
+			const srcCtx = srcCanvas.getContext('2d');
+			const srcImgData = srcCtx.createImageData(srcWidth, srcHeight);
+			srcImgData.data.set(imageData);
+			srcCtx.putImageData(srcImgData, 0, 0);
+			
+			// Draw resized at top-left (NanoDet default)
+			tempCtx.drawImage(srcCanvas, 0, 0, newWidth, newHeight);
+			
+			// Get resized image data
+			const resizedData = tempCtx.getImageData(0, 0, targetSize, targetSize);
+			
+			// Convert to NCHW format with normalization (0-255 to 0-1, or model-specific)
+			const float32Data = new Float32Array(3 * targetSize * targetSize);
+			const pixels = resizedData.data;
+			
+			// NanoDet typically uses RGB normalized to 0-1 or with mean/std
+			// Common NanoDet normalization: (pixel / 255 - mean) / std
+			// Using ImageNet-style: mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+			const mean = [0.485, 0.456, 0.406];
+			const std = [0.229, 0.224, 0.225];
+			
+			for (let i = 0; i < targetSize * targetSize; i++) {
+				const pixelIdx = i * 4;
+				// NCHW format: all R, then all G, then all B
+				float32Data[i] = (pixels[pixelIdx] / 255 - mean[0]) / std[0];     // R
+				float32Data[targetSize * targetSize + i] = (pixels[pixelIdx + 1] / 255 - mean[1]) / std[1]; // G
+				float32Data[2 * targetSize * targetSize + i] = (pixels[pixelIdx + 2] / 255 - mean[2]) / std[2]; // B
+			}
+			
+			return {
+				tensor: float32Data,
+				scale: scale,
+				padX: padX,
+				padY: padY,
+				newWidth: newWidth,
+				newHeight: newHeight
+			};
+		}
+		
+		// Run NanoDet inference and get detections
+		async function runNanoDetInference(imageData, srcWidth, srcHeight) {
+			if (!onnxSession) return [];
+			
+			const targetSize = parseInt($('modelInputSize').value);
+			const { tensor, scale, padX, padY } = preprocessForNanoDet(imageData, srcWidth, srcHeight, targetSize);
+			
+			try {
+				// Create input tensor
+				const inputTensor = new ort.Tensor('float32', tensor, [1, 3, targetSize, targetSize]);
+				
+				// Run inference
+				const feeds = {};
+				feeds[onnxSession.inputNames[0]] = inputTensor;
+				const results = await onnxSession.run(feeds);
+				
+				// Parse NanoDet outputs - format depends on model export
+				// Common formats: [batch, num_detections, 6] where 6 = [x1, y1, x2, y2, score, class]
+				// Or separate outputs for boxes, scores, classes
+				const detections = parseNanoDetOutput(results, srcWidth, srcHeight, scale, padX, padY, targetSize);
+				
+				return detections;
+			} catch (error) {
+				console.error('NanoDet inference error:', error);
+				return [];
+			}
+		}
+		
+		// Parse NanoDet GFL output - optimized for speed
+		// Output shape: [1, 3598, 34] where 34 = 32 (DFL regression) + 2 (class scores)
+		// DFL: 4 edges × 8 bins = 32 values for distribution focal loss
+		// Class scores are at indices 32 and 33 (logits, need sigmoid)
+		let outputFormatLogged = false;
+		let anchorGrid = null; // Cache anchor points
+		
+		function parseNanoDetOutput(results, srcWidth, srcHeight, scale, padX, padY, targetSize) {
+			const detections = [];
+			const confidence = nanodetConfidence;
+			const regMax = 7; // 8 bins (0 to 7)
+			
+			// Get output tensor
+			const outputNames = Object.keys(results);
+			let outputData = null;
+			let outputShape = null;
+			
+			for (const name of outputNames) {
+				const tensor = results[name];
+				outputData = tensor.data;
+				outputShape = tensor.dims;
+			}
+			
+			if (!outputData) return [];
+			
+			const numBoxes = outputShape.length === 3 ? outputShape[1] : outputShape[0];
+			const boxSize = outputShape.length === 3 ? outputShape[2] : outputShape[1];
+			
+			// Detect output format:
+			// - boxSize == 6: Decoded format [x1, y1, x2, y2, score, class_id]
+			// - boxSize == 34: GFL format [32 DFL values + 2 class scores]
+			// - boxSize > 6 and != 34: GFL with different num_classes
+			
+			const isDecodedFormat = (boxSize === 6 || boxSize === 5);
+			
+			if (!outputFormatLogged) {
+				outputFormatLogged = true;
+				console.log(`Output: ${numBoxes} boxes, ${boxSize} values each, format=${isDecodedFormat ? 'DECODED' : 'GFL'}`);
+			}
+			
+			if (isDecodedFormat) {
+				// Already decoded: [x1, y1, x2, y2, score, class_id]
+				return parseDecodedOutput(outputData, numBoxes, boxSize, srcWidth, srcHeight, scale, padX, padY, confidence);
+			} else {
+				// Raw GFL format: needs decoding
+				return parseGFLOutput(outputData, numBoxes, boxSize, srcWidth, srcHeight, scale, padX, padY, targetSize, confidence, regMax);
+			}
+		}
+		
+		// Parse already-decoded output [x1, y1, x2, y2, score, class_id]
+		let decodedDebugLogged = false;
+		function parseDecodedOutput(outputData, numBoxes, boxSize, srcWidth, srcHeight, scale, padX, padY, confidence) {
+			const detections = [];
+			
+			// Debug: log first few boxes to verify format
+			if (!decodedDebugLogged) {
+				decodedDebugLogged = true;
+				console.log(`Decoded format: ${numBoxes} boxes x ${boxSize} values, scale=${scale.toFixed(3)}, pad=(${padX},${padY})`);
+				// Show top scoring boxes
+				let scores = [];
+				for (let i = 0; i < Math.min(numBoxes, 100); i++) {
+					scores.push({ idx: i, score: outputData[i * boxSize + 4] });
+				}
+				scores.sort((a, b) => b.score - a.score);
+				for (let j = 0; j < Math.min(5, scores.length); j++) {
+					const i = scores[j].idx;
+					const offset = i * boxSize;
+					console.log(`Top${j+1} box[${i}]: model=[${outputData[offset].toFixed(1)},${outputData[offset+1].toFixed(1)},${outputData[offset+2].toFixed(1)},${outputData[offset+3].toFixed(1)}] score=${outputData[offset+4].toFixed(3)} class=${boxSize>=6?outputData[offset+5]:0}`);
+				}
+			}
+			
+			for (let i = 0; i < numBoxes; i++) {
+				const offset = i * boxSize;
+				
+				const x1_model = outputData[offset];
+				const y1_model = outputData[offset + 1];
+				const x2_model = outputData[offset + 2];
+				const y2_model = outputData[offset + 3];
+				const score = outputData[offset + 4];
+				const classId = boxSize >= 6 ? outputData[offset + 5] : 0;
+				
+				if (score < confidence) continue;
+				
+				// Convert from model coords to original image coords
+				let x1 = (x1_model - padX) / scale;
+				let y1 = (y1_model - padY) / scale;
+				let x2 = (x2_model - padX) / scale;
+				let y2 = (y2_model - padY) / scale;
+				
+				// Clamp
+				x1 = Math.max(0, Math.min(srcWidth, x1));
+				y1 = Math.max(0, Math.min(srcHeight, y1));
+				x2 = Math.max(0, Math.min(srcWidth, x2));
+				y2 = Math.max(0, Math.min(srcHeight, y2));
+				
+				if (x2 - x1 < 10 || y2 - y1 < 10) continue;
+				
+				detections.push({
+					x1: Math.round(x1),
+					y1: Math.round(y1),
+					x2: Math.round(x2),
+					y2: Math.round(y2),
+					score: score,
+					classId: Math.round(classId)
+				});
+			}
+			
+			if (detections.length > 0) {
+				console.log(`Found ${detections.length} decoded detections above ${confidence.toFixed(2)}`);
+				// Log first 3 detections
+				for (let d = 0; d < Math.min(3, detections.length); d++) {
+					const det = detections[d];
+					console.log(`  Det${d}: img=[${det.x1},${det.y1},${det.x2},${det.y2}] score=${det.score.toFixed(3)}`);
+				}
+			}
+			
+			detections.sort((a, b) => b.score - a.score);
+			return applyNMS(detections.slice(0, 50), 0.45);
+		}
+		
+		// Parse raw GFL output [32 DFL + N class scores]
+		function parseGFLOutput(outputData, numBoxes, boxSize, srcWidth, srcHeight, scale, padX, padY, targetSize, confidence, regMax) {
+			const detections = [];
+			const numClasses = boxSize - 32;
+			const classOffset = 32;
+			// NanoDet-Plus uses strides [8, 16, 32, 64] for 416 input
+			// Output order: all stride-8 points, then stride-16, then stride-32, then stride-64
+			if (!anchorGrid || anchorGrid.targetSize !== targetSize || anchorGrid.numBoxes !== numBoxes) {
+				anchorGrid = { points: [], targetSize: targetSize, numBoxes: numBoxes };
+				
+				// Try different stride combinations to match numBoxes
+				const strideConfigs = [
+					[8, 16, 32, 64],  // NanoDet-Plus
+					[8, 16, 32],       // NanoDet standard
+					[8, 16, 32, 64, 128], // Larger
+				];
+				
+				let bestStrides = [8, 16, 32];
+				let bestDiff = Infinity;
+				
+				for (const strides of strideConfigs) {
+					let count = 0;
+					for (const s of strides) {
+						const grid = Math.ceil(targetSize / s);
+						count += grid * grid;
+					}
+					const diff = Math.abs(count - numBoxes);
+					if (diff < bestDiff) {
+						bestDiff = diff;
+						bestStrides = strides;
+					}
+				}
+				
+				console.log(`Using strides [${bestStrides}] for ${numBoxes} boxes (diff=${bestDiff})`);
+				
+				for (const stride of bestStrides) {
+					const gridSize = Math.ceil(targetSize / stride);
+					for (let y = 0; y < gridSize; y++) {
+						for (let x = 0; x < gridSize; x++) {
+							anchorGrid.points.push({
+								x: x * stride + stride / 2,
+								y: y * stride + stride / 2,
+								stride: stride
+							});
+						}
+					}
+				}
+				console.log(`Built anchor grid: ${anchorGrid.points.length} points for size ${targetSize}`);
+			}
+			
+			// One-time debug logging
+			if (!outputFormatLogged) {
+				outputFormatLogged = true;
+				console.log(`GFL Output: ${numBoxes} boxes, ${boxSize} values (32 DFL + ${numClasses} classes)`);
+				// Find best scoring box
+				let bestIdx = 0, bestLogit = -Infinity;
+				for (let i = 0; i < Math.min(numBoxes, 500); i++) {
+					for (let c = 0; c < numClasses; c++) {
+						const logit = outputData[i * boxSize + classOffset + c];
+						if (logit > bestLogit) {
+							bestLogit = logit;
+							bestIdx = i;
+						}
+					}
+				}
+				console.log(`Best box ${bestIdx}: class logit=${bestLogit.toFixed(3)}, score=${(1/(1+Math.exp(-bestLogit))).toFixed(3)}`);
+			}
+			
+			// Pre-compute threshold in logit space for fast filtering
+			const logitThreshold = Math.log(confidence / (1 - confidence));
+			
+			// Pre-compute DFL indices (0 to regMax)
+			const dflIndices = new Float32Array(regMax + 1);
+			for (let i = 0; i <= regMax; i++) dflIndices[i] = i;
+			
+			for (let i = 0; i < numBoxes; i++) {
+				const offset = i * boxSize;
+				
+				// Quick check: find max class logit (scores at indices 32+)
+				let maxLogit = -Infinity;
+				let maxClassId = 0;
+				for (let c = 0; c < numClasses; c++) {
+					const logit = outputData[offset + classOffset + c];
+					if (logit > maxLogit) {
+						maxLogit = logit;
+						maxClassId = c;
+					}
+				}
+				
+				// Early exit if below threshold
+				if (maxLogit < logitThreshold) continue;
+				
+				// Compute actual confidence score
+				const maxClassScore = 1 / (1 + Math.exp(-maxLogit));
+				
+				// Get anchor point for this box
+				const anchor = i < anchorGrid.points.length ? anchorGrid.points[i] : { x: 0, y: 0, stride: 8 };
+				
+				// Decode DFL distributions to distances (optimized - inline softmax)
+				// Each edge has 8 values (bins 0-7), softmax then weighted sum
+				function decodeDFL(startIdx) {
+					// Softmax
+					let maxVal = -Infinity;
+					for (let j = 0; j <= regMax; j++) {
+						if (outputData[startIdx + j] > maxVal) maxVal = outputData[startIdx + j];
+					}
+					let sum = 0;
+					const exps = new Float32Array(regMax + 1);
+					for (let j = 0; j <= regMax; j++) {
+						exps[j] = Math.exp(outputData[startIdx + j] - maxVal);
+						sum += exps[j];
+					}
+					// Weighted sum
+					let dist = 0;
+					for (let j = 0; j <= regMax; j++) {
+						dist += (exps[j] / sum) * j;
+					}
+					return dist;
+				}
+				
+				const distLeft = decodeDFL(offset);
+				const distTop = decodeDFL(offset + 8);
+				const distRight = decodeDFL(offset + 16);
+				const distBottom = decodeDFL(offset + 24);
+				
+				// Convert distances to bbox (distances are in stride units)
+				let x1 = anchor.x - distLeft * anchor.stride;
+				let y1 = anchor.y - distTop * anchor.stride;
+				let x2 = anchor.x + distRight * anchor.stride;
+				let y2 = anchor.y + distBottom * anchor.stride;
+				
+				// Debug first few high-confidence detections
+				if (detections.length < 3) {
+					console.log(`Det ${i}: anchor=(${anchor.x.toFixed(0)},${anchor.y.toFixed(0)},s=${anchor.stride}) dists=[${distLeft.toFixed(2)},${distTop.toFixed(2)},${distRight.toFixed(2)},${distBottom.toFixed(2)}] -> model[${x1.toFixed(0)},${y1.toFixed(0)},${x2.toFixed(0)},${y2.toFixed(0)}] score=${maxClassScore.toFixed(2)}`);
+				}
+				
+				// Convert from model coords back to original image coords
+				x1 = (x1 - padX) / scale;
+				y1 = (y1 - padY) / scale;
+				x2 = (x2 - padX) / scale;
+				y2 = (y2 - padY) / scale;
+				
+				// Clamp to image bounds
+				x1 = Math.max(0, Math.min(srcWidth, x1));
+				y1 = Math.max(0, Math.min(srcHeight, y1));
+				x2 = Math.max(0, Math.min(srcWidth, x2));
+				y2 = Math.max(0, Math.min(srcHeight, y2));
+				
+				// Skip invalid/tiny boxes
+				if (x2 - x1 < 10 || y2 - y1 < 10) continue;
+				
+				detections.push({
+					x1: Math.round(x1),
+					y1: Math.round(y1),
+					x2: Math.round(x2),
+					y2: Math.round(y2),
+					score: maxClassScore,
+					classId: maxClassId
+				});
+			}
+			
+			if (detections.length > 0) {
+				console.log(`Found ${detections.length} detections above ${confidence.toFixed(2)} threshold`);
+			}
+			
+			// Sort by score descending
+			detections.sort((a, b) => b.score - a.score);
+			
+			// Apply NMS (limit to top 50 for speed)
+			return applyNMS(detections.slice(0, 50), 0.45);
+		}
+		
+		// Non-Maximum Suppression
+		function applyNMS(detections, iouThreshold) {
+			const result = [];
+			const used = new Set();
+			
+			for (let i = 0; i < detections.length; i++) {
+				if (used.has(i)) continue;
+				
+				result.push(detections[i]);
+				
+				for (let j = i + 1; j < detections.length; j++) {
+					if (used.has(j)) continue;
+					
+					const iou = calculateIoU(detections[i], detections[j]);
+					if (iou > iouThreshold) {
+						used.add(j);
+					}
+				}
+			}
+			
+			return result;
+		}
+		
+		// Calculate Intersection over Union
+		function calculateIoU(box1, box2) {
+			const x1 = Math.max(box1.x1, box2.x1);
+			const y1 = Math.max(box1.y1, box2.y1);
+			const x2 = Math.min(box1.x2, box2.x2);
+			const y2 = Math.min(box1.y2, box2.y2);
+			
+			const intersection = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+			const area1 = (box1.x2 - box1.x1) * (box1.y2 - box1.y1);
+			const area2 = (box2.x2 - box2.x1) * (box2.y2 - box2.y1);
+			const union = area1 + area2 - intersection;
+			
+			return intersection / union;
+		}
+		
+		// Draw detection boxes on overlay (with offset for scan zone)
+		function drawDetectionBoxes(detections, offsetX = 0, offsetY = 0) {
+			const overlay = $('detectionOverlay');
+			overlay.innerHTML = '';
+			
+			if (!$('showDetections').checked) return;
+			
+			const rect = canvas.getBoundingClientRect();
+			const scaleX = rect.width / canvas.width;
+			const scaleY = rect.height / canvas.height;
+			
+			detections.forEach((det, idx) => {
+				const box = document.createElement('div');
+				box.className = 'detection-box';
+				box.style.left = ((det.x1 + offsetX) * scaleX) + 'px';
+				box.style.top = ((det.y1 + offsetY) * scaleY) + 'px';
+				box.style.width = ((det.x2 - det.x1) * scaleX) + 'px';
+				box.style.height = ((det.y2 - det.y1) * scaleY) + 'px';
+				
+				const label = document.createElement('div');
+				label.className = 'detection-label';
+				label.textContent = `Barcode ${idx + 1}: ${(det.score * 100).toFixed(0)}%`;
+				box.appendChild(label);
+				
+				overlay.appendChild(box);
+			});
+		}
+		
+		// Crop detected region from canvas
+		function cropDetection(ctx, detection, padding = 10) {
+			const x1 = Math.max(0, detection.x1 - padding);
+			const y1 = Math.max(0, detection.y1 - padding);
+			const x2 = Math.min(canvas.width, detection.x2 + padding);
+			const y2 = Math.min(canvas.height, detection.y2 + padding);
+			
+			const width = x2 - x1;
+			const height = y2 - y1;
+			
+			if (width <= 0 || height <= 0) return null;
+			
+			return {
+				imageData: ctx.getImageData(x1, y1, width, height),
+				x: x1,
+				y: y1,
+				width: width,
+				height: height
+			};
+		}
+		
+		// ===== ZXing Integration =====
+		let zxing = null;
+		ZXing().then(instance => { 
+			zxing = instance; 
+			// Configure consensus: 3 frames, need 2 matches
+			zxing.configureConsensus(3, 2);
+			// Enable debug image by default in demo (C++ default is OFF)
+			zxing.setReturnDebugImage(true);
+			// Enable live debug stream by default in demo
+			zxing.setLiveDebugStream(true);
+			
+			// Initialize ONNX after ZXing is ready
+			initONNX();
 		});
 
-		const cameraSelector = document.getElementById("cameraSelector");
-		const format = document.getElementById("format");
-		const mode = document.getElementById("mode");
-		const canvas = document.getElementById("canvas");
-		const resultElement = document.getElementById("result");
+		const $ = id => document.getElementById(id);
+		const canvas = $('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+		const debugCanvas = $('debugCanvas'), debugCtx = debugCanvas.getContext('2d', { willReadFrequently: true });
+		const video = document.createElement('video');
+		video.setAttribute('autoplay', ''); video.setAttribute('playsinline', 'true');
 
-		let ctx = canvas.getContext("2d", { willReadFrequently: true });
-		const video = document.createElement("video");
-		video.setAttribute("id", "video");
-		video.setAttribute("autoplay", "");
+		let history = [], fps = 0, frameCount = 0, lastFpsTime = performance.now();
+		let lastNanodetTime = 0;
 
-		function readBarcodeFromCanvas(canvas, format, mode) {
-			var imgWidth = canvas.width;
-			var imgHeight = canvas.height;
-			var imageData = canvas.getContext('2d').getImageData(0, 0, imgWidth, imgHeight);
-			var sourceBuffer = imageData.data;
+		// Update debug panel visibility
+		function updateDebugPanel() {
+			$('debugPanel').style.display = $('liveDebugStream').checked ? 'block' : 'none';
+		}
 
-			if (zxing != null) {
-				var buffer = zxing._malloc(sourceBuffer.byteLength);
-				zxing.HEAPU8.set(sourceBuffer, buffer);
-				var result = zxing.readBarcodeFromPixmap(buffer, imgWidth, imgHeight, mode, format);
-				zxing._free(buffer);
-				return result;
+		// Render debug image to debug canvas
+		function renderDebugImage(debugImageData, width, height) {
+			if (!debugImageData || width <= 0 || height <= 0) return;
+			try {
+				debugCanvas.width = width;
+				debugCanvas.height = height;
+				const imgData = debugCtx.createImageData(width, height);
+				const data = new Uint8Array(debugImageData);
+				imgData.data.set(data);
+				debugCtx.putImageData(imgData, 0, 0);
+			} catch (e) {
+				console.error('Error rendering debug image:', e);
+			}
+		}
+
+		$('nanodetConfidence').oninput = function() { 
+			nanodetConfidence = this.value / 100; 
+			$('nanodetConfidenceLabel').textContent = this.value + '%'; 
+		};
+		$('useConsensus').onchange = function() { if (zxing) zxing.clearConsensus(); };
+		$('showDebugImage').onchange = function() { if (zxing) zxing.setReturnDebugImage(this.checked); };
+		$('liveDebugStream').onchange = function() { 
+			if (zxing) zxing.setLiveDebugStream(this.checked);
+			updateDebugPanel();
+		};
+		$('consensusFrames').oninput = function() { 
+			const frames = parseInt(this.value);
+			const matches = Math.ceil(frames / 2) + 1; // Require majority + 1 for agreement
+			$('consensusFramesLabel').textContent = frames;
+			if (zxing) zxing.configureConsensus(frames, matches);
+		};
+		
+		// ===== COMPREHENSIVE IMAGE PROCESSING CONTROLS =====
+		function setParam(param, value) {
+			if (zxing) zxing.setImageParam(param, value);
+		}
+		
+		// Brightness/Contrast/Gamma
+		$('imgBrightness').oninput = function() { $('imgBrightnessLabel').textContent = this.value; setParam('brightness', parseFloat(this.value)); };
+		$('imgContrast').oninput = function() { const v = this.value/10; $('imgContrastLabel').textContent = v.toFixed(1); setParam('contrast', v); };
+		$('imgGamma').oninput = function() { const v = this.value/10; $('imgGammaLabel').textContent = v.toFixed(1); setParam('gamma', v); };
+		$('imgInvert').onchange = function() { setParam('invert', this.checked ? 1 : 0); };
+		
+		// Histogram
+		$('imgHistEq').onchange = function() { setParam('histogramEqualize', this.checked ? 1 : 0); };
+		$('imgCLAHE').onchange = function() { setParam('clahe', this.checked ? 1 : 0); };
+		$('imgCLAHEClip').oninput = function() { $('imgCLAHEClipLabel').textContent = (this.value/10).toFixed(1); setParam('claheClipLimit', parseFloat(this.value)); };
+		$('imgCLAHETile').oninput = function() { $('imgCLAHETileLabel').textContent = this.value; setParam('claheTileSize', parseFloat(this.value)); };
+		
+		// Blur
+		$('imgBlurType').onchange = function() { setParam('blurType', parseFloat(this.value)); };
+		$('imgBlurRadius').oninput = function() { $('imgBlurRadiusLabel').textContent = this.value; setParam('blurRadius', parseFloat(this.value)); };
+		$('imgGaussSigma').oninput = function() { const v = this.value/10; $('imgGaussSigmaLabel').textContent = v.toFixed(1); setParam('gaussianSigma', v); };
+		$('imgBilateralColor').oninput = function() { $('imgBilateralColorLabel').textContent = this.value; setParam('bilateralSigmaColor', parseFloat(this.value)); };
+		$('imgBilateralSpace').oninput = function() { $('imgBilateralSpaceLabel').textContent = this.value; setParam('bilateralSigmaSpace', parseFloat(this.value)); };
+		
+		// Sharpen
+		$('imgSharpen').onchange = function() { setParam('sharpen', this.checked ? 1 : 0); };
+		$('imgSharpenAmount').oninput = function() { const v = this.value/10; $('imgSharpenAmountLabel').textContent = v.toFixed(1); setParam('sharpenAmount', v); };
+		
+		// Edge Detection
+		$('imgEdgeType').onchange = function() { setParam('edgeType', parseFloat(this.value)); };
+		$('imgSobelK').oninput = function() { $('imgSobelKLabel').textContent = this.value; setParam('sobelKsize', parseFloat(this.value)); };
+		$('imgCannyLow').oninput = function() { $('imgCannyLowLabel').textContent = this.value; setParam('cannyLow', parseFloat(this.value)); };
+		$('imgCannyHigh').oninput = function() { $('imgCannyHighLabel').textContent = this.value; setParam('cannyHigh', parseFloat(this.value)); };
+		
+		// Thresholding
+		$('imgThreshType').onchange = function() { setParam('thresholdType', parseFloat(this.value)); };
+		$('imgThreshValue').oninput = function() { $('imgThreshValueLabel').textContent = this.value; setParam('thresholdValue', parseFloat(this.value)); };
+		$('imgAdaptiveBlock').oninput = function() { $('imgAdaptiveBlockLabel').textContent = this.value; setParam('adaptiveBlockSize', parseFloat(this.value)); };
+		$('imgAdaptiveC').oninput = function() { $('imgAdaptiveCLabel').textContent = this.value; setParam('adaptiveC', parseFloat(this.value)); };
+		
+		// Kraken NLBin
+		$('imgNlbin').onchange = function() { setParam('nlbinEnabled', this.checked ? 1 : 0); };
+		$('imgNlbinThresh').oninput = function() { const v = this.value/100; $('imgNlbinThreshLabel').textContent = v.toFixed(2); setParam('nlbinThreshold', v); };
+		$('imgNlbinZoom').oninput = function() { const v = this.value/100; $('imgNlbinZoomLabel').textContent = v.toFixed(2); setParam('nlbinZoom', v); };
+		$('imgNlbinEscale').oninput = function() { const v = this.value/10; $('imgNlbinEscaleLabel').textContent = v.toFixed(1); setParam('nlbinEscale', v); };
+		$('imgNlbinBorder').oninput = function() { const v = this.value/100; $('imgNlbinBorderLabel').textContent = v.toFixed(2); setParam('nlbinBorder', v); };
+		$('imgNlbinPerc').oninput = function() { $('imgNlbinPercLabel').textContent = this.value; setParam('nlbinPerc', parseFloat(this.value)); };
+		$('imgNlbinRange').oninput = function() { $('imgNlbinRangeLabel').textContent = this.value; setParam('nlbinRange', parseFloat(this.value)); };
+		$('imgNlbinLow').oninput = function() { $('imgNlbinLowLabel').textContent = this.value; setParam('nlbinLow', parseFloat(this.value)); };
+		$('imgNlbinHigh').oninput = function() { $('imgNlbinHighLabel').textContent = this.value; setParam('nlbinHigh', parseFloat(this.value)); };
+		
+		// Morphology
+		$('imgMorphType').onchange = function() { setParam('morphType', parseFloat(this.value)); };
+		$('imgMorphKernel').onchange = function() { setParam('morphKernelType', parseFloat(this.value)); };
+		$('imgMorphSize').oninput = function() { $('imgMorphSizeLabel').textContent = this.value; setParam('morphSize', parseFloat(this.value)); };
+		$('imgMorphIter').oninput = function() { $('imgMorphIterLabel').textContent = this.value; setParam('morphIterations', parseFloat(this.value)); };
+		
+		// Blob Removal
+		$('imgBlobRemove').onchange = function() { setParam('removeSmallBlobs', this.checked ? 1 : 0); };
+		$('imgMinBlobSize').oninput = function() { $('imgMinBlobSizeLabel').textContent = this.value; setParam('minBlobSize', parseFloat(this.value)); };
+		
+		// Reset button
+		$('resetImgParams').onclick = function() {
+			// Reset all controls to defaults
+			$('imgBrightness').value = 0; $('imgBrightnessLabel').textContent = '0';
+			$('imgContrast').value = 10; $('imgContrastLabel').textContent = '1.0';
+			$('imgGamma').value = 10; $('imgGammaLabel').textContent = '1.0';
+			$('imgInvert').checked = false;
+			$('imgHistEq').checked = false;
+			$('imgCLAHE').checked = false;
+			$('imgCLAHEClip').value = 40; $('imgCLAHEClipLabel').textContent = '4.0';
+			$('imgCLAHETile').value = 8; $('imgCLAHETileLabel').textContent = '8';
+			$('imgBlurType').value = '0';
+			$('imgBlurRadius').value = 1; $('imgBlurRadiusLabel').textContent = '1';
+			$('imgGaussSigma').value = 10; $('imgGaussSigmaLabel').textContent = '1.0';
+			$('imgBilateralColor').value = 50; $('imgBilateralColorLabel').textContent = '50';
+			$('imgBilateralSpace').value = 50; $('imgBilateralSpaceLabel').textContent = '50';
+			$('imgSharpen').checked = false;
+			$('imgSharpenAmount').value = 10; $('imgSharpenAmountLabel').textContent = '1.0';
+			$('imgEdgeType').value = '0';
+			$('imgSobelK').value = 3; $('imgSobelKLabel').textContent = '3';
+			$('imgCannyLow').value = 50; $('imgCannyLowLabel').textContent = '50';
+			$('imgCannyHigh').value = 150; $('imgCannyHighLabel').textContent = '150';
+			$('imgThreshType').value = '0';
+			$('imgThreshValue').value = 128; $('imgThreshValueLabel').textContent = '128';
+			$('imgAdaptiveBlock').value = 11; $('imgAdaptiveBlockLabel').textContent = '11';
+			$('imgAdaptiveC').value = 2; $('imgAdaptiveCLabel').textContent = '2';
+			// NLBin defaults
+			$('imgNlbin').checked = false;
+			$('imgNlbinThresh').value = 50; $('imgNlbinThreshLabel').textContent = '0.50';
+			$('imgNlbinZoom').value = 50; $('imgNlbinZoomLabel').textContent = '0.50';
+			$('imgNlbinEscale').value = 10; $('imgNlbinEscaleLabel').textContent = '1.0';
+			$('imgNlbinBorder').value = 10; $('imgNlbinBorderLabel').textContent = '0.10';
+			$('imgNlbinPerc').value = 80; $('imgNlbinPercLabel').textContent = '80';
+			$('imgNlbinRange').value = 20; $('imgNlbinRangeLabel').textContent = '20';
+			$('imgNlbinLow').value = 5; $('imgNlbinLowLabel').textContent = '5';
+			$('imgNlbinHigh').value = 90; $('imgNlbinHighLabel').textContent = '90';
+			// Morphology/Blob
+			$('imgMorphType').value = '0';
+			$('imgMorphKernel').value = '0';
+			$('imgMorphSize').value = 1; $('imgMorphSizeLabel').textContent = '1';
+			$('imgMorphIter').value = 1; $('imgMorphIterLabel').textContent = '1';
+			$('imgBlobRemove').checked = false;
+			$('imgMinBlobSize').value = 10; $('imgMinBlobSizeLabel').textContent = '10';
+			
+			// Send all reset values to C++
+			if (zxing) {
+				setParam('brightness', 0); setParam('contrast', 1.0); setParam('gamma', 1.0); setParam('invert', 0);
+				setParam('histogramEqualize', 0); setParam('clahe', 0); setParam('claheClipLimit', 40); setParam('claheTileSize', 8);
+				setParam('blurType', 0); setParam('blurRadius', 1); setParam('gaussianSigma', 1.0);
+				setParam('bilateralSigmaColor', 50); setParam('bilateralSigmaSpace', 50);
+				setParam('sharpen', 0); setParam('sharpenAmount', 1.0);
+				setParam('edgeType', 0); setParam('sobelKsize', 3); setParam('cannyLow', 50); setParam('cannyHigh', 150);
+				setParam('thresholdType', 0); setParam('thresholdValue', 128); setParam('adaptiveBlockSize', 11); setParam('adaptiveC', 2);
+				// NLBin reset
+				setParam('nlbinEnabled', 0); setParam('nlbinThreshold', 0.5); setParam('nlbinZoom', 0.5);
+				setParam('nlbinEscale', 1.0); setParam('nlbinBorder', 0.1); setParam('nlbinPerc', 80);
+				setParam('nlbinRange', 20); setParam('nlbinLow', 5); setParam('nlbinHigh', 90);
+				// Morphology/Blob reset
+				setParam('morphType', 0); setParam('morphKernelType', 0); setParam('morphSize', 1); setParam('morphIterations', 1);
+				setParam('removeSmallBlobs', 0); setParam('minBlobSize', 10);
+			}
+		};
+		
+		// Update scan zone overlay position - this controls what area is cropped for scanning
+		function updateScanZone() {
+			const zone = $('scanZone');
+			if (!$('useScanZone').checked) { 
+				zone.style.display = 'none'; 
+				return; 
+			}
+			zone.style.display = 'block';
+			
+			const pct = parseInt($('zoneSize').value) / 100;
+			const rect = canvas.getBoundingClientRect();
+			const scaleX = rect.width / canvas.width;
+			const scaleY = rect.height / canvas.height;
+			const w = canvas.width * pct;
+			const h = canvas.height * pct;
+			const x = (canvas.width - w) / 2;
+			const y = (canvas.height - h) / 2;
+			
+			zone.style.width = (w * scaleX) + 'px';
+			zone.style.height = (h * scaleY) + 'px';
+			zone.style.left = (x * scaleX) + 'px';
+			zone.style.top = (y * scaleY) + 'px';
+			
+			// Update label with info
+			const label = zone.querySelector('.scan-zone-label');
+			if (label) {
+				const zoneW = Math.floor(w);
+				const zoneH = Math.floor(h);
+				if ($('useNanoDet').checked && onnxSession) {
+					label.textContent = `Scan Zone: ${zoneW}×${zoneH} → NanoDet 416×416`;
+				} else {
+					label.textContent = `Scan Zone: ${zoneW}×${zoneH}`;
+				}
+			}
+		}
+		
+		// Zone slider handler
+		$('zoneSize').oninput = function() { 
+			$('zoneSizeLabel').textContent = this.value + '%'; 
+			updateScanZone(); 
+		};
+		$('useScanZone').onchange = updateScanZone;
+		
+		window.onresize = function() {
+			updateScanZone();
+			// Redraw detection boxes on resize
+			const overlay = $('detectionOverlay');
+			overlay.innerHTML = ''; // Clear and let next frame redraw
+		};
+		
+		$('useNanoDet').onchange = function() { updateScanZone(); };
+		// Model input size is now fixed at 416
+
+		function readBarcode(imageData, w, h) {
+			if (!zxing) return { error: 'Loading...' };
+			const buf = zxing._malloc(imageData.byteLength);
+			zxing.HEAPU8.set(imageData, buf);
+			
+			// Get live debug image if enabled
+			if ($('liveDebugStream').checked) {
+				const debugImg = zxing.getLiveDebugImage(buf, w, h, $('binarizer').value, $('preprocess').checked);
+				if (debugImg) {
+					renderDebugImage(debugImg, w, h);
+				}
+			}
+			
+			let result;
+			if ($('useConsensus').checked) {
+				// Use C++ consensus algorithm
+				result = zxing.readBarcodeFromPixmapWithConsensus(buf, w, h, 
+					$('mode').value === 'true', $('format').value, $('binarizer').value,
+					$('tryAngledScanning').checked, $('tryUpscale').checked, 
+					$('relaxedTolerance').checked, $('tryRotate').checked, $('preprocess').checked);
 			} else {
-				return { error: "ZXing not yet initialized" };
+				// Direct read without consensus
+				result = zxing.readBarcodeFromPixmap(buf, w, h, 
+					$('mode').value === 'true', $('format').value, $('binarizer').value,
+					$('tryAngledScanning').checked, $('tryUpscale').checked, 
+					$('relaxedTolerance').checked, $('tryRotate').checked, $('preprocess').checked);
+			}
+			
+			zxing._free(buf);
+			return result;
+		}
+
+		// Convert debug image data to data URL
+		function debugImageToDataUrl(debugImage, width, height) {
+			if (!debugImage || width <= 0 || height <= 0) return null;
+			try {
+				const tempCanvas = document.createElement('canvas');
+				tempCanvas.width = width;
+				tempCanvas.height = height;
+				const tempCtx = tempCanvas.getContext('2d');
+				const imgData = tempCtx.createImageData(width, height);
+				// Copy the RGBA data
+				const data = new Uint8Array(debugImage);
+				imgData.data.set(data);
+				tempCtx.putImageData(imgData, 0, 0);
+				return tempCanvas.toDataURL('image/png');
+			} catch (e) {
+				console.error('Error creating debug image:', e);
+				return null;
 			}
 		}
 
-		function drawResult(code) {
+		function addToHistory(format, text, debugImageUrl) {
+			if (history.length && history[0].text === text) return;
+			history.unshift({ format, text, time: new Date().toLocaleTimeString(), debugImage: debugImageUrl });
+			if (history.length > 30) history.pop();
+			$('historyList').innerHTML = history.map(h => 
+				`<div class="history-item">
+					<span class="time">${h.time}</span>
+					<span class="format">${h.format}</span>
+					<div class="text">${h.text.replace(/</g,'&lt;')}</div>
+					${h.debugImage ? `<img class="debug-img" src="${h.debugImage}" title="Click to open full size" onclick="window.open(this.src)">` : ''}
+				</div>`
+			).join('');
+		}
+
+		$('clearBtn').onclick = () => { history = []; $('historyList').innerHTML = '<i>No barcodes scanned yet</i>'; };
+
+		function drawResult(code, ox, oy) {
+			ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 4;
 			ctx.beginPath();
-			ctx.lineWidth = 4;
-			ctx.strokeStyle = "red";
-			// ctx.textAlign = "center";
-			// ctx.fillStyle = "#green"
-			// ctx.font = "25px Arial";
-			// ctx.fontWeight = "bold";
-			with (code.position) {
-				ctx.moveTo(topLeft.x, topLeft.y);
-				ctx.lineTo(topRight.x, topRight.y);
-				ctx.lineTo(bottomRight.x, bottomRight.y);
-				ctx.lineTo(bottomLeft.x, bottomLeft.y);
-				ctx.lineTo(topLeft.x, topLeft.y);
-				ctx.stroke();
-				// ctx.fillText(code.text, (topLeft.x + bottomRight.x) / 2, (topLeft.y + bottomRight.y) / 2);
-			}
+			const p = code.position;
+			ctx.moveTo(p.topLeft.x + ox, p.topLeft.y + oy);
+			ctx.lineTo(p.topRight.x + ox, p.topRight.y + oy);
+			ctx.lineTo(p.bottomRight.x + ox, p.bottomRight.y + oy);
+			ctx.lineTo(p.bottomLeft.x + ox, p.bottomLeft.y + oy);
+			ctx.closePath(); ctx.stroke();
 		}
 
-		function escapeTags(htmlStr) {
-			return htmlStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-		}
-
-		const processFrame = function () {
+		async function processFrame() {
+			const start = performance.now();
 			ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-			const code = readBarcodeFromCanvas(canvas, format.value, mode.value === 'true');
-			if (code.format) {
-				resultElement.innerText = code.format + ": " + escapeTags(code.text);
-				drawResult(code)
-			} else {
-				resultElement.innerText = "No barcode found";
+			let imgData, ox = 0, oy = 0, w = canvas.width, h = canvas.height;
+			let detections = [];
+			let code = null;
+			
+			// Calculate scan zone dimensions
+			const useScanZone = $('useScanZone').checked;
+			if (useScanZone) {
+				const pct = parseInt($('zoneSize').value) / 100;
+				w = Math.floor(canvas.width * pct);
+				h = Math.floor(canvas.height * pct);
+				ox = Math.floor((canvas.width - w) / 2);
+				oy = Math.floor((canvas.height - h) / 2);
 			}
-			requestAnimationFrame(processFrame);
-		};
-
-		const updateVideoStream = function (deviceId) {
-			// To ensure the camera switch, it is advisable to free up the media resources
-			if (video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
-
-			// First get basic access to query capabilities
-			navigator.mediaDevices
-				.getUserMedia({ video: { facingMode: deviceId }, audio: false })
-				.then(function (stream) {
-					const track = stream.getVideoTracks()[0];
-					const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+			
+			// Get the image data from the scan zone (or full frame)
+			imgData = ctx.getImageData(ox, oy, w, h);
+			
+			// Check if NanoDet detection is enabled and model is loaded
+			const useNanoDet = $('useNanoDet').checked && onnxSession !== null;
+			
+			if (useNanoDet) {
+				// Run NanoDet inference on the scan zone
+				const nanodetStart = performance.now();
+				detections = await runNanoDetInference(imgData.data, w, h);
+				lastNanodetTime = performance.now() - nanodetStart;
+				
+				// Draw detection boxes (offset by scan zone position)
+				drawDetectionBoxes(detections, ox, oy);
+				
+				// ONLY process detected bboxes with ZXing - no fallback to full scan zone
+				// This is the whole point of the AI detection!
+				for (const detection of detections) {
+					// Add padding around detection for better decoding
+					const padding = 15;
+					const cropX = Math.max(0, detection.x1 - padding);
+					const cropY = Math.max(0, detection.y1 - padding);
+					const cropX2 = Math.min(w, detection.x2 + padding);
+					const cropY2 = Math.min(h, detection.y2 + padding);
+					const cropW = cropX2 - cropX;
+					const cropH = cropY2 - cropY;
 					
-					// Stop this temporary stream
-					stream.getTracks().forEach(t => t.stop());
+					if (cropW <= 0 || cropH <= 0) continue;
 					
-					// Determine the best resolution from capabilities
-					let idealWidth = 1280;
-					let idealHeight = 720;
+					// Create a temporary canvas to crop the detection
+					const cropCanvas = document.createElement('canvas');
+					cropCanvas.width = cropW;
+					cropCanvas.height = cropH;
+					const cropCtx = cropCanvas.getContext('2d');
 					
-					if (capabilities.width && capabilities.height) {
-						idealWidth = capabilities.width.max || 1280;
-						idealHeight = capabilities.height.max || 720;
-						console.log("Camera capabilities - Max resolution: " + idealWidth + "x" + idealHeight);
-					} else {
-						console.log("Camera capabilities not available, using default 1280x720");
+					// Put the scan zone image data and then extract the crop
+					const tempCanvas = document.createElement('canvas');
+					tempCanvas.width = w;
+					tempCanvas.height = h;
+					const tempCtx = tempCanvas.getContext('2d');
+					tempCtx.putImageData(imgData, 0, 0);
+					
+					cropCtx.drawImage(tempCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+					const croppedImgData = cropCtx.getImageData(0, 0, cropW, cropH);
+					
+					const cropCode = readBarcode(croppedImgData.data, cropW, cropH);
+					
+					// Get live debug image if enabled - show what's being sent to ZXing
+					if ($('liveDebugStream').checked) {
+						const buf = zxing._malloc(croppedImgData.data.byteLength);
+						zxing.HEAPU8.set(croppedImgData.data, buf);
+						const debugImg = zxing.getLiveDebugImage(buf, cropW, cropH, $('binarizer').value, $('preprocess').checked);
+						if (debugImg) {
+							renderDebugImage(debugImg, cropW, cropH);
+						}
+						zxing._free(buf);
 					}
 					
-					// Now request with the optimal resolution
-					const constraints = {
-						video: {
-							facingMode: deviceId,
-							width: { ideal: idealWidth },
-							height: { ideal: idealHeight }
-						},
-						audio: false
-					};
-					
-					return navigator.mediaDevices.getUserMedia(constraints);
-				})
-				.then(function (stream) {
-					video.srcObject = stream;
-					video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
-					video.play();
-					
-					// Wait for video metadata to load to get actual resolution
-					video.onloadedmetadata = function () {
-						canvas.width = video.videoWidth;
-						canvas.height = video.videoHeight;
-						ctx = canvas.getContext("2d", { willReadFrequently: true });
-						console.log("Camera resolution: " + video.videoWidth + "x" + video.videoHeight);
-					};
-					processFrame();
-				})
-				.catch(function (error) {
-					console.error("Error accessing camera:", error);
-					resultElement.innerText = "Error: " + error.message;
+					if (cropCode.format && cropCode.format !== '__pending__') {
+						// Adjust position to full frame coordinates
+						if (cropCode.position) {
+							cropCode.position.topLeft.x += ox + cropX;
+							cropCode.position.topLeft.y += oy + cropY;
+							cropCode.position.topRight.x += ox + cropX;
+							cropCode.position.topRight.y += oy + cropY;
+							cropCode.position.bottomLeft.x += ox + cropX;
+							cropCode.position.bottomLeft.y += oy + cropY;
+							cropCode.position.bottomRight.x += ox + cropX;
+							cropCode.position.bottomRight.y += oy + cropY;
+						}
+						code = cropCode;
+						break; // Found a barcode, stop processing other detections
+					}
+				}
+				
+				// No fallback - if NanoDet found nothing or ZXing couldn't decode, that's it
+				// The whole point of the AI is to only scan what it detects as a barcode
+			} else {
+				// NanoDet disabled - use scan zone directly with ZXing
+				code = readBarcode(imgData.data, w, h);
+				
+				// Clear detection overlay
+				$('detectionOverlay').innerHTML = '';
+				
+				// Get live debug image if enabled
+				if ($('liveDebugStream').checked) {
+					const buf = zxing._malloc(imgData.data.byteLength);
+					zxing.HEAPU8.set(imgData.data, buf);
+					const debugImg = zxing.getLiveDebugImage(buf, w, h, $('binarizer').value, $('preprocess').checked);
+					if (debugImg) {
+						renderDebugImage(debugImg, w, h);
+					}
+					zxing._free(buf);
+				}
+			}
+
+			const elapsed = performance.now() - start;
+
+			frameCount++;
+			if (performance.now() - lastFpsTime >= 1000) { fps = frameCount; frameCount = 0; lastFpsTime = performance.now(); }
+			$('stats').textContent = `FPS: ${fps} | Process: ${elapsed.toFixed(1)}ms | NanoDet: ${useNanoDet ? lastNanodetTime.toFixed(1) + 'ms' : 'OFF'} | Detections: ${detections.length}`;
+
+			// Handle null code
+			if (!code) {
+				$('result').className = 'not-found';
+				$('result').textContent = 'No barcode found';
+				requestAnimationFrame(processFrame);
+				return;
+			}
+
+			// Handle consensus pending state (from C++ algorithm)
+			if (code.format === '__pending__') {
+				$('result').className = 'not-found';
+				$('result').textContent = 'Analyzing... (' + code.text + ' frames)';
+				requestAnimationFrame(processFrame);
+				return;
+			}
+
+			// Generate debug image URL if available
+			let debugUrl = null;
+			if (code.debugImage && code.debugImageWidth > 0) {
+				debugUrl = debugImageToDataUrl(code.debugImage, code.debugImageWidth, code.debugImageHeight);
+			}
+
+			if (code.format) {
+				$('result').className = 'found';
+				$('result').textContent = code.format + ': ' + code.text;
+				drawResult(code, ox, oy);
+				addToHistory(code.format, code.text, debugUrl);
+			} else {
+				$('result').className = 'not-found';
+				$('result').textContent = 'No barcode found';
+			}
+			requestAnimationFrame(processFrame);
+		}
+
+		async function startCamera(facingMode) {
+			if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+			
+			// Detect and use the highest resolution supported by the camera
+			try {
+				// First, get the device capabilities to find max resolution
+				const devices = await navigator.mediaDevices.enumerateDevices();
+				const videoDevices = devices.filter(d => d.kind === 'videoinput');
+				
+				// Try to get a stream to query capabilities
+				const tempStream = await navigator.mediaDevices.getUserMedia({ 
+					video: { facingMode }, 
+					audio: false 
 				});
-		};
+				
+				const track = tempStream.getVideoTracks()[0];
+				const capabilities = track.getCapabilities();
+				console.log('Camera capabilities:', capabilities);
+				
+				// Get max width and height
+				const maxWidth = capabilities.width?.max || 3840;
+				const maxHeight = capabilities.height?.max || 2160;
+				console.log(`Detected max resolution: ${maxWidth}x${maxHeight}`);
+				
+				// Stop temp stream
+				tempStream.getTracks().forEach(t => t.stop());
+				
+				// Now request the highest resolution
+				const stream = await navigator.mediaDevices.getUserMedia({ 
+					video: { 
+						facingMode,
+						width: { ideal: maxWidth },
+						height: { ideal: maxHeight }
+					}, 
+					audio: false 
+				});
+				
+				video.srcObject = stream;
+				video.play();
+				video.onloadedmetadata = () => {
+					canvas.width = video.videoWidth; 
+					canvas.height = video.videoHeight;
+					console.log(`Camera using resolution: ${video.videoWidth}x${video.videoHeight}`);
+					// Initialize debug canvas
+					const pct = parseInt($('zoneSize').value) / 100;
+					debugCanvas.width = Math.floor(canvas.width * pct);
+					debugCanvas.height = Math.floor(canvas.height * pct);
+					updateScanZone();
+					updateDebugPanel();
+					processFrame();
+				};
+			} catch (e) {
+				$('result').textContent = 'Camera error: ' + e.message;
+				console.error('Camera error:', e);
+			}
+		}
 
-		cameraSelector.addEventListener("change", function () {
-			updateVideoStream(this.value);
-		});
-
-		updateVideoStream();
+		$('cameraSelector').onchange = function() { startCamera(this.value); };
+		startCamera($('cameraSelector').value);
 	</script>
 </body>
-
 </html>

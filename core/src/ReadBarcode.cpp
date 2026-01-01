@@ -31,6 +31,7 @@ public:
 	using Image::Image;
 
 	uint8_t* data() { return const_cast<uint8_t*>(Image::data()); }
+	const uint8_t* data() const { return Image::data(); }
 };
 
 template<typename P>
@@ -45,6 +46,64 @@ static LumImage ExtractLum(const ImageView& iv, P projection)
 
 	return res;
 }
+
+/**
+ * ENHANCED: Upscale an image using bilinear interpolation for better 1D barcode detection at distance.
+ * When barcodes are too small, the narrow bars may be only 1-2 pixels wide, leading to detection failures.
+ * Upscaling with interpolation creates smoother transitions that are easier to threshold correctly.
+ */
+class LumImageUpscaler
+{
+	LumImage upscaled;
+	
+public:
+	ImageView layer;
+	
+	LumImageUpscaler(const ImageView& iv, int factor)
+	{
+		if (factor < 2 || factor > 4)
+			return;
+		
+		int newWidth = iv.width() * factor;
+		int newHeight = iv.height() * factor;
+		
+		upscaled = LumImage(newWidth, newHeight);
+		auto* dst = upscaled.data();
+		
+		// Bilinear interpolation upscaling
+		for (int dy = 0; dy < newHeight; ++dy) {
+			float srcY = static_cast<float>(dy) / factor;
+			int y0 = static_cast<int>(srcY);
+			int y1 = std::min(y0 + 1, iv.height() - 1);
+			float fy = srcY - y0;
+			
+			for (int dx = 0; dx < newWidth; ++dx) {
+				float srcX = static_cast<float>(dx) / factor;
+				int x0 = static_cast<int>(srcX);
+				int x1 = std::min(x0 + 1, iv.width() - 1);
+				float fx = srcX - x0;
+				
+				// Get 4 surrounding pixels
+				uint8_t p00 = *iv.data(x0, y0);
+				uint8_t p10 = *iv.data(x1, y0);
+				uint8_t p01 = *iv.data(x0, y1);
+				uint8_t p11 = *iv.data(x1, y1);
+				
+				// Bilinear interpolation
+				float val = p00 * (1 - fx) * (1 - fy) +
+							p10 * fx * (1 - fy) +
+							p01 * (1 - fx) * fy +
+							p11 * fx * fy;
+				
+				*dst++ = static_cast<uint8_t>(std::clamp(val, 0.0f, 255.0f));
+			}
+		}
+		
+		layer = upscaled;
+	}
+	
+	bool isValid() const { return upscaled.width() > 0; }
+};
 
 class LumImagePyramid
 {
@@ -200,6 +259,42 @@ Barcodes ReadBarcodes(const ImageView& _iv, const ReaderOptions& opts)
 				if (maxSymbols <= 0)
 					return res;
 			}
+		}
+	}
+
+	// ENHANCED: Try upscaled image if no results found and upscaling is enabled
+	// This helps with barcodes that are far away where bars are only 1-2 pixels wide
+	if (res.empty() && opts.tryUpscale()) {
+		// Try multiple upscale factors - start with 2x, then 3x, then 4x if needed
+		// 4x is aggressive but helps with very distant barcodes
+		for (int factor : {2, 3, 4}) {
+			LumImageUpscaler upscaler(iv, factor);
+			if (!upscaler.isValid())
+				continue;
+				
+			auto upscaledBitmap = CreateBitmap(opts.binarizer(), upscaler.layer);
+			for (int invert = 0; invert <= static_cast<int>(opts.tryInvert()); ++invert) {
+				if (invert)
+					upscaledBitmap->invert();
+				auto rs = reader.readMultiple(*upscaledBitmap, maxSymbols);
+				for (auto& r : rs) {
+					// Scale position back to original image size
+					auto pos = r.position();
+					r.setPosition({pos[0] / factor, pos[1] / factor, pos[2] / factor, pos[3] / factor});
+					if (!Contains(res, r)) {
+						r.setReaderOptions(opts);
+						r.setIsInverted(upscaledBitmap->inverted());
+						res.push_back(std::move(r));
+						--maxSymbols;
+					}
+				}
+				if (maxSymbols <= 0)
+					return res;
+			}
+			
+			// If we found results with this factor, don't try larger ones
+			if (!res.empty())
+				break;
 		}
 	}
 

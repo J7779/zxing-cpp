@@ -214,40 +214,129 @@ function Start-WebServer {
         }
         
         if ($python) {
-            Write-Host "Starting Python HTTP server on port $Port..." -ForegroundColor Yellow
+            # Get local IP address for phone access
+            $localIP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" -and $_.IPAddress -notlike "169.*" -and $_.PrefixOrigin -ne "WellKnown" } | Select-Object -First 1).IPAddress
+            if (-not $localIP) { $localIP = "YOUR_LOCAL_IP" }
+            
+            Write-Host "Starting Python HTTPS server on port $Port..." -ForegroundColor Yellow
             Write-Host ""
             Write-Host "========================================" -ForegroundColor Magenta
-            Write-Host "  Demo URLs:" -ForegroundColor Magenta
-            Write-Host "  Camera Reader: http://localhost:$Port/demo_cam_reader.html" -ForegroundColor White
-            Write-Host "  File Reader:   http://localhost:$Port/demo_reader.html" -ForegroundColor White
-            Write-Host "  Writer:        http://localhost:$Port/demo_writer.html" -ForegroundColor White
+            Write-Host "  HTTPS Demo URLs:" -ForegroundColor Magenta
+            Write-Host "  Local:  https://localhost:$Port/demo_cam_reader.html" -ForegroundColor White
+            Write-Host "  Phone:  https://${localIP}:$Port/demo_cam_reader.html" -ForegroundColor Green
             Write-Host "========================================" -ForegroundColor Magenta
             Write-Host ""
+            Write-Host "NOTE: Accept the certificate warning in your browser!" -ForegroundColor Yellow
             Write-Host "Press Ctrl+C to stop the server" -ForegroundColor Yellow
             Write-Host ""
             
-            # Open the browser to the cam reader demo
-            Start-Process "http://localhost:$Port/demo_cam_reader.html"
+            # Create HTTPS server script using Python's cryptography
+            $httpsScript = @'
+import http.server
+import ssl
+import os
+import sys
+
+# Certificate and key paths
+cert_dir = os.path.dirname(os.path.abspath(__file__))
+certfile = os.path.join(cert_dir, 'server.pem')
+
+# Generate self-signed certificate using Python
+def generate_self_signed_cert():
+    try:
+        from cryptography import x509
+        from cryptography.x509.oid import NameOID
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives.asymmetric import rsa
+        from cryptography.hazmat.primitives import serialization
+        import datetime
+        
+        # Generate key
+        key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048,
+            backend=default_backend()
+        )
+        
+        # Generate certificate
+        subject = issuer = x509.Name([
+            x509.NameAttribute(NameOID.COMMON_NAME, u"localhost"),
+        ])
+        
+        cert = x509.CertificateBuilder().subject_name(
+            subject
+        ).issuer_name(
+            issuer
+        ).public_key(
+            key.public_key()
+        ).serial_number(
+            x509.random_serial_number()
+        ).not_valid_before(
+            datetime.datetime.utcnow()
+        ).not_valid_after(
+            datetime.datetime.utcnow() + datetime.timedelta(days=365)
+        ).add_extension(
+            x509.SubjectAlternativeName([
+                x509.DNSName(u"localhost"),
+                x509.DNSName(u"*"),
+                x509.IPAddress(ipaddress.IPv4Address('127.0.0.1')),
+            ]),
+            critical=False,
+        ).sign(key, hashes.SHA256(), default_backend())
+        
+        # Write to PEM file (combined cert + key)
+        with open(certfile, "wb") as f:
+            f.write(cert.public_bytes(serialization.Encoding.PEM))
+            f.write(key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption()
+            ))
+        print(f"Generated certificate: {certfile}")
+        return True
+    except ImportError:
+        return False
+
+# Try to generate cert with cryptography library
+import ipaddress
+if not os.path.exists(certfile):
+    if not generate_self_signed_cert():
+        print("Installing cryptography package...")
+        import subprocess
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "cryptography", "-q"])
+        generate_self_signed_cert()
+
+# Change to script directory to serve files
+os.chdir(cert_dir)
+
+# Start HTTPS server
+server_address = ('0.0.0.0', PORT_PLACEHOLDER)
+httpd = http.server.HTTPServer(server_address, http.server.SimpleHTTPRequestHandler)
+
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain(certfile)
+httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+
+print(f"Serving HTTPS on https://0.0.0.0:{PORT_PLACEHOLDER}/")
+print("Accept the certificate warning in your browser")
+httpd.serve_forever()
+'@
             
-            # Start the server (blocks until Ctrl+C)
-            & $python.Source -m http.server $Port
+            # Replace port placeholder
+            $httpsScript = $httpsScript -replace 'PORT_PLACEHOLDER', $Port
+            
+            # Save script to wasm directory
+            $scriptPath = Join-Path $WasmDir "https_server.py"
+            $httpsScript | Out-File -FilePath $scriptPath -Encoding UTF8 -NoNewline
+            
+            # Open the browser
+            Start-Process "https://localhost:$Port/demo_cam_reader.html"
+            
+            # Start the HTTPS server
+            & $python.Source $scriptPath
         } else {
-            # Try emrun as fallback (comes with Emscripten)
-            $emrun = Get-Command emrun -ErrorAction SilentlyContinue
-            if ($emrun) {
-                Write-Host "Starting server with emrun..." -ForegroundColor Yellow
-                Write-Host ""
-                Write-Host "========================================" -ForegroundColor Magenta
-                Write-Host "  Camera Reader Demo will open automatically" -ForegroundColor Magenta
-                Write-Host "========================================" -ForegroundColor Magenta
-                Write-Host ""
-                & emrun --serve_after_close --port $Port demo_cam_reader.html
-            } else {
-                Write-Host "[ERROR] No suitable web server found." -ForegroundColor Red
-                Write-Host "Please install Python or use emrun from Emscripten." -ForegroundColor Yellow
-                Write-Host ""
-                Write-Host "You can manually serve the files from: $WasmDir" -ForegroundColor Yellow
-            }
+            Write-Host "[ERROR] Python not found." -ForegroundColor Red
         }
     }
     finally {

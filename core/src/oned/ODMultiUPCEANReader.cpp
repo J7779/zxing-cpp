@@ -42,18 +42,20 @@ constexpr float QUIET_ZONE_ADDON = 3;
 // There is a single sample (ean13-1/12.png) that fails to decode with these (new) settings because
 // it has a right-side quiet zone of only about 4.5 modules, which is clearly out of spec.
 
-static bool DecodeDigit(const PatternView& view, std::string& txt, int* lgPattern = nullptr)
+// ENHANCED: Standard tolerances
+static constexpr float STD_MAX_AVG_VARIANCE = 0.48f;
+static constexpr float STD_MAX_INDIVIDUAL_VARIANCE = 0.7f;
+
+// ENHANCED: Relaxed tolerances for distant/blurry barcodes
+static constexpr float RELAXED_MAX_AVG_VARIANCE = 0.55f;
+static constexpr float RELAXED_MAX_INDIVIDUAL_VARIANCE = 0.85f;
+
+static bool DecodeDigit(const PatternView& view, std::string& txt, float maxAvgVar, float maxIndVar, int* lgPattern = nullptr)
 {
 #if 1
-	// These two values are critical for determining how permissive the decoding will be.
-	// We've arrived at these values through a lot of trial and error. Setting them any higher
-	// lets false positives creep in quickly.
-	static constexpr float MAX_AVG_VARIANCE = 0.48f;
-	static constexpr float MAX_INDIVIDUAL_VARIANCE = 0.7f;
-
 	int bestMatch =
-		lgPattern ? RowReader::DecodeDigit(view, UPCEANCommon::L_AND_G_PATTERNS, MAX_AVG_VARIANCE, MAX_INDIVIDUAL_VARIANCE, false)
-				  : RowReader::DecodeDigit(view, UPCEANCommon::L_PATTERNS, MAX_AVG_VARIANCE, MAX_INDIVIDUAL_VARIANCE, false);
+		lgPattern ? RowReader::DecodeDigit(view, UPCEANCommon::L_AND_G_PATTERNS, maxAvgVar, maxIndVar, false)
+				  : RowReader::DecodeDigit(view, UPCEANCommon::L_PATTERNS, maxAvgVar, maxIndVar, false);
 	if (bestMatch == -1)
 		return false;
 
@@ -104,10 +106,10 @@ static bool DecodeDigit(const PatternView& view, std::string& txt, int* lgPatter
 #endif
 }
 
-static bool DecodeDigits(int digitCount, PatternView& next, std::string& txt, int* lgPattern = nullptr)
+static bool DecodeDigits(int digitCount, PatternView& next, std::string& txt, float maxAvgVar, float maxIndVar, int* lgPattern = nullptr)
 {
 	for (int j = 0; j < digitCount; ++j, next.skipSymbol())
-		if (!DecodeDigit(next, txt, lgPattern))
+		if (!DecodeDigit(next, txt, maxAvgVar, maxIndVar, lgPattern))
 			return false;
 	return true;
 }
@@ -121,6 +123,21 @@ struct PartialResult
 	PartialResult() { txt.reserve(14); }
 	bool isValid() const { return format != BarcodeFormat::None; }
 };
+
+// ENHANCED: Thread-local tolerance context for relaxed scanning
+static thread_local float g_maxAvgVariance = STD_MAX_AVG_VARIANCE;
+static thread_local float g_maxIndVariance = STD_MAX_INDIVIDUAL_VARIANCE;
+
+// Helper to decode with current tolerances
+static bool DecodeDigitWithTolerance(const PatternView& view, std::string& txt, int* lgPattern = nullptr)
+{
+	return DecodeDigit(view, txt, g_maxAvgVariance, g_maxIndVariance, lgPattern);
+}
+
+static bool DecodeDigitsWithTolerance(int digitCount, PatternView& next, std::string& txt, int* lgPattern = nullptr)
+{
+	return DecodeDigits(digitCount, next, txt, g_maxAvgVariance, g_maxIndVariance, lgPattern);
+}
 
 bool _ret_false_debug_helper()
 {
@@ -139,11 +156,11 @@ static bool EAN13(PartialResult& res, PatternView begin)
 	res.txt = " "; // make space for lgPattern character
 	int lgPattern = 0;
 
-	CHECK(DecodeDigits(6, next, res.txt, &lgPattern));
+	CHECK(DecodeDigitsWithTolerance(6, next, res.txt, &lgPattern));
 
 	next = next.subView(MID_PATTERN.size(), CHAR_LEN);
 
-	CHECK(DecodeDigits(6, next, res.txt));
+	CHECK(DecodeDigitsWithTolerance(6, next, res.txt));
 
 	int i = IndexOf(FIRST_DIGIT_ENCODINGS, lgPattern);
 	CHECK(i != -1);
@@ -177,11 +194,11 @@ static bool EAN8(PartialResult& res, PatternView begin)
 	auto next = begin.subView(END_PATTERN.size(), CHAR_LEN);
 	res.txt.clear();
 
-	CHECK(DecodeDigits(4, next, res.txt));
+	CHECK(DecodeDigitsWithTolerance(4, next, res.txt));
 
 	next = next.subView(MID_PATTERN.size(), CHAR_LEN);
 
-	CHECK(DecodeDigits(4, next, res.txt));
+	CHECK(DecodeDigitsWithTolerance(4, next, res.txt));
 
 	res.end = end;
 	res.format = BarcodeFormat::EAN8;
@@ -205,7 +222,7 @@ static bool UPCE(PartialResult& res, PatternView begin)
 	int lgPattern = 0;
 	res.txt = " "; // make space for lgPattern character
 
-	CHECK(DecodeDigits(6, next, res.txt, &lgPattern));
+	CHECK(DecodeDigitsWithTolerance(6, next, res.txt, &lgPattern));
 
 	int i = IndexOf(UPCEANCommon::NUMSYS_AND_CHECK_DIGIT_PATTERNS, lgPattern);
 	CHECK(i != -1);
@@ -245,7 +262,7 @@ static bool AddOn(PartialResult& res, PatternView begin, int digitCount)
 	res.txt.clear();
 
 	for (int i = 0; i < digitCount; ++i) {
-		CHECK(DecodeDigit(ext, res.txt, &lgPattern));
+		CHECK(DecodeDigitWithTolerance(ext, res.txt, &lgPattern));
 		ext.skipSymbol();
 		if (i < digitCount - 1) {
 			CHECK(IsPattern(ext, EXT_SEPARATOR_PATTERN, 0, 0, moduleSize));
@@ -265,11 +282,21 @@ static bool AddOn(PartialResult& res, PatternView begin, int digitCount)
 
 Barcode MultiUPCEANReader::decodePattern(int rowNumber, PatternView& next, std::unique_ptr<RowReader::DecodingState>&) const
 {
+	// ENHANCED: Set tolerance context based on options
+	if (_opts.relaxedLinearTolerance()) {
+		g_maxAvgVariance = RELAXED_MAX_AVG_VARIANCE;
+		g_maxIndVariance = RELAXED_MAX_INDIVIDUAL_VARIANCE;
+	} else {
+		g_maxAvgVariance = STD_MAX_AVG_VARIANCE;
+		g_maxIndVariance = STD_MAX_INDIVIDUAL_VARIANCE;
+	}
+
 	const int minSize = 3 + 6*4 + 6; // UPC-E
 
 	next = FindLeftGuard(next, minSize, END_PATTERN, QUIET_ZONE_LEFT);
 	if (!next.isValid())
 		return {};
+
 
 	PartialResult res;
 	auto begin = next;

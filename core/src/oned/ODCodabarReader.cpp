@@ -39,10 +39,16 @@ constexpr float QUIET_ZONE_SCALE = 0.5f;
 // some codabar generator allow the codabar string to be closed by every
 // character. This will cause lots of false positives!
 
-bool IsLeftGuard(const PatternView& view, int spaceInPixel)
+// For relaxed mode, pass relaxed=true to allow more tolerance in pattern matching
+static bool IsLeftGuardWithTolerance(const PatternView& view, int spaceInPixel, bool relaxed)
 {
 	return spaceInPixel > view.sum() * QUIET_ZONE_SCALE &&
-		   Contains({0x1A, 0x29, 0x0B, 0x0E}, RowReader::NarrowWideBitPattern(view));
+		   Contains({0x1A, 0x29, 0x0B, 0x0E}, RowReader::NarrowWideBitPattern(view, relaxed));
+}
+
+bool IsLeftGuard(const PatternView& view, int spaceInPixel)
+{
+	return IsLeftGuardWithTolerance(view, spaceInPixel, false);
 }
 
 Barcode CodabarReader::decodePattern(int rowNumber, PatternView& next, std::unique_ptr<DecodingState>&) const
@@ -51,9 +57,14 @@ Barcode CodabarReader::decodePattern(int rowNumber, PatternView& next, std::uniq
 	// absolute minimum would be 2 (meaning 0 'content'). everything below 4 produces too many false
 	// positives.
 	const int minCharCount = 4;
+	bool relaxed = _opts.relaxedLinearTolerance();
 	auto isStartOrStopSymbol = [](char c) { return 'A' <= c && c <= 'D'; };
 
-	next = FindLeftGuard<CHAR_LEN>(next, minCharCount * CHAR_LEN, IsLeftGuard);
+	// Use relaxed tolerance in the guard pattern detection
+	next = FindLeftGuard<CHAR_LEN>(next, minCharCount * CHAR_LEN, 
+		[relaxed](const PatternView& view, int spaceInPixel) {
+			return IsLeftGuardWithTolerance(view, spaceInPixel, relaxed);
+		});
 	if (!next.isValid())
 		return {};
 
@@ -62,7 +73,7 @@ Barcode CodabarReader::decodePattern(int rowNumber, PatternView& next, std::uniq
 
 	std::string txt;
 	txt.reserve(20);
-	txt += DecodeNarrowWidePattern(next, CHARACTER_ENCODINGS, ALPHABET); // read off the start pattern
+	txt += DecodeNarrowWidePattern(next, CHARACTER_ENCODINGS, ALPHABET, relaxed); // read off the start pattern
 
 	if (!isStartOrStopSymbol(txt.back()))
 		return {};
@@ -72,7 +83,7 @@ Barcode CodabarReader::decodePattern(int rowNumber, PatternView& next, std::uniq
 		if (!next.skipSymbol() || !next.skipSingle(maxInterCharacterSpace))
 			return {};
 
-		txt += DecodeNarrowWidePattern(next, CHARACTER_ENCODINGS, ALPHABET);
+		txt += DecodeNarrowWidePattern(next, CHARACTER_ENCODINGS, ALPHABET, relaxed);
 		if (txt.back() == 0)
 			return {};
 	} while (!isStartOrStopSymbol(txt.back()));

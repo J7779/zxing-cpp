@@ -54,6 +54,12 @@ public:
 	*/
 	virtual bool getPatternRow(int row, int rotation, PatternRow& res) const = 0;
 
+	/**
+	* Get access to the underlying image buffer for advanced scanning operations.
+	* @return const reference to the ImageView
+	*/
+	const ImageView& buffer() const { return _buffer; }
+
 	const BitMatrix* getBitMatrix() const;
 
 	void invert();

@@ -8,6 +8,7 @@
 #include "ODCode93Reader.h"
 
 #include "ODCode93Patterns.h"
+#include "ReaderOptions.h"
 #include "Barcode.h"
 #include "ZXAlgorithms.h"
 
@@ -68,6 +69,50 @@ static auto E2E_PATTERNS = [ ] {
 	return res;
 }();
 
+// Standard: exact pattern match only
+// Relaxed: allow single-element deviation of ±1 in E2E pattern
+static char LookupE2EPatternWithTolerance(int pattern, bool relaxed)
+{
+	// First try exact match
+	int idx = IndexOf(E2E_PATTERNS, pattern);
+	if (idx != -1)
+		return ALPHABET[idx];
+
+	if (!relaxed)
+		return 0;
+
+	// For relaxed mode, try to find a pattern that differs by at most 1 in each element
+	// The E2E pattern is encoded as 4 values in a single int (each 4 bits, shifted)
+	// Extract and compare with tolerance
+	auto extractE2E = [](int p) -> std::array<int, 4> {
+		return {(p >> 9) & 0x7, (p >> 6) & 0x7, (p >> 3) & 0x7, p & 0x7};
+	};
+
+	auto target = extractE2E(pattern);
+	int bestIdx = -1;
+	int bestDiff = 5; // max allowed total difference for relaxed mode
+
+	for (int i = 0; i < Size(E2E_PATTERNS); ++i) {
+		auto candidate = extractE2E(E2E_PATTERNS[i]);
+		int diff = 0;
+		bool valid = true;
+		for (int j = 0; j < 4; ++j) {
+			int d = std::abs(candidate[j] - target[j]);
+			if (d > 1) { // max 1 deviation per element
+				valid = false;
+				break;
+			}
+			diff += d;
+		}
+		if (valid && diff < bestDiff) {
+			bestDiff = diff;
+			bestIdx = i;
+		}
+	}
+
+	return bestIdx != -1 ? ALPHABET[bestIdx] : 0;
+}
+
 static bool IsStartGuard(const PatternView& window, int spaceInPixel)
 {
 	// The complete start pattern is FixedPattern<CHAR_LEN, CHAR_MODS>{1, 1, 1, 1, 4, 1}.
@@ -83,6 +128,7 @@ Barcode Code93Reader::decodePattern(int rowNumber, PatternView& next, std::uniqu
 {
 	// minimal number of characters that must be present (including start, stop, checksum and 1 payload characters)
 	int minCharCount = 5;
+	bool relaxed = _opts.relaxedLinearTolerance();
 
 	next = FindLeftGuard<CHAR_LEN>(next, minCharCount * CHAR_LEN, IsStartGuard);
 	if (!next.isValid())
@@ -98,7 +144,7 @@ Barcode Code93Reader::decodePattern(int rowNumber, PatternView& next, std::uniqu
 		if (!next.skipSymbol())
 			return {};
 
-		txt += LookupBitPattern(ToInt(NormalizedE2EPattern<CHAR_LEN>(next, CHAR_MODS)), E2E_PATTERNS, ALPHABET);
+		txt += LookupE2EPatternWithTolerance(ToInt(NormalizedE2EPattern<CHAR_LEN>(next, CHAR_MODS)), relaxed);
 
 		if (txt.back() == 0)
 			return {};
