@@ -89,10 +89,13 @@
 			&nbsp;|&nbsp;
 			NanoDet Confidence: <input type="range" id="nanodetConfidence" min="10" max="95" value="30"> <span id="nanodetConfidenceLabel">30%</span>
 			&nbsp;|&nbsp;
-			Model Input: <span style="color:#0f0;">640x640 (fixed)</span>
-			<input type="hidden" id="modelInputSize" value="640">
+			AI Skip: <input type="range" id="frameSkip" min="1" max="5" value="2"> <span id="frameSkipLabel">2</span>
 			&nbsp;|&nbsp;
 			Consensus: <input type="range" id="consensusFrames" min="3" max="10" value="3"> <span id="consensusFramesLabel">3</span>
+		</div>
+		<div style="font-size:11px;color:#888;margin-top:5px;">
+			Model Input: <span style="color:#0f0;">640x640</span>
+			<input type="hidden" id="modelInputSize" value="640">
 		</div>
 		
 		<!-- COMPREHENSIVE IMAGE PROCESSING CONTROLS -->
@@ -266,6 +269,18 @@
 		let modelInputSize = 640;
 		let nanodetConfidence = 0.30;
 		
+		// Performance: cached canvases to avoid GC pressure
+		let cachedPreprocessCanvas = null;
+		let cachedPreprocessCtx = null;
+		let cachedSrcCanvas = null;
+		let cachedSrcCtx = null;
+		let cachedTensorBuffer = null;
+		
+		// Frame skipping for NanoDet (run inference every N frames)
+		let nanodetFrameSkip = 2; // Run inference every 2nd frame
+		let nanodetFrameCount = 0;
+		let lastDetections = []; // Cache last detections for skipped frames
+		
 		// Initialize ONNX Runtime
 		async function initONNX() {
 			try {
@@ -304,13 +319,16 @@
 			}
 		}
 		
-		// Preprocess image for NanoDet
+		// Preprocess image for NanoDet (optimized with canvas reuse)
 		function preprocessForNanoDet(imageData, srcWidth, srcHeight, targetSize) {
-			// Create temporary canvas for resizing
-			const tempCanvas = document.createElement('canvas');
-			tempCanvas.width = targetSize;
-			tempCanvas.height = targetSize;
-			const tempCtx = tempCanvas.getContext('2d');
+			// Reuse canvas for preprocessing to avoid GC
+			if (!cachedPreprocessCanvas || cachedPreprocessCanvas.width !== targetSize) {
+				cachedPreprocessCanvas = document.createElement('canvas');
+				cachedPreprocessCanvas.width = targetSize;
+				cachedPreprocessCanvas.height = targetSize;
+				cachedPreprocessCtx = cachedPreprocessCanvas.getContext('2d', { willReadFrequently: true });
+			}
+			const tempCtx = cachedPreprocessCtx;
 			
 			// Calculate letterbox padding to maintain aspect ratio
 			const scale = Math.min(targetSize / srcWidth, targetSize / srcHeight);
@@ -325,23 +343,29 @@
 			tempCtx.fillStyle = '#808080';
 			tempCtx.fillRect(0, 0, targetSize, targetSize);
 			
-			// Draw source image to temp canvas
-			const srcCanvas = document.createElement('canvas');
-			srcCanvas.width = srcWidth;
-			srcCanvas.height = srcHeight;
-			const srcCtx = srcCanvas.getContext('2d');
-			const srcImgData = srcCtx.createImageData(srcWidth, srcHeight);
+			// Reuse source canvas to avoid GC
+			if (!cachedSrcCanvas || cachedSrcCanvas.width !== srcWidth || cachedSrcCanvas.height !== srcHeight) {
+				cachedSrcCanvas = document.createElement('canvas');
+				cachedSrcCanvas.width = srcWidth;
+				cachedSrcCanvas.height = srcHeight;
+				cachedSrcCtx = cachedSrcCanvas.getContext('2d', { willReadFrequently: true });
+			}
+			const srcImgData = cachedSrcCtx.createImageData(srcWidth, srcHeight);
 			srcImgData.data.set(imageData);
-			srcCtx.putImageData(srcImgData, 0, 0);
+			cachedSrcCtx.putImageData(srcImgData, 0, 0);
 			
 			// Draw resized at top-left (NanoDet default)
-			tempCtx.drawImage(srcCanvas, 0, 0, newWidth, newHeight);
+			tempCtx.drawImage(cachedSrcCanvas, 0, 0, newWidth, newHeight);
 			
 			// Get resized image data
 			const resizedData = tempCtx.getImageData(0, 0, targetSize, targetSize);
 			
-			// Convert to NCHW format with normalization (0-255 to 0-1, or model-specific)
-			const float32Data = new Float32Array(3 * targetSize * targetSize);
+			// Reuse tensor buffer to avoid allocation
+			const tensorSize = 3 * targetSize * targetSize;
+			if (!cachedTensorBuffer || cachedTensorBuffer.length !== tensorSize) {
+				cachedTensorBuffer = new Float32Array(tensorSize);
+			}
+			const float32Data = cachedTensorBuffer;
 			const pixels = resizedData.data;
 			
 			// NanoDet uses BGR order with these normalization values:
@@ -822,6 +846,10 @@
 			nanodetConfidence = this.value / 100; 
 			$('nanodetConfidenceLabel').textContent = this.value + '%'; 
 		};
+		$('frameSkip').oninput = function() { 
+			nanodetFrameSkip = parseInt(this.value);
+			$('frameSkipLabel').textContent = this.value;
+		};
 		$('useConsensus').onchange = function() { if (zxing) zxing.clearConsensus(); };
 		$('showDebugImage').onchange = function() { if (zxing) zxing.setReturnDebugImage(this.checked); };
 		$('liveDebugStream').onchange = function() { 
@@ -1116,10 +1144,21 @@
 			const useNanoDet = $('useNanoDet').checked && onnxSession !== null;
 			
 			if (useNanoDet) {
-				// Run NanoDet inference on the scan zone
-				const nanodetStart = performance.now();
-				detections = await runNanoDetInference(imgData.data, w, h);
-				lastNanodetTime = performance.now() - nanodetStart;
+				// Frame skipping: only run inference every N frames for performance
+				nanodetFrameCount++;
+				const shouldRunInference = (nanodetFrameCount >= nanodetFrameSkip);
+				
+				if (shouldRunInference) {
+					nanodetFrameCount = 0;
+					// Run NanoDet inference on the scan zone
+					const nanodetStart = performance.now();
+					detections = await runNanoDetInference(imgData.data, w, h);
+					lastNanodetTime = performance.now() - nanodetStart;
+					lastDetections = detections; // Cache for skipped frames
+				} else {
+					// Use cached detections from last inference
+					detections = lastDetections;
+				}
 				
 				// Draw detection boxes (offset by scan zone position)
 				drawDetectionBoxes(detections, ox, oy);
@@ -1138,28 +1177,21 @@
 					
 					if (cropW <= 0 || cropH <= 0) continue;
 					
-					// Create a temporary canvas to crop the detection
-					const cropCanvas = document.createElement('canvas');
-					cropCanvas.width = cropW;
-					cropCanvas.height = cropH;
-					const cropCtx = cropCanvas.getContext('2d');
+					// Use ImageData directly instead of canvas cropping (faster)
+					// Create cropped ImageData by copying pixels
+					const croppedData = new Uint8ClampedArray(cropW * cropH * 4);
+					for (let row = 0; row < cropH; row++) {
+						const srcOffset = ((cropY + row) * w + cropX) * 4;
+						const dstOffset = row * cropW * 4;
+						croppedData.set(imgData.data.subarray(srcOffset, srcOffset + cropW * 4), dstOffset);
+					}
 					
-					// Put the scan zone image data and then extract the crop
-					const tempCanvas = document.createElement('canvas');
-					tempCanvas.width = w;
-					tempCanvas.height = h;
-					const tempCtx = tempCanvas.getContext('2d');
-					tempCtx.putImageData(imgData, 0, 0);
-					
-					cropCtx.drawImage(tempCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-					const croppedImgData = cropCtx.getImageData(0, 0, cropW, cropH);
-					
-					const cropCode = readBarcode(croppedImgData.data, cropW, cropH);
+					const cropCode = readBarcode(croppedData, cropW, cropH);
 					
 					// Get live debug image if enabled - show what's being sent to ZXing
 					if ($('liveDebugStream').checked) {
-						const buf = zxing._malloc(croppedImgData.data.byteLength);
-						zxing.HEAPU8.set(croppedImgData.data, buf);
+						const buf = zxing._malloc(croppedData.byteLength);
+						zxing.HEAPU8.set(croppedData, buf);
 						const debugImg = zxing.getLiveDebugImage(buf, cropW, cropH, $('binarizer').value, $('preprocess').checked);
 						if (debugImg) {
 							renderDebugImage(debugImg, cropW, cropH);
