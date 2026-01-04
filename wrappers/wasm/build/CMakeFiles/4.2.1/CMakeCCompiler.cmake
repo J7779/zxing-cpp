@@ -1,4 +1,4 @@
-set(CMAKE_C_COMPILER "C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emcc.bat")
+set(CMAKE_C_COMPILER "C:/Users/Rex/emsdk/upstream/emscripten/emcc.bat")
 set(CMAKE_C_COMPILER_ARG1 "")
 set(CMAKE_C_COMPILER_ID "Clang")
 set(CMAKE_C_COMPILER_VERSION "22.0.0")
@@ -23,10 +23,10 @@ set(CMAKE_C_COMPILER_ARCHITECTURE_ID "")
 
 
 
-set(CMAKE_AR "C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emar.bat")
-set(CMAKE_C_COMPILER_AR "C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emar.bat")
-set(CMAKE_RANLIB "C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emranlib.bat")
-set(CMAKE_C_COMPILER_RANLIB "C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emranlib.bat")
+set(CMAKE_AR "C:/Users/Rex/emsdk/upstream/emscripten/emar.bat")
+set(CMAKE_C_COMPILER_AR "C:/Users/Rex/emsdk/upstream/emscripten/emar.bat")
+set(CMAKE_RANLIB "C:/Users/Rex/emsdk/upstream/emscripten/emranlib.bat")
+set(CMAKE_C_COMPILER_RANLIB "C:/Users/Rex/emsdk/upstream/emscripten/emranlib.bat")
 set(CMAKE_LINKER "CMAKE_LINKER-NOTFOUND")
 set(CMAKE_LINKER_LINK "")
 set(CMAKE_LINKER_LLD "")
@@ -78,7 +78,7 @@ endif()
 
 
 
-set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/cache/sysroot/include")
+set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "C:/Users/Rex/emsdk/upstream/emscripten/cache/sysroot/include")
 set(CMAKE_C_IMPLICIT_LINK_LIBRARIES "")
 set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "")
 set(CMAKE_C_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")

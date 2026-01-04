@@ -2,7 +2,7 @@
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/cache/sysroot")
+  set(CMAKE_INSTALL_PREFIX "C:/Users/Rex/emsdk/upstream/emscripten/cache/sysroot")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 

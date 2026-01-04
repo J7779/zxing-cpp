@@ -16,7 +16,7 @@
 
 rule CXX_SCAN__zxing_Release
   depfile = $DEP_FILE
-  command = C:\Windows\system32\cmd.exe /C ""C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emscan-deps.bat" -format=p1689 -- C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -x c++ $in -c -o $OBJ_FILE -MT $DYNDEP_INTERMEDIATE_FILE -MD -MF $DEP_FILE > $DYNDEP_INTERMEDIATE_FILE.tmp && "C:/Program Files/CMake/bin/cmake.exe" -E rename $DYNDEP_INTERMEDIATE_FILE.tmp $DYNDEP_INTERMEDIATE_FILE"
+  command = C:\Windows\system32\cmd.exe /C ""C:/Users/Rex/emsdk/upstream/emscripten/emscan-deps" -format=p1689 -- C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -x c++ $in -c -o $OBJ_FILE -MT $DYNDEP_INTERMEDIATE_FILE -MD -MF $DEP_FILE > $DYNDEP_INTERMEDIATE_FILE.tmp && "C:/Program Files/CMake/bin/cmake.exe" -E rename $DYNDEP_INTERMEDIATE_FILE.tmp $DYNDEP_INTERMEDIATE_FILE"
   description = Scanning $in for CXX dependencies
 
 
@@ -37,7 +37,7 @@ rule CXX_DYNDEP__zxing_Release
 rule CXX_COMPILER__zxing_scanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE @$DYNDEP_MODULE_MAP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE @$DYNDEP_MODULE_MAP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -47,7 +47,7 @@ rule CXX_COMPILER__zxing_scanned_Release
 rule CXX_COMPILER__zxing_unscanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -55,7 +55,7 @@ rule CXX_COMPILER__zxing_unscanned_Release
 # Rule for linking CXX executable.
 
 rule CXX_EXECUTABLE_LINKER__zxing_Release
-  command = C:\Windows\system32\cmd.exe /C "$PRE_LINK && C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD"
+  command = C:\Windows\system32\cmd.exe /C "$PRE_LINK && C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD"
   description = Linking CXX executable $TARGET_FILE
   restat = $RESTAT
 
@@ -65,7 +65,7 @@ rule CXX_EXECUTABLE_LINKER__zxing_Release
 
 rule CXX_SCAN__zxing_reader_Release
   depfile = $DEP_FILE
-  command = C:\Windows\system32\cmd.exe /C ""C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emscan-deps.bat" -format=p1689 -- C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -x c++ $in -c -o $OBJ_FILE -MT $DYNDEP_INTERMEDIATE_FILE -MD -MF $DEP_FILE > $DYNDEP_INTERMEDIATE_FILE.tmp && "C:/Program Files/CMake/bin/cmake.exe" -E rename $DYNDEP_INTERMEDIATE_FILE.tmp $DYNDEP_INTERMEDIATE_FILE"
+  command = C:\Windows\system32\cmd.exe /C ""C:/Users/Rex/emsdk/upstream/emscripten/emscan-deps" -format=p1689 -- C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -x c++ $in -c -o $OBJ_FILE -MT $DYNDEP_INTERMEDIATE_FILE -MD -MF $DEP_FILE > $DYNDEP_INTERMEDIATE_FILE.tmp && "C:/Program Files/CMake/bin/cmake.exe" -E rename $DYNDEP_INTERMEDIATE_FILE.tmp $DYNDEP_INTERMEDIATE_FILE"
   description = Scanning $in for CXX dependencies
 
 
@@ -86,7 +86,7 @@ rule CXX_DYNDEP__zxing_reader_Release
 rule CXX_COMPILER__zxing_reader_scanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE @$DYNDEP_MODULE_MAP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE @$DYNDEP_MODULE_MAP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -96,7 +96,7 @@ rule CXX_COMPILER__zxing_reader_scanned_Release
 rule CXX_COMPILER__zxing_reader_unscanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -104,7 +104,7 @@ rule CXX_COMPILER__zxing_reader_unscanned_Release
 # Rule for linking CXX executable.
 
 rule CXX_EXECUTABLE_LINKER__zxing_reader_Release
-  command = C:\Windows\system32\cmd.exe /C "$PRE_LINK && C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD"
+  command = C:\Windows\system32\cmd.exe /C "$PRE_LINK && C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD"
   description = Linking CXX executable $TARGET_FILE
   restat = $RESTAT
 
@@ -114,7 +114,7 @@ rule CXX_EXECUTABLE_LINKER__zxing_reader_Release
 
 rule CXX_SCAN__zxing_writer_Release
   depfile = $DEP_FILE
-  command = C:\Windows\system32\cmd.exe /C ""C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emscan-deps.bat" -format=p1689 -- C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -x c++ $in -c -o $OBJ_FILE -MT $DYNDEP_INTERMEDIATE_FILE -MD -MF $DEP_FILE > $DYNDEP_INTERMEDIATE_FILE.tmp && "C:/Program Files/CMake/bin/cmake.exe" -E rename $DYNDEP_INTERMEDIATE_FILE.tmp $DYNDEP_INTERMEDIATE_FILE"
+  command = C:\Windows\system32\cmd.exe /C ""C:/Users/Rex/emsdk/upstream/emscripten/emscan-deps" -format=p1689 -- C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -x c++ $in -c -o $OBJ_FILE -MT $DYNDEP_INTERMEDIATE_FILE -MD -MF $DEP_FILE > $DYNDEP_INTERMEDIATE_FILE.tmp && "C:/Program Files/CMake/bin/cmake.exe" -E rename $DYNDEP_INTERMEDIATE_FILE.tmp $DYNDEP_INTERMEDIATE_FILE"
   description = Scanning $in for CXX dependencies
 
 
@@ -135,7 +135,7 @@ rule CXX_DYNDEP__zxing_writer_Release
 rule CXX_COMPILER__zxing_writer_scanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE @$DYNDEP_MODULE_MAP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE @$DYNDEP_MODULE_MAP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -145,7 +145,7 @@ rule CXX_COMPILER__zxing_writer_scanned_Release
 rule CXX_COMPILER__zxing_writer_unscanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -153,7 +153,7 @@ rule CXX_COMPILER__zxing_writer_unscanned_Release
 # Rule for linking CXX executable.
 
 rule CXX_EXECUTABLE_LINKER__zxing_writer_Release
-  command = C:\Windows\system32\cmd.exe /C "$PRE_LINK && C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD"
+  command = C:\Windows\system32\cmd.exe /C "$PRE_LINK && C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD"
   description = Linking CXX executable $TARGET_FILE
   restat = $RESTAT
 
@@ -172,7 +172,7 @@ rule CUSTOM_COMMAND
 rule C_COMPILER__ZXing_unscanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\emcc.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\emcc.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
   description = Building C object $out
 
 
@@ -181,7 +181,7 @@ rule C_COMPILER__ZXing_unscanned_Release
 
 rule CXX_SCAN__ZXing_Release
   depfile = $DEP_FILE
-  command = C:\Windows\system32\cmd.exe /C ""C:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/emscan-deps.bat" -format=p1689 -- C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -x c++ $in -c -o $OBJ_FILE -MT $DYNDEP_INTERMEDIATE_FILE -MD -MF $DEP_FILE > $DYNDEP_INTERMEDIATE_FILE.tmp && "C:/Program Files/CMake/bin/cmake.exe" -E rename $DYNDEP_INTERMEDIATE_FILE.tmp $DYNDEP_INTERMEDIATE_FILE"
+  command = C:\Windows\system32\cmd.exe /C ""C:/Users/Rex/emsdk/upstream/emscripten/emscan-deps" -format=p1689 -- C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -x c++ $in -c -o $OBJ_FILE -MT $DYNDEP_INTERMEDIATE_FILE -MD -MF $DEP_FILE > $DYNDEP_INTERMEDIATE_FILE.tmp && "C:/Program Files/CMake/bin/cmake.exe" -E rename $DYNDEP_INTERMEDIATE_FILE.tmp $DYNDEP_INTERMEDIATE_FILE"
   description = Scanning $in for CXX dependencies
 
 
@@ -202,7 +202,7 @@ rule CXX_DYNDEP__ZXing_Release
 rule CXX_COMPILER__ZXing_scanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE @$DYNDEP_MODULE_MAP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE @$DYNDEP_MODULE_MAP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -212,7 +212,7 @@ rule CXX_COMPILER__ZXing_scanned_Release
 rule CXX_COMPILER__ZXing_unscanned_Release
   depfile = $DEP_FILE
   deps = gcc
-  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\Users\Rex\emsdk\upstream\emscripten\em++.bat $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
   description = Building CXX object $out
 
 
@@ -220,7 +220,7 @@ rule CXX_COMPILER__ZXing_unscanned_Release
 # Rule for linking CXX static library.
 
 rule CXX_STATIC_LIBRARY_LINKER__ZXing_Release
-  command = C:\Windows\system32\cmd.exe /C "$PRE_LINK && "C:\Program Files\CMake\bin\cmake.exe" -E rm -f $TARGET_FILE && C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\emar.bat qc $TARGET_FILE $LINK_FLAGS $in && C:\Users\Rex\Documents\GitHub\zxing-cpp\emsdk\upstream\emscripten\emranlib.bat $TARGET_FILE && $POST_BUILD"
+  command = C:\Windows\system32\cmd.exe /C "$PRE_LINK && "C:\Program Files\CMake\bin\cmake.exe" -E rm -f $TARGET_FILE && C:\Users\Rex\emsdk\upstream\emscripten\emar.bat qc $TARGET_FILE $LINK_FLAGS $in && C:\Users\Rex\emsdk\upstream\emscripten\emranlib.bat $TARGET_FILE && $POST_BUILD"
   description = Linking CXX static library $TARGET_FILE
   restat = $RESTAT
 
