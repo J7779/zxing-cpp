@@ -30,3 +30,4 @@ Conclusions:
  * building in C++-20 mode brings position independent DataMatrix detection but costs 35% more time
  * link time optimization (`-flto`) is not worth it and potentially even counter productive
  
+chmod +x /Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build_and_serve.sh

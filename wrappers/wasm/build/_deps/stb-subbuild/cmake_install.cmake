@@ -1,8 +1,8 @@
-# Install script for directory: C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild
+# Install script for directory: /Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/stb-populate")
+  set(CMAKE_INSTALL_PREFIX "/usr/local")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -35,7 +35,7 @@ endif()
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/install_local_manifest.txt"
+  file(WRITE "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
 if(CMAKE_INSTALL_COMPONENT)
@@ -51,6 +51,6 @@ else()
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/${CMAKE_INSTALL_MANIFEST}"
+  file(WRITE "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()

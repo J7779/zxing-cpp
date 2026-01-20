@@ -119,27 +119,33 @@ start_web_server() {
     pushd "$WASM_DIR" > /dev/null
     
     echo "========================================"
-    echo "  Demo URLs:"
-    echo "  Camera Reader: http://localhost:$PORT/demo_cam_reader.html"
-    echo "  File Reader:   http://localhost:$PORT/demo_reader.html"
-    echo "  Writer:        http://localhost:$PORT/demo_writer.html"
+    echo "  Demo URLs (HTTPS with COI headers):"
+    echo "  Camera Reader: https://localhost:$PORT/demo_cam_reader.html"
+    echo "  File Reader:   https://localhost:$PORT/demo_reader.html"
+    echo "  Writer:        https://localhost:$PORT/demo_writer.html"
     echo "========================================"
+    echo ""
+    echo "NOTE: Accept the self-signed certificate warning in your browser."
+    echo "      HTTPS with Cross-Origin Isolation is required for multi-threading."
     echo ""
     echo "Press Ctrl+C to stop the server"
     echo ""
     
-    # Try to open browser
+    # Try to open browser (use https since we need COI headers)
     if command -v xdg-open &> /dev/null; then
-        xdg-open "http://localhost:$PORT/demo_cam_reader.html" &
+        xdg-open "https://localhost:$PORT/demo_cam_reader.html" &
     elif command -v open &> /dev/null; then
-        open "http://localhost:$PORT/demo_cam_reader.html" &
+        open "https://localhost:$PORT/demo_cam_reader.html" &
     fi
     
-    # Start Python HTTP server
-    if command -v python3 &> /dev/null; then
-        python3 -m http.server "$PORT"
-    elif command -v python &> /dev/null; then
-        python -m http.server "$PORT"
+    # Start HTTPS server with Cross-Origin Isolation headers (required for multi-threading)
+    if [ -f "$WASM_DIR/https_server.py" ]; then
+        echo "Starting HTTPS server with Cross-Origin Isolation headers..."
+        if command -v python3 &> /dev/null; then
+            python3 "$WASM_DIR/https_server.py"
+        elif command -v python &> /dev/null; then
+            python "$WASM_DIR/https_server.py"
+        fi
     elif command -v emrun &> /dev/null; then
         emrun --serve_after_close --port "$PORT" demo_cam_reader.html
     else

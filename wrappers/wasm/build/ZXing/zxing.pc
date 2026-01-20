@@ -1,5 +1,5 @@
-libdir=C:/Users/Rex/emsdk/upstream/emscripten/cache/sysroot/lib
-includedir=C:/Users/Rex/emsdk/upstream/emscripten/cache/sysroot/include
+libdir=/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/emsdk/upstream/emscripten/cache/sysroot/lib
+includedir=/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/emsdk/upstream/emscripten/cache/sysroot/include
 
 Name: ZXing
 Description: ZXing-C++ library

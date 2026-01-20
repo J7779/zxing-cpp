@@ -6,22 +6,22 @@ cmake_minimum_required(VERSION ${CMAKE_VERSION}) # this file comes with cmake
 # If CMAKE_DISABLE_SOURCE_CHANGES is set to true and the source directory is an
 # existing directory in our source tree, calling file(MAKE_DIRECTORY) on it
 # would cause a fatal error, even though it would be a no-op.
-if(NOT EXISTS "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-src")
-  file(MAKE_DIRECTORY "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-src")
+if(NOT EXISTS "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-src")
+  file(MAKE_DIRECTORY "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-src")
 endif()
 file(MAKE_DIRECTORY
-  "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-build"
-  "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix"
-  "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/tmp"
-  "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp"
-  "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src"
-  "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp"
+  "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-build"
+  "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix"
+  "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/tmp"
+  "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp"
+  "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src"
+  "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp"
 )
 
 set(configSubDirs )
 foreach(subDir IN LISTS configSubDirs)
-    file(MAKE_DIRECTORY "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/${subDir}")
+    file(MAKE_DIRECTORY "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp/${subDir}")
 endforeach()
 if(cfgdir)
-  file(MAKE_DIRECTORY "C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp${cfgdir}") # cfgdir has leading slash
+  file(MAKE_DIRECTORY "/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/_deps/stb-subbuild/stb-populate-prefix/src/stb-populate-stamp${cfgdir}") # cfgdir has leading slash
 endif()
