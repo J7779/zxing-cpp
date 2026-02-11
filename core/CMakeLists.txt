@@ -493,6 +493,14 @@ if (ZXING_WRITERS_OLD AND ZXING_ENABLE_QRCODE)
     )
 endif()
 
+# NanoDet barcode detection model (embedded ONNX)
+set (ONNX_FILES
+    src/onnx/NanoDet.h
+    src/onnx/NanoDet.cpp
+    src/onnx/NanoDetModelData.h
+    src/onnx/NanoDetModelData.cpp
+)
+
 source_group (Sources FILES ${COMMON_FILES})
 source_group (Sources\\aztec FILES ${AZTEC_FILES})
 source_group (Sources\\datamatrix FILES ${DATAMATRIX_FILES})
@@ -500,6 +508,7 @@ source_group (Sources\\maxicode FILES ${MAXICODE_FILES})
 source_group (Sources\\oned FILES ${ONED_FILES})
 source_group (Sources\\pdf417 FILES ${PDF417_FILES})
 source_group (Sources\\qrcode FILES ${QRCODE_FILES})
+source_group (Sources\\onnx FILES ${ONNX_FILES})
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
@@ -513,10 +522,12 @@ add_library (ZXing
     ${ONED_FILES}
     ${PDF417_FILES}
     ${QRCODE_FILES}
+    ${ONNX_FILES}
 )
 
 target_include_directories (ZXing
     PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>" "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+    PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/onnx>"
     INTERFACE "$<INSTALL_INTERFACE:include>"
 )
 
@@ -554,6 +565,20 @@ if (ZXING_WRITERS_NEW)
         zxing_add_package(zint zint https://github.com/zint/zint.git 2.16.0)
         target_link_libraries (ZXing PRIVATE zint)
     endif()
+endif()
+
+# NanoDet model data is large - skip precompile headers and optimize for size
+set_source_files_properties(src/onnx/NanoDetModelData.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+set_source_files_properties(src/onnx/NanoDet.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+
+# Optional: link ONNX Runtime for native (non-WASM) full inference pipeline
+find_package(onnxruntime QUIET)
+if (onnxruntime_FOUND)
+    target_link_libraries(ZXing PRIVATE onnxruntime::onnxruntime)
+    target_compile_definitions(ZXing PRIVATE ZXING_USE_ONNXRUNTIME)
+    message(STATUS "ONNX Runtime found - NanoDet full inference pipeline enabled")
+else()
+    message(STATUS "ONNX Runtime not found - NanoDet pre/post-processing only (model data still embedded)")
 endif()
 
 add_library(ZXing::ZXing ALIAS ZXing)

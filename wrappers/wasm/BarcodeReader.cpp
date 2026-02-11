@@ -11,6 +11,10 @@
 #include "HybridBinarizer.h"
 #include "ThresholdBinarizer.h"
 
+// NanoDet barcode detection (model + pre/post processing embedded in WASM)
+#include "onnx/NanoDet.h"
+#include "onnx/NanoDetModelData.h"
+
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include <memory>
@@ -1652,6 +1656,82 @@ ReadResult readBarcodeFromPixmapWithConsensus(int bufferPtr, int imgWidth, int i
 	return rawResult;
 }
 
+// ============================================================================
+// NANODET - Embedded model access and pre/post-processing
+// The ONNX model is compiled into the WASM binary. JavaScript gets the model
+// data as a Uint8Array and feeds it to ONNX Runtime Web. Preprocessing and
+// postprocessing run in C++ for performance.
+// ============================================================================
+
+// Return embedded ONNX model data to JavaScript as Uint8Array
+emscripten::val getEmbeddedModelData() {
+	thread_local const emscripten::val Uint8Array = emscripten::val::global("Uint8Array");
+	return Uint8Array.new_(emscripten::typed_memory_view(
+		ZXing::NanoDet::GetModelSize(),
+		ZXing::NanoDet::GetModelData()));
+}
+
+unsigned int getEmbeddedModelSize() {
+	return ZXing::NanoDet::GetModelSize();
+}
+
+// Preprocess RGBA image data for NanoDet - returns Float32Array tensor in NCHW BGR format
+// Also returns scale/pad info via separate getter
+static ZXing::NanoDet::PreprocessResult g_lastPreprocessResult;
+
+emscripten::val nanodetPreprocess(int bufferPtr, int imgWidth, int imgHeight, int targetSize) {
+	thread_local const emscripten::val Float32Array = emscripten::val::global("Float32Array");
+	
+	const uint8_t* rgba = reinterpret_cast<const uint8_t*>(bufferPtr);
+	g_lastPreprocessResult = ZXing::NanoDet::Preprocess(rgba, imgWidth, imgHeight, targetSize);
+	
+	return Float32Array.new_(emscripten::typed_memory_view(
+		g_lastPreprocessResult.tensor.size(),
+		g_lastPreprocessResult.tensor.data()));
+}
+
+float nanodetGetScale() { return g_lastPreprocessResult.scale; }
+int nanodetGetPadX() { return g_lastPreprocessResult.padX; }
+int nanodetGetPadY() { return g_lastPreprocessResult.padY; }
+
+// Postprocess NanoDet output - takes raw model output tensor, returns JSON-like detection array
+// Returns a JS array of detection objects [{x1, y1, x2, y2, score, classId}, ...]
+emscripten::val nanodetPostprocess(int outputPtr, int numBoxes, int boxSize,
+								   int srcWidth, int srcHeight,
+								   float scale, int padX, int padY, int targetSize,
+								   float confidence) {
+	const float* outputData = reinterpret_cast<const float*>(outputPtr);
+	
+	// Auto-detect output format
+	bool isDecoded = (boxSize == 5 || boxSize == 6);
+	
+	std::vector<ZXing::NanoDet::Detection> detections;
+	if (isDecoded) {
+		detections = ZXing::NanoDet::PostprocessDecoded(
+			outputData, numBoxes, boxSize,
+			srcWidth, srcHeight, scale, padX, padY, confidence);
+	} else {
+		detections = ZXing::NanoDet::PostprocessGFL(
+			outputData, numBoxes, boxSize,
+			srcWidth, srcHeight, scale, padX, padY, targetSize, confidence);
+	}
+	
+	// Convert to JS array of objects
+	emscripten::val result = emscripten::val::array();
+	for (const auto& det : detections) {
+		emscripten::val obj = emscripten::val::object();
+		obj.set("x1", static_cast<int>(det.x1));
+		obj.set("y1", static_cast<int>(det.y1));
+		obj.set("x2", static_cast<int>(det.x2));
+		obj.set("y2", static_cast<int>(det.y2));
+		obj.set("score", det.score);
+		obj.set("classId", det.classId);
+		result.call<void>("push", obj);
+	}
+	
+	return result;
+}
+
 EMSCRIPTEN_BINDINGS(BarcodeReader)
 {
 	using namespace emscripten;
@@ -1701,4 +1781,13 @@ EMSCRIPTEN_BINDINGS(BarcodeReader)
 	
 	// Image processing parameter control (comprehensive OpenCV-style)
 	function("setImageParam", &setImageParam);
+	
+	// NanoDet embedded model and pre/post-processing
+	function("getEmbeddedModelData", &getEmbeddedModelData);
+	function("getEmbeddedModelSize", &getEmbeddedModelSize);
+	function("nanodetPreprocess", &nanodetPreprocess);
+	function("nanodetGetScale", &nanodetGetScale);
+	function("nanodetGetPadX", &nanodetGetPadX);
+	function("nanodetGetPadY", &nanodetGetPadY);
+	function("nanodetPostprocess", &nanodetPostprocess);
 };

@@ -1,8 +1,0 @@
-libdir=/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/emsdk/upstream/emscripten/cache/sysroot/lib
-includedir=/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/emsdk/upstream/emscripten/cache/sysroot/include
-
-Name: ZXing
-Description: ZXing-C++ library
-Version: 2.3.0
-Libs: -L${libdir} -lZXing
-Cflags: -I${includedir} -I${includedir}/ZXing 

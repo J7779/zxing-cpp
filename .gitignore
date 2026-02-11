@@ -27,3 +27,4 @@ CMakeLists.txt.user
 /emsdk
 /wrappers/wasm/build/_deps
 /wrappers/wasm/emsdk
+/build-wasm

@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/cmake_install.cmake",
-		"/Users/rexmobile/Documents/GitHub/zxing-cpp/wrappers/wasm/build/ZXing/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
