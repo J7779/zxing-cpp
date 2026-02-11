@@ -172,14 +172,9 @@
 				<option value="QRCode">QRCode</option>
 				<option value="DataMatrix">DataMatrix</option>
 			</select>
-			Mode: <select id="mode"><option value="true" selected>Normal</option><option value="false">Fast</option></select>
-			Binarizer: <select id="binarizer"><option value="LocalAverage" selected>LocalAverage</option><option value="GlobalHistogram">GlobalHistogram</option><option value="BoolCast">BoolCast</option></select>
+
 		</div>
 		<div style="margin-top:10px;">
-			<label><input type="checkbox" id="tryRotate" checked> Rotate</label>
-			<label><input type="checkbox" id="tryAngledScanning" checked> Angled</label>
-			<label><input type="checkbox" id="tryUpscale" checked> Upscale</label>
-			<label><input type="checkbox" id="relaxedTolerance" checked> Relaxed</label>
 			<label><input type="checkbox" id="useScanZone" checked> Scan Zone</label>
 			<label><input type="checkbox" id="useNanoDet" checked> <strong>NanoDet AI</strong></label>
 			<label><input type="checkbox" id="useZXing" checked> <strong>ZXing Decode</strong></label>
@@ -188,7 +183,6 @@
 		<div style="margin-top:10px;">
 			<label><input type="checkbox" id="showDebugImage" checked> Save Debug to History</label>
 			<label><input type="checkbox" id="liveDebugStream" checked> Live Debug View</label>
-			<label><input type="checkbox" id="preprocess"> Preprocess</label>
 			<label><input type="checkbox" id="showDetections" checked> Show Detection Boxes</label>
 			<label><input type="checkbox" id="showOnlyOnDecode"> Only on Decode</label>
 		</div>
@@ -202,163 +196,11 @@
 			Consensus: <input type="range" id="consensusFrames" min="3" max="10" value="3"> <span id="consensusFramesLabel">3</span>
 		</div>
 		<div style="font-size:11px;color:#888;margin-top:5px;">
-			Model Input: <span style="color:#0f0;">416×416</span> (fixed)
-			<input type="hidden" id="modelInputSize" value="416">
+			Model Input: <span style="color:#0f0;">640×640</span> (fixed)
+			<input type="hidden" id="modelInputSize" value="640">
 		</div>
 		
-		<!-- COMPREHENSIVE IMAGE PROCESSING CONTROLS -->
-		<details id="imgProcessControls" style="margin-top:10px;background:#1a1a2e;padding:12px;border-radius:8px;text-align:left;">
-			<summary style="cursor:pointer;color:#0af;font-weight:bold;font-size:14px;">IMAGE PROCESSING (OpenCV-style) - Click to Expand</summary>
-			
-			<!-- BRIGHTNESS/CONTRAST/GAMMA -->
-			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
-				<legend style="color:#0af;font-weight:bold;">Brightness / Contrast / Gamma</legend>
-				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-					<div>Brightness: <input type="range" id="imgBrightness" min="-100" max="100" value="0" style="width:100px;"> <span id="imgBrightnessLabel">0</span></div>
-					<div>Contrast: <input type="range" id="imgContrast" min="5" max="30" value="10" style="width:100px;"> <span id="imgContrastLabel">1.0</span></div>
-					<div>Gamma: <input type="range" id="imgGamma" min="1" max="30" value="10" style="width:100px;"> <span id="imgGammaLabel">1.0</span></div>
-					<div><label><input type="checkbox" id="imgInvert"> Invert Image</label></div>
-				</div>
-			</fieldset>
-			
-			<!-- HISTOGRAM -->
-			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
-				<legend style="color:#0af;font-weight:bold;">Histogram Equalization</legend>
-				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-					<div><label><input type="checkbox" id="imgHistEq"> Histogram Equalize</label></div>
-					<div><label><input type="checkbox" id="imgCLAHE"> CLAHE (Adaptive)</label></div>
-					<div>CLAHE Clip: <input type="range" id="imgCLAHEClip" min="1" max="100" value="40" style="width:80px;"> <span id="imgCLAHEClipLabel">4.0</span></div>
-					<div>CLAHE Tiles: <input type="range" id="imgCLAHETile" min="2" max="16" value="8" style="width:80px;"> <span id="imgCLAHETileLabel">8</span></div>
-				</div>
-			</fieldset>
-			
-			<!-- BLUR -->
-			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
-				<legend style="color:#0af;font-weight:bold;">Blur / Smoothing</legend>
-				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-					<div>Type: <select id="imgBlurType" style="width:120px;">
-						<option value="0">None</option>
-						<option value="1">Box Blur</option>
-						<option value="2">Gaussian Blur</option>
-						<option value="3">Median Blur</option>
-						<option value="4">Bilateral Filter</option>
-					</select></div>
-					<div>Radius: <input type="range" id="imgBlurRadius" min="0" max="10" value="1" style="width:80px;"> <span id="imgBlurRadiusLabel">1</span></div>
-					<div>Gaussian σ: <input type="range" id="imgGaussSigma" min="1" max="50" value="10" style="width:80px;"> <span id="imgGaussSigmaLabel">1.0</span></div>
-					<div>Bilateral Color σ: <input type="range" id="imgBilateralColor" min="1" max="150" value="50" style="width:80px;"> <span id="imgBilateralColorLabel">50</span></div>
-					<div style="grid-column:span 2;">Bilateral Space σ: <input type="range" id="imgBilateralSpace" min="1" max="150" value="50" style="width:80px;"> <span id="imgBilateralSpaceLabel">50</span></div>
-				</div>
-			</fieldset>
-			
-			<!-- SHARPEN -->
-			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
-				<legend style="color:#0af;font-weight:bold;">Sharpening</legend>
-				<div><label><input type="checkbox" id="imgSharpen"> Enable Sharpen</label>
-				Amount: <input type="range" id="imgSharpenAmount" min="0" max="50" value="10" style="width:100px;"> <span id="imgSharpenAmountLabel">1.0</span></div>
-			</fieldset>
-			
-			<!-- EDGE DETECTION -->
-			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
-				<legend style="color:#0af;font-weight:bold;">Edge Detection</legend>
-				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-					<div>Type: <select id="imgEdgeType" style="width:120px;">
-						<option value="0">None</option>
-						<option value="1">Sobel</option>
-						<option value="2">Scharr</option>
-						<option value="3">Laplacian</option>
-						<option value="4">Canny</option>
-					</select></div>
-					<div>Sobel KSize: <input type="range" id="imgSobelK" min="1" max="7" value="3" step="2" style="width:80px;"> <span id="imgSobelKLabel">3</span></div>
-					<div>Canny Low: <input type="range" id="imgCannyLow" min="0" max="255" value="50" style="width:80px;"> <span id="imgCannyLowLabel">50</span></div>
-					<div>Canny High: <input type="range" id="imgCannyHigh" min="0" max="255" value="150" style="width:80px;"> <span id="imgCannyHighLabel">150</span></div>
-				</div>
-			</fieldset>
-			
-			<!-- THRESHOLDING -->
-			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
-				<legend style="color:#0af;font-weight:bold;">Thresholding (OpenCV-style)</legend>
-				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-					<div style="grid-column:span 2;">Type: <select id="imgThreshType" style="width:200px;">
-						<option value="0">None (use ZXing binarizer)</option>
-						<option value="1">Binary (THRESH_BINARY)</option>
-						<option value="2">Binary Inv (THRESH_BINARY_INV)</option>
-						<option value="3">Truncate (THRESH_TRUNC)</option>
-						<option value="4">To Zero (THRESH_TOZERO)</option>
-						<option value="5">To Zero Inv (THRESH_TOZERO_INV)</option>
-						<option value="6">Otsu (automatic)</option>
-						<option value="7">Adaptive Mean</option>
-						<option value="8">Adaptive Gaussian</option>
-					</select></div>
-					<div>Threshold: <input type="range" id="imgThreshValue" min="0" max="255" value="128" style="width:80px;"> <span id="imgThreshValueLabel">128</span></div>
-					<div>Block Size: <input type="range" id="imgAdaptiveBlock" min="3" max="51" value="11" step="2" style="width:80px;"> <span id="imgAdaptiveBlockLabel">11</span></div>
-					<div style="grid-column:span 2;">Adaptive C: <input type="range" id="imgAdaptiveC" min="-20" max="20" value="2" style="width:150px;"> <span id="imgAdaptiveCLabel">2</span></div>
-				</div>
-			</fieldset>
-			
-			<!-- KRAKEN NLBIN -->
-			<fieldset style="border:1px solid #f0a;border-radius:4px;margin:10px 0;padding:10px;background:rgba(255,0,170,0.05);">
-				<legend style="color:#f0a;font-weight:bold;">Kraken NLBin (Non-Linear Binarization)</legend>
-				<p style="font-size:0.75em;color:#888;margin:0 0 8px 0;">Based on kraken.binarization by Kiessling &amp; Breuel (Apache 2.0). Advanced adaptive binarization for documents/barcodes.</p>
-				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-					<div style="grid-column:span 2;"><label><input type="checkbox" id="imgNlbin"> <strong>Enable NLBin</strong> (overrides standard threshold)</label></div>
-					<div>Threshold: <input type="range" id="imgNlbinThresh" min="0" max="100" value="50" style="width:80px;"> <span id="imgNlbinThreshLabel">0.50</span></div>
-					<div>Zoom: <input type="range" id="imgNlbinZoom" min="10" max="100" value="50" style="width:80px;"> <span id="imgNlbinZoomLabel">0.50</span></div>
-					<div>Escale: <input type="range" id="imgNlbinEscale" min="1" max="30" value="10" style="width:80px;"> <span id="imgNlbinEscaleLabel">1.0</span></div>
-					<div>Border: <input type="range" id="imgNlbinBorder" min="0" max="40" value="10" style="width:80px;"> <span id="imgNlbinBorderLabel">0.10</span></div>
-					<div>Percentile: <input type="range" id="imgNlbinPerc" min="50" max="99" value="80" style="width:80px;"> <span id="imgNlbinPercLabel">80</span></div>
-					<div>Range: <input type="range" id="imgNlbinRange" min="5" max="50" value="20" style="width:80px;"> <span id="imgNlbinRangeLabel">20</span></div>
-					<div>Low %: <input type="range" id="imgNlbinLow" min="1" max="30" value="5" style="width:80px;"> <span id="imgNlbinLowLabel">5</span></div>
-					<div>High %: <input type="range" id="imgNlbinHigh" min="70" max="99" value="90" style="width:80px;"> <span id="imgNlbinHighLabel">90</span></div>
-				</div>
-			</fieldset>
-			
-			<!-- MORPHOLOGY -->
-			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
-				<legend style="color:#0af;font-weight:bold;">Morphological Operations</legend>
-				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-					<div>Operation: <select id="imgMorphType" style="width:120px;">
-						<option value="0">None</option>
-						<option value="1">Erode</option>
-						<option value="2">Dilate</option>
-						<option value="3">Open</option>
-						<option value="4">Close</option>
-						<option value="5">Gradient</option>
-						<option value="6">Top Hat</option>
-						<option value="7">Black Hat</option>
-					</select></div>
-					<div>Kernel: <select id="imgMorphKernel" style="width:100px;">
-						<option value="0">Rectangle</option>
-						<option value="1">Cross</option>
-						<option value="2">Ellipse</option>
-					</select></div>
-					<div>Size: <input type="range" id="imgMorphSize" min="0" max="5" value="1" style="width:80px;"> <span id="imgMorphSizeLabel">1</span></div>
-					<div>Iterations: <input type="range" id="imgMorphIter" min="1" max="5" value="1" style="width:80px;"> <span id="imgMorphIterLabel">1</span></div>
-				</div>
-			</fieldset>
-			
-			<!-- 1D BARCODE ENHANCEMENT -->
-			<fieldset style="border:1px solid #ff0;border-radius:4px;margin:10px 0;padding:10px;background:#2a2a00;">
-				<legend style="color:#ff0;font-weight:bold;">1D Barcode Enhancement (Distance Fix)</legend>
-				<div style="font-size:11px;color:#aaa;margin-bottom:8px;">Connect broken bars from distant/noisy captures</div>
-				<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-					<div>Vertical Close: <input type="range" id="imgVertClose" min="0" max="5" value="0" style="width:80px;"> <span id="imgVertCloseLabel">0</span></div>
-					<div>Horizontal Close: <input type="range" id="imgHorizClose" min="0" max="3" value="0" style="width:80px;"> <span id="imgHorizCloseLabel">0</span></div>
-				</div>
-				<div style="font-size:10px;color:#888;margin-top:5px;">Tip: Try Vertical=2-3 for distant barcodes. Keep Horizontal low (can merge thin bars)</div>
-			</fieldset>
-			
-			<!-- BLOB REMOVAL -->
-			<fieldset style="border:1px solid #0af;border-radius:4px;margin:10px 0;padding:10px;">
-				<legend style="color:#0af;font-weight:bold;">Noise / Blob Removal</legend>
-				<div><label><input type="checkbox" id="imgBlobRemove"> Remove Small Blobs</label>
-				Min Size: <input type="range" id="imgMinBlobSize" min="0" max="100" value="10" style="width:100px;"> <span id="imgMinBlobSizeLabel">10</span> px</div>
-			</fieldset>
-			
-			<!-- RESET BUTTON -->
-			<div style="text-align:center;margin-top:10px;">
-				<button id="resetImgParams" style="background:#e94560;color:white;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;">Reset All to Defaults</button>
-			</div>
-		</details>
+
 	</div>
 
 	<div class="main-container">
@@ -415,7 +257,7 @@
 		setTimeout(renderVisibleLog, 100);
 		// ===== ONNX Runtime Web + NanoDet Integration =====
 		let onnxSession = null;
-		let modelInputSize = 416;
+		let modelInputSize = 640;
 		let nanodetConfidence = 0.30;
 
 		// Frame skipping for NanoDet (run inference every N frames)
@@ -747,137 +589,6 @@
 			if (zxing) zxing.configureConsensus(frames, matches);
 		};
 		
-		// ===== COMPREHENSIVE IMAGE PROCESSING CONTROLS =====
-		function setParam(param, value) {
-			if (zxing) zxing.setImageParam(param, value);
-		}
-		
-		// Brightness/Contrast/Gamma
-		$('imgBrightness').oninput = function() { $('imgBrightnessLabel').textContent = this.value; setParam('brightness', parseFloat(this.value)); };
-		$('imgContrast').oninput = function() { const v = this.value/10; $('imgContrastLabel').textContent = v.toFixed(1); setParam('contrast', v); };
-		$('imgGamma').oninput = function() { const v = this.value/10; $('imgGammaLabel').textContent = v.toFixed(1); setParam('gamma', v); };
-		$('imgInvert').onchange = function() { setParam('invert', this.checked ? 1 : 0); };
-		
-		// Histogram
-		$('imgHistEq').onchange = function() { setParam('histogramEqualize', this.checked ? 1 : 0); };
-		$('imgCLAHE').onchange = function() { setParam('clahe', this.checked ? 1 : 0); };
-		$('imgCLAHEClip').oninput = function() { $('imgCLAHEClipLabel').textContent = (this.value/10).toFixed(1); setParam('claheClipLimit', parseFloat(this.value)); };
-		$('imgCLAHETile').oninput = function() { $('imgCLAHETileLabel').textContent = this.value; setParam('claheTileSize', parseFloat(this.value)); };
-		
-		// Blur
-		$('imgBlurType').onchange = function() { setParam('blurType', parseFloat(this.value)); };
-		$('imgBlurRadius').oninput = function() { $('imgBlurRadiusLabel').textContent = this.value; setParam('blurRadius', parseFloat(this.value)); };
-		$('imgGaussSigma').oninput = function() { const v = this.value/10; $('imgGaussSigmaLabel').textContent = v.toFixed(1); setParam('gaussianSigma', v); };
-		$('imgBilateralColor').oninput = function() { $('imgBilateralColorLabel').textContent = this.value; setParam('bilateralSigmaColor', parseFloat(this.value)); };
-		$('imgBilateralSpace').oninput = function() { $('imgBilateralSpaceLabel').textContent = this.value; setParam('bilateralSigmaSpace', parseFloat(this.value)); };
-		
-		// Sharpen
-		$('imgSharpen').onchange = function() { setParam('sharpen', this.checked ? 1 : 0); };
-		$('imgSharpenAmount').oninput = function() { const v = this.value/10; $('imgSharpenAmountLabel').textContent = v.toFixed(1); setParam('sharpenAmount', v); };
-		
-		// Edge Detection
-		$('imgEdgeType').onchange = function() { setParam('edgeType', parseFloat(this.value)); };
-		$('imgSobelK').oninput = function() { $('imgSobelKLabel').textContent = this.value; setParam('sobelKsize', parseFloat(this.value)); };
-		$('imgCannyLow').oninput = function() { $('imgCannyLowLabel').textContent = this.value; setParam('cannyLow', parseFloat(this.value)); };
-		$('imgCannyHigh').oninput = function() { $('imgCannyHighLabel').textContent = this.value; setParam('cannyHigh', parseFloat(this.value)); };
-		
-		// Thresholding
-		$('imgThreshType').onchange = function() { setParam('thresholdType', parseFloat(this.value)); };
-		$('imgThreshValue').oninput = function() { $('imgThreshValueLabel').textContent = this.value; setParam('thresholdValue', parseFloat(this.value)); };
-		$('imgAdaptiveBlock').oninput = function() { $('imgAdaptiveBlockLabel').textContent = this.value; setParam('adaptiveBlockSize', parseFloat(this.value)); };
-		$('imgAdaptiveC').oninput = function() { $('imgAdaptiveCLabel').textContent = this.value; setParam('adaptiveC', parseFloat(this.value)); };
-		
-		// Kraken NLBin
-		$('imgNlbin').onchange = function() { setParam('nlbinEnabled', this.checked ? 1 : 0); };
-		$('imgNlbinThresh').oninput = function() { const v = this.value/100; $('imgNlbinThreshLabel').textContent = v.toFixed(2); setParam('nlbinThreshold', v); };
-		$('imgNlbinZoom').oninput = function() { const v = this.value/100; $('imgNlbinZoomLabel').textContent = v.toFixed(2); setParam('nlbinZoom', v); };
-		$('imgNlbinEscale').oninput = function() { const v = this.value/10; $('imgNlbinEscaleLabel').textContent = v.toFixed(1); setParam('nlbinEscale', v); };
-		$('imgNlbinBorder').oninput = function() { const v = this.value/100; $('imgNlbinBorderLabel').textContent = v.toFixed(2); setParam('nlbinBorder', v); };
-		$('imgNlbinPerc').oninput = function() { $('imgNlbinPercLabel').textContent = this.value; setParam('nlbinPerc', parseFloat(this.value)); };
-		$('imgNlbinRange').oninput = function() { $('imgNlbinRangeLabel').textContent = this.value; setParam('nlbinRange', parseFloat(this.value)); };
-		$('imgNlbinLow').oninput = function() { $('imgNlbinLowLabel').textContent = this.value; setParam('nlbinLow', parseFloat(this.value)); };
-		$('imgNlbinHigh').oninput = function() { $('imgNlbinHighLabel').textContent = this.value; setParam('nlbinHigh', parseFloat(this.value)); };
-		
-		// Morphology
-		$('imgMorphType').onchange = function() { setParam('morphType', parseFloat(this.value)); };
-		$('imgMorphKernel').onchange = function() { setParam('morphKernelType', parseFloat(this.value)); };
-		$('imgMorphSize').oninput = function() { $('imgMorphSizeLabel').textContent = this.value; setParam('morphSize', parseFloat(this.value)); };
-		$('imgMorphIter').oninput = function() { $('imgMorphIterLabel').textContent = this.value; setParam('morphIterations', parseFloat(this.value)); };
-		
-		// 1D Barcode Enhancement
-		$('imgVertClose').oninput = function() { $('imgVertCloseLabel').textContent = this.value; setParam('verticalCloseSize', parseFloat(this.value)); };
-		$('imgHorizClose').oninput = function() { $('imgHorizCloseLabel').textContent = this.value; setParam('horizontalCloseSize', parseFloat(this.value)); };
-		
-		// Blob Removal
-		$('imgBlobRemove').onchange = function() { setParam('removeSmallBlobs', this.checked ? 1 : 0); };
-		$('imgMinBlobSize').oninput = function() { $('imgMinBlobSizeLabel').textContent = this.value; setParam('minBlobSize', parseFloat(this.value)); };
-		
-		// Reset button
-		$('resetImgParams').onclick = function() {
-			// Reset all controls to defaults
-			$('imgBrightness').value = 0; $('imgBrightnessLabel').textContent = '0';
-			$('imgContrast').value = 10; $('imgContrastLabel').textContent = '1.0';
-			$('imgGamma').value = 10; $('imgGammaLabel').textContent = '1.0';
-			$('imgInvert').checked = false;
-			$('imgHistEq').checked = false;
-			$('imgCLAHE').checked = false;
-			$('imgCLAHEClip').value = 40; $('imgCLAHEClipLabel').textContent = '4.0';
-			$('imgCLAHETile').value = 8; $('imgCLAHETileLabel').textContent = '8';
-			$('imgBlurType').value = '0';
-			$('imgBlurRadius').value = 1; $('imgBlurRadiusLabel').textContent = '1';
-			$('imgGaussSigma').value = 10; $('imgGaussSigmaLabel').textContent = '1.0';
-			$('imgBilateralColor').value = 50; $('imgBilateralColorLabel').textContent = '50';
-			$('imgBilateralSpace').value = 50; $('imgBilateralSpaceLabel').textContent = '50';
-			$('imgSharpen').checked = false;
-			$('imgSharpenAmount').value = 10; $('imgSharpenAmountLabel').textContent = '1.0';
-			$('imgEdgeType').value = '0';
-			$('imgSobelK').value = 3; $('imgSobelKLabel').textContent = '3';
-			$('imgCannyLow').value = 50; $('imgCannyLowLabel').textContent = '50';
-			$('imgCannyHigh').value = 150; $('imgCannyHighLabel').textContent = '150';
-			$('imgThreshType').value = '0';
-			$('imgThreshValue').value = 128; $('imgThreshValueLabel').textContent = '128';
-			$('imgAdaptiveBlock').value = 11; $('imgAdaptiveBlockLabel').textContent = '11';
-			$('imgAdaptiveC').value = 2; $('imgAdaptiveCLabel').textContent = '2';
-			// NLBin defaults
-			$('imgNlbin').checked = false;
-			$('imgNlbinThresh').value = 50; $('imgNlbinThreshLabel').textContent = '0.50';
-			$('imgNlbinZoom').value = 50; $('imgNlbinZoomLabel').textContent = '0.50';
-			$('imgNlbinEscale').value = 10; $('imgNlbinEscaleLabel').textContent = '1.0';
-			$('imgNlbinBorder').value = 10; $('imgNlbinBorderLabel').textContent = '0.10';
-			$('imgNlbinPerc').value = 80; $('imgNlbinPercLabel').textContent = '80';
-			$('imgNlbinRange').value = 20; $('imgNlbinRangeLabel').textContent = '20';
-			$('imgNlbinLow').value = 5; $('imgNlbinLowLabel').textContent = '5';
-			$('imgNlbinHigh').value = 90; $('imgNlbinHighLabel').textContent = '90';
-			// Morphology/Blob
-			$('imgMorphType').value = '0';
-			$('imgMorphKernel').value = '0';
-			$('imgMorphSize').value = 1; $('imgMorphSizeLabel').textContent = '1';
-			$('imgMorphIter').value = 1; $('imgMorphIterLabel').textContent = '1';
-			$('imgVertClose').value = 0; $('imgVertCloseLabel').textContent = '0';
-			$('imgHorizClose').value = 0; $('imgHorizCloseLabel').textContent = '0';
-			$('imgBlobRemove').checked = false;
-			$('imgMinBlobSize').value = 10; $('imgMinBlobSizeLabel').textContent = '10';
-			
-			// Send all reset values to C++
-			if (zxing) {
-				setParam('brightness', 0); setParam('contrast', 1.0); setParam('gamma', 1.0); setParam('invert', 0);
-				setParam('histogramEqualize', 0); setParam('clahe', 0); setParam('claheClipLimit', 40); setParam('claheTileSize', 8);
-				setParam('blurType', 0); setParam('blurRadius', 1); setParam('gaussianSigma', 1.0);
-				setParam('bilateralSigmaColor', 50); setParam('bilateralSigmaSpace', 50);
-				setParam('sharpen', 0); setParam('sharpenAmount', 1.0);
-				setParam('edgeType', 0); setParam('sobelKsize', 3); setParam('cannyLow', 50); setParam('cannyHigh', 150);
-				setParam('thresholdType', 0); setParam('thresholdValue', 128); setParam('adaptiveBlockSize', 11); setParam('adaptiveC', 2);
-				// NLBin reset
-				setParam('nlbinEnabled', 0); setParam('nlbinThreshold', 0.5); setParam('nlbinZoom', 0.5);
-				setParam('nlbinEscale', 1.0); setParam('nlbinBorder', 0.1); setParam('nlbinPerc', 80);
-				setParam('nlbinRange', 20); setParam('nlbinLow', 5); setParam('nlbinHigh', 90);
-				// Morphology/Blob reset
-				setParam('morphType', 0); setParam('morphKernelType', 0); setParam('morphSize', 1); setParam('morphIterations', 1);
-				// 1D Enhancement reset
-				setParam('verticalCloseSize', 0); setParam('horizontalCloseSize', 0);
-				setParam('removeSmallBlobs', 0); setParam('minBlobSize', 10);
-			}
-		};
 		
 		// Update scan zone overlay position - this controls what area is cropped for scanning
 		function updateScanZone() {
@@ -939,7 +650,7 @@
 			
 			// Get live debug image if enabled
 			if ($('liveDebugStream').checked) {
-				const debugImg = zxing.getLiveDebugImage(buf, w, h, $('binarizer').value, $('preprocess').checked);
+				const debugImg = zxing.getLiveDebugImage(buf, w, h, 'LocalAverage', false);
 				if (debugImg) {
 					renderDebugImage(debugImg, w, h);
 				}
@@ -947,17 +658,13 @@
 			
 			let result;
 			if ($('useConsensus').checked) {
-				// Use C++ consensus algorithm
 				result = zxing.readBarcodeFromPixmapWithConsensus(buf, w, h, 
-					$('mode').value === 'true', $('format').value, $('binarizer').value,
-					$('tryAngledScanning').checked, $('tryUpscale').checked, 
-					$('relaxedTolerance').checked, $('tryRotate').checked, $('preprocess').checked);
+					true, $('format').value, 'LocalAverage',
+					false, false, false, false, false);
 			} else {
-				// Direct read without consensus
 				result = zxing.readBarcodeFromPixmap(buf, w, h, 
-					$('mode').value === 'true', $('format').value, $('binarizer').value,
-					$('tryAngledScanning').checked, $('tryUpscale').checked, 
-					$('relaxedTolerance').checked, $('tryRotate').checked, $('preprocess').checked);
+					true, $('format').value, 'LocalAverage',
+					false, false, false, false, false);
 			}
 			
 			zxing._free(buf);
@@ -975,12 +682,12 @@
 			let result;
 			if ($('useConsensus').checked) {
 				result = zxing.readBarcodeFromPixmapWithConsensus(buf, w, h, 
-					true, $('format').value, $('binarizer').value,
-					true, true, true, true, $('preprocess').checked);
+					true, $('format').value, 'LocalAverage',
+					false, false, false, false, false);
 			} else {
 				result = zxing.readBarcodeFromPixmap(buf, w, h, 
-					true, $('format').value, $('binarizer').value,
-					true, true, true, true, $('preprocess').checked);
+					true, $('format').value, 'LocalAverage',
+					false, false, false, false, false);
 			}
 			
 			zxing._free(buf);
@@ -1115,7 +822,7 @@
 						if ($('liveDebugStream').checked) {
 							const buf = zxing._malloc(croppedData.byteLength);
 							zxing.HEAPU8.set(croppedData, buf);
-							const debugImg = zxing.getLiveDebugImage(buf, cropW, cropH, $('binarizer').value, $('preprocess').checked);
+							const debugImg = zxing.getLiveDebugImage(buf, cropW, cropH, 'LocalAverage', false);
 							if (debugImg) {
 								renderDebugImage(debugImg, cropW, cropH);
 							}
@@ -1170,7 +877,7 @@
 					if ($('liveDebugStream').checked) {
 						const buf = zxing._malloc(imgData.data.byteLength);
 						zxing.HEAPU8.set(imgData.data, buf);
-						const debugImg = zxing.getLiveDebugImage(buf, w, h, $('binarizer').value, $('preprocess').checked);
+						const debugImg = zxing.getLiveDebugImage(buf, w, h, 'LocalAverage', false);
 						if (debugImg) {
 							renderDebugImage(debugImg, w, h);
 						}

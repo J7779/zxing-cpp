@@ -619,7 +619,7 @@
 				const zoneW = Math.floor(w);
 				const zoneH = Math.floor(h);
 				if ($('useNanoDet').checked && onnxSession) {
-					label.textContent = `Scan Zone: ${zoneW}×${zoneH} → NanoDet 640×640`;
+					label.textContent = `Scan Zone: ${zoneW}×${zoneH} → NanoDet 416×416`;
 				} else {
 					label.textContent = `Scan Zone: ${zoneW}×${zoneH}`;
 				}
@@ -641,6 +641,7 @@
 		};
 		
 		$('useNanoDet').onchange = function() { updateScanZone(); };
+		// Model input size is now fixed at 416
 
 		function readBarcode(imageData, w, h) {
 			if (!zxing) return { error: 'Loading...' };
@@ -671,6 +672,8 @@
 		}
 
 		// Dedicated decode for AI-detected crop regions
+		// Always uses tryHarder, tryUpscale, tryRotate, tryAngledScanning
+		// since these are small focused crops where decode quality is critical
 		function readBarcodeCrop(imageData, w, h) {
 			if (!zxing) return { error: 'Loading...' };
 			const buf = zxing._malloc(imageData.byteLength);
@@ -811,6 +814,8 @@
 							croppedData.set(imgData.data.subarray(srcOffset, srcOffset + cropW * 4), dstOffset);
 						}
 						
+						// For AI-detected crops, always use tryHarder + tryUpscale 
+						// since these are small focused regions where decode quality matters
 						const cropCode = readBarcodeCrop(croppedData, cropW, cropH);
 						
 						// Get live debug image if enabled - show what's being sent to ZXing
