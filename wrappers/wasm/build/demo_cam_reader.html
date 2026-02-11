@@ -202,8 +202,8 @@
 			Consensus: <input type="range" id="consensusFrames" min="3" max="10" value="3"> <span id="consensusFramesLabel">3</span>
 		</div>
 		<div style="font-size:11px;color:#888;margin-top:5px;">
-			Model Input: <span style="color:#0f0;">640x640</span>
-			<input type="hidden" id="modelInputSize" value="640">
+			Model Input: <span style="color:#0f0;">416×416</span> (fixed)
+			<input type="hidden" id="modelInputSize" value="416">
 		</div>
 		
 		<!-- COMPREHENSIVE IMAGE PROCESSING CONTROLS -->
@@ -415,7 +415,7 @@
 		setTimeout(renderVisibleLog, 100);
 		// ===== ONNX Runtime Web + NanoDet Integration =====
 		let onnxSession = null;
-		let modelInputSize = 640;
+		let modelInputSize = 416;
 		let nanodetConfidence = 0.30;
 
 		// Frame skipping for NanoDet (run inference every N frames)
@@ -575,7 +575,6 @@
 				timingStats.inference = performance.now() - t1;
 				
 				// Get raw output tensor
-				const t2 = performance.now();
 				const outputNames = Object.keys(results);
 				let outputData = null;
 				let outputShape = null;
@@ -595,14 +594,13 @@
 				}
 				
 				// Copy output tensor to WASM heap and call C++ postprocess
-				// C++ handles: format detection, DFL decode, anchor grid, NMS - all optimized
+				const t2 = performance.now();
 				const byteLen = outputData.byteLength;
 				const outPtr = zxing._malloc(byteLen);
-				// Write float data as bytes via HEAPU8 (HEAPF32 isn't exposed by Embind)
 				const outputBytes = new Uint8Array(outputData.buffer, outputData.byteOffset, byteLen);
 				zxing.HEAPU8.set(outputBytes, outPtr);
 				
-				const detections = zxing.nanodetPostprocess(
+				const packed = zxing.nanodetPostprocess(
 					outPtr, numBoxes, boxSize,
 					srcWidth, srcHeight,
 					scale, padX, padY, targetSize,
@@ -610,13 +608,23 @@
 				);
 				
 				zxing._free(outPtr);
-				timingStats.postprocess = performance.now() - t2;
 				
-				// Convert Embind result to plain JS array
-				const result = [];
-				for (let i = 0; i < detections.length; i++) {
-					result.push(detections[i]);
+				// Unpack flat float array: [count, x1,y1,x2,y2,score,classId, ...]
+				const packedCopy = new Float32Array(packed);
+				const count = packedCopy[0] | 0;
+				const result = new Array(count);
+				for (let i = 0; i < count; i++) {
+					const b = 1 + i * 6;
+					result[i] = {
+						x1: packedCopy[b] | 0,
+						y1: packedCopy[b+1] | 0,
+						x2: packedCopy[b+2] | 0,
+						y2: packedCopy[b+3] | 0,
+						score: packedCopy[b+4],
+						classId: packedCopy[b+5] | 0
+					};
 				}
+				timingStats.postprocess = performance.now() - t2;
 				return result;
 			} catch (error) {
 				console.error('NanoDet inference error:', error);
@@ -956,6 +964,29 @@
 			return result;
 		}
 
+		// Dedicated decode for AI-detected crop regions
+		// Always uses tryHarder, tryUpscale, tryRotate, tryAngledScanning
+		// since these are small focused crops where decode quality is critical
+		function readBarcodeCrop(imageData, w, h) {
+			if (!zxing) return { error: 'Loading...' };
+			const buf = zxing._malloc(imageData.byteLength);
+			zxing.HEAPU8.set(imageData, buf);
+			
+			let result;
+			if ($('useConsensus').checked) {
+				result = zxing.readBarcodeFromPixmapWithConsensus(buf, w, h, 
+					true, $('format').value, $('binarizer').value,
+					true, true, true, true, $('preprocess').checked);
+			} else {
+				result = zxing.readBarcodeFromPixmap(buf, w, h, 
+					true, $('format').value, $('binarizer').value,
+					true, true, true, true, $('preprocess').checked);
+			}
+			
+			zxing._free(buf);
+			return result;
+		}
+
 		// Convert debug image data to data URL
 		function debugImageToDataUrl(debugImage, width, height) {
 			if (!debugImage || width <= 0 || height <= 0) return null;
@@ -1053,8 +1084,11 @@
 					// This is the whole point of the AI detection!
 					for (let i = 0; i < detections.length; i++) {
 						const detection = detections[i];
-						// Add padding around detection for better decoding
-						const padding = 15;
+						// Generous padding around detection for better decoding
+						// Use proportional padding: 30% of box size (min 20px)
+						const boxW = detection.x2 - detection.x1;
+						const boxH = detection.y2 - detection.y1;
+						const padding = Math.max(20, Math.round(Math.max(boxW, boxH) * 0.3));
 						const cropX = Math.max(0, detection.x1 - padding);
 						const cropY = Math.max(0, detection.y1 - padding);
 						const cropX2 = Math.min(w, detection.x2 + padding);
@@ -1073,7 +1107,9 @@
 							croppedData.set(imgData.data.subarray(srcOffset, srcOffset + cropW * 4), dstOffset);
 						}
 						
-						const cropCode = readBarcode(croppedData, cropW, cropH);
+						// For AI-detected crops, always use tryHarder + tryUpscale 
+						// since these are small focused regions where decode quality matters
+						const cropCode = readBarcodeCrop(croppedData, cropW, cropH);
 						
 						// Get live debug image if enabled - show what's being sent to ZXing
 						if ($('liveDebugStream').checked) {

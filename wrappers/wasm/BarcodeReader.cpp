@@ -1694,12 +1694,16 @@ float nanodetGetScale() { return g_lastPreprocessResult.scale; }
 int nanodetGetPadX() { return g_lastPreprocessResult.padX; }
 int nanodetGetPadY() { return g_lastPreprocessResult.padY; }
 
-// Postprocess NanoDet output - takes raw model output tensor, returns JSON-like detection array
-// Returns a JS array of detection objects [{x1, y1, x2, y2, score, classId}, ...]
+// Postprocess NanoDet output - returns flat packed float array for minimal JS/WASM overhead
+// Layout: [numDetections, x1,y1,x2,y2,score,classId, x1,y1,x2,y2,score,classId, ...]
+// First float is the count, then 6 floats per detection. Total: 1 + 6*N floats.
+static std::vector<float> g_postprocessResult;
+
 emscripten::val nanodetPostprocess(int outputPtr, int numBoxes, int boxSize,
 								   int srcWidth, int srcHeight,
 								   float scale, int padX, int padY, int targetSize,
 								   float confidence) {
+	thread_local const emscripten::val Float32Array = emscripten::val::global("Float32Array");
 	const float* outputData = reinterpret_cast<const float*>(outputPtr);
 	
 	// Auto-detect output format
@@ -1716,20 +1720,23 @@ emscripten::val nanodetPostprocess(int outputPtr, int numBoxes, int boxSize,
 			srcWidth, srcHeight, scale, padX, padY, targetSize, confidence);
 	}
 	
-	// Convert to JS array of objects
-	emscripten::val result = emscripten::val::array();
-	for (const auto& det : detections) {
-		emscripten::val obj = emscripten::val::object();
-		obj.set("x1", static_cast<int>(det.x1));
-		obj.set("y1", static_cast<int>(det.y1));
-		obj.set("x2", static_cast<int>(det.x2));
-		obj.set("y2", static_cast<int>(det.y2));
-		obj.set("score", det.score);
-		obj.set("classId", det.classId);
-		result.call<void>("push", obj);
+	// Pack into flat float array: [count, x1,y1,x2,y2,score,classId, ...]
+	g_postprocessResult.resize(1 + detections.size() * 6);
+	g_postprocessResult[0] = static_cast<float>(detections.size());
+	for (size_t i = 0; i < detections.size(); ++i) {
+		const auto& d = detections[i];
+		size_t base = 1 + i * 6;
+		g_postprocessResult[base + 0] = d.x1;
+		g_postprocessResult[base + 1] = d.y1;
+		g_postprocessResult[base + 2] = d.x2;
+		g_postprocessResult[base + 3] = d.y2;
+		g_postprocessResult[base + 4] = d.score;
+		g_postprocessResult[base + 5] = static_cast<float>(d.classId);
 	}
 	
-	return result;
+	// Return as typed_memory_view (zero-copy read from WASM memory)
+	return Float32Array.new_(emscripten::typed_memory_view(
+		g_postprocessResult.size(), g_postprocessResult.data()));
 }
 
 EMSCRIPTEN_BINDINGS(BarcodeReader)

@@ -1,0 +1,28 @@
+# NanoDet Requirements
+# For training NanoDet-m on barcode detection
+
+# Core dependencies
+torch>=1.10.0
+torchvision>=0.11.0
+pytorch-lightning>=1.6.0,<2.0.0  # NanoDet requires PL 1.x
+
+# NanoDet - install from source
+# git clone https://github.com/RangiLyu/nanodet.git
+# cd nanodet && pip install -e .
+
+# Additional dependencies
+numpy>=1.21.0
+opencv-python>=4.5.0
+pycocotools>=2.0.4
+PyYAML>=5.4
+tensorboard>=2.8.0
+tabulate
+pyaml
+tqdm
+imagesize
+termcolor
+
+# Optional: For ONNX export
+onnx>=1.10.0
+onnxruntime>=1.10.0
+onnx-simplifier>=0.4.0

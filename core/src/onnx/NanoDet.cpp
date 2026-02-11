@@ -237,8 +237,15 @@ std::vector<Detection> PostprocessGFL(
     int numClasses = boxSize - 32; // e.g., 34 - 32 = 2 classes
     int regOffset = numClasses;     // DFL data starts after class scores
 
-    // Build anchor grid
-    auto anchors = BuildAnchorGrid(targetSize, numBoxes);
+    // Cache anchor grid (only rebuild if targetSize or numBoxes changed)
+    static std::vector<AnchorPoint> anchors;
+    static int cachedTargetSize = 0;
+    static int cachedNumBoxes = 0;
+    if (cachedTargetSize != targetSize || cachedNumBoxes != numBoxes) {
+        anchors = BuildAnchorGrid(targetSize, numBoxes);
+        cachedTargetSize = targetSize;
+        cachedNumBoxes = numBoxes;
+    }
 
     std::vector<Detection> detections;
 
