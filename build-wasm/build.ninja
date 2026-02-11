@@ -41,53 +41,6 @@ include CMakeFiles/rules.ninja
 
 cmake_ninja_workdir = C$:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/
 # =============================================================================
-# Object build statements for EXECUTABLE target zxing
-
-
-#############################################
-# Order-only phony target for zxing
-
-build cmake_object_order_depends_target_zxing: phony || cmake_object_order_depends_target_ZXing
-
-build CMakeFiles/zxing.dir/BarcodeReader.cpp.o: CXX_COMPILER__zxing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/BarcodeReader.cpp || cmake_object_order_depends_target_zxing
-  CONFIG = Release
-  DEP_FILE = CMakeFiles\zxing.dir\BarcodeReader.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -isystem C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/_deps/stb-src
-  OBJECT_DIR = CMakeFiles\zxing.dir
-  OBJECT_FILE_DIR = CMakeFiles\zxing.dir
-  TARGET_SUPPORT_DIR = CMakeFiles\zxing.dir
-
-build CMakeFiles/zxing.dir/BarcodeWriter.cpp.o: CXX_COMPILER__zxing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/BarcodeWriter.cpp || cmake_object_order_depends_target_zxing
-  CONFIG = Release
-  DEP_FILE = CMakeFiles\zxing.dir\BarcodeWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -isystem C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/_deps/stb-src
-  OBJECT_DIR = CMakeFiles\zxing.dir
-  OBJECT_FILE_DIR = CMakeFiles\zxing.dir
-  TARGET_SUPPORT_DIR = CMakeFiles\zxing.dir
-
-
-# =============================================================================
-# Link build statements for EXECUTABLE target zxing
-
-
-#############################################
-# Link the executable zxing.js
-
-build zxing.js: CXX_EXECUTABLE_LINKER__zxing_Release CMakeFiles/zxing.dir/BarcodeReader.cpp.o CMakeFiles/zxing.dir/BarcodeWriter.cpp.o | ZXing/libZXing.a || ZXing/libZXing.a
-  CONFIG = Release
-  FLAGS = -O3 -DNDEBUG
-  LINK_FLAGS = --bind -s ENVIRONMENT=web -s DISABLE_EXCEPTION_CATCHING=0 -s FILESYSTEM=0 -s MODULARIZE=1 -s DYNAMIC_EXECUTION=0 -s EXPORT_NAME=ZXing -s EXPORTED_FUNCTIONS="['_malloc', '_free']" -s EXPORTED_RUNTIME_METHODS=HEAPU8 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB
-  LINK_LIBRARIES = ZXing/libZXing.a
-  OBJECT_DIR = CMakeFiles\zxing.dir
-  POST_BUILD = cd .
-  PRE_LINK = cd .
-  TARGET_FILE = zxing.js
-  TARGET_PDB = zxing.js.dbg
-  TARGET_SUPPORT_DIR = CMakeFiles\zxing.dir
-
-# =============================================================================
 # Object build statements for EXECUTABLE target zxing_reader
 
 
@@ -124,44 +77,6 @@ build zxing_reader.js: CXX_EXECUTABLE_LINKER__zxing_reader_Release CMakeFiles/zx
   TARGET_FILE = zxing_reader.js
   TARGET_PDB = zxing_reader.js.dbg
   TARGET_SUPPORT_DIR = CMakeFiles\zxing_reader.dir
-
-# =============================================================================
-# Object build statements for EXECUTABLE target zxing_writer
-
-
-#############################################
-# Order-only phony target for zxing_writer
-
-build cmake_object_order_depends_target_zxing_writer: phony || cmake_object_order_depends_target_ZXing
-
-build CMakeFiles/zxing_writer.dir/BarcodeWriter.cpp.o: CXX_COMPILER__zxing_writer_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/BarcodeWriter.cpp || cmake_object_order_depends_target_zxing_writer
-  CONFIG = Release
-  DEP_FILE = CMakeFiles\zxing_writer.dir\BarcodeWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -isystem C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/_deps/stb-src
-  OBJECT_DIR = CMakeFiles\zxing_writer.dir
-  OBJECT_FILE_DIR = CMakeFiles\zxing_writer.dir
-  TARGET_SUPPORT_DIR = CMakeFiles\zxing_writer.dir
-
-
-# =============================================================================
-# Link build statements for EXECUTABLE target zxing_writer
-
-
-#############################################
-# Link the executable zxing_writer.js
-
-build zxing_writer.js: CXX_EXECUTABLE_LINKER__zxing_writer_Release CMakeFiles/zxing_writer.dir/BarcodeWriter.cpp.o | ZXing/libZXing.a || ZXing/libZXing.a
-  CONFIG = Release
-  FLAGS = -O3 -DNDEBUG
-  LINK_FLAGS = --bind -s ENVIRONMENT=web -s DISABLE_EXCEPTION_CATCHING=0 -s FILESYSTEM=0 -s MODULARIZE=1 -s DYNAMIC_EXECUTION=0 -s EXPORT_NAME=ZXing -s EXPORTED_FUNCTIONS="['_malloc', '_free']" -s EXPORTED_RUNTIME_METHODS=HEAPU8 -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=64MB
-  LINK_LIBRARIES = ZXing/libZXing.a
-  OBJECT_DIR = CMakeFiles\zxing_writer.dir
-  POST_BUILD = cd .
-  PRE_LINK = cd .
-  TARGET_FILE = zxing_writer.js
-  TARGET_PDB = zxing_writer.js.dbg
-  TARGET_SUPPORT_DIR = CMakeFiles\zxing_writer.dir
 
 
 #############################################
@@ -519,33 +434,6 @@ build ZXing/CMakeFiles/ZXing.dir/src/WhiteRectDetector.cpp.o: CXX_COMPILER__ZXin
   OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src
   TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
 
-build ZXing/CMakeFiles/ZXing.dir/src/TextEncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/TextEncoder.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\TextEncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/ReedSolomonEncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/ReedSolomonEncoder.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\ReedSolomonEncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/MultiFormatWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/MultiFormatWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\MultiFormatWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
 build ZXing/CMakeFiles/ZXing.dir/src/aztec/AZDecoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/aztec/AZDecoder.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
   CONFIG = Release
   DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\aztec\AZDecoder.cpp.o.d
@@ -567,42 +455,6 @@ build ZXing/CMakeFiles/ZXing.dir/src/aztec/AZDetector.cpp.o: CXX_COMPILER__ZXing
 build ZXing/CMakeFiles/ZXing.dir/src/aztec/AZReader.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/aztec/AZReader.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
   CONFIG = Release
   DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\aztec\AZReader.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\aztec
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/aztec/AZEncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/aztec/AZEncoder.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\aztec\AZEncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\aztec
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/aztec/AZHighLevelEncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/aztec/AZHighLevelEncoder.cpp || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\aztec\AZHighLevelEncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Os
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\aztec
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/aztec/AZToken.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/aztec/AZToken.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\aztec\AZToken.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\aztec
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/aztec/AZWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/aztec/AZWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\aztec\AZWriter.cpp.o.d
   FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
   INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
   OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
@@ -657,42 +509,6 @@ build ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMDetector.cpp.o: CXX_COMPILER__
 build ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMReader.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMReader.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
   CONFIG = Release
   DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\datamatrix\DMReader.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\datamatrix
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMECEncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMECEncoder.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\datamatrix\DMECEncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\datamatrix
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMHighLevelEncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMHighLevelEncoder.cpp || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\datamatrix\DMHighLevelEncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Os
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\datamatrix
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMSymbolInfo.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMSymbolInfo.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\datamatrix\DMSymbolInfo.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\datamatrix
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\datamatrix\DMWriter.cpp.o.d
   FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
   INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
   OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
@@ -861,96 +677,6 @@ build ZXing/CMakeFiles/ZXing.dir/src/oned/ODReader.cpp.o: CXX_COMPILER__ZXing_un
   OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
   TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
 
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODCodabarWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODCodabarWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODCodabarWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode39Writer.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODCode39Writer.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODCode39Writer.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode93Writer.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODCode93Writer.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODCode93Writer.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode128Writer.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODCode128Writer.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODCode128Writer.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODEAN8Writer.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODEAN8Writer.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODEAN8Writer.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODEAN13Writer.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODEAN13Writer.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODEAN13Writer.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODITFWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODITFWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODITFWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODUPCEWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODUPCEWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODUPCEWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODUPCAWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODUPCAWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODUPCAWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/oned/ODWriterHelper.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/oned/ODWriterHelper.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\oned\ODWriterHelper.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\oned
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
 build ZXing/CMakeFiles/ZXing.dir/src/pdf417/ZXBigInteger.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/pdf417/ZXBigInteger.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
   CONFIG = Release
   DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\pdf417\ZXBigInteger.cpp.o.d
@@ -1059,33 +785,6 @@ build ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFScanningDecoder.cpp.o: CXX_COMPIL
   OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\pdf417
   TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
 
-build ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFEncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFEncoder.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\pdf417\PDFEncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\pdf417
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFHighLevelEncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFHighLevelEncoder.cpp || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\pdf417\PDFHighLevelEncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Os
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\pdf417
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\pdf417\PDFWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\pdf417
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
 build ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRCodecMode.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/qrcode/QRCodecMode.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
   CONFIG = Release
   DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\qrcode\QRCodecMode.cpp.o.d
@@ -1167,42 +866,6 @@ build ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRReader.cpp.o: CXX_COMPILER__ZXing_
   OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\qrcode
   TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
 
-build ZXing/CMakeFiles/ZXing.dir/src/qrcode/QREncoder.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/qrcode/QREncoder.cpp || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\qrcode\QREncoder.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Os
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\qrcode
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRMaskUtil.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/qrcode/QRMaskUtil.cpp || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\qrcode\QRMaskUtil.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Os
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\qrcode
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRMatrixUtil.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/qrcode/QRMatrixUtil.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\qrcode\QRMatrixUtil.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\qrcode
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
-build ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRWriter.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/qrcode/QRWriter.cpp | ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch || cmake_object_order_depends_target_ZXing
-  CONFIG = Release
-  DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\qrcode\QRWriter.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/= -Winvalid-pch -Xclang -include-pch -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx.pch -Xclang -include -Xclang C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/CMakeFiles/ZXing.dir/cmake_pch.hxx
-  INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
-  OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
-  OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\qrcode
-  TARGET_SUPPORT_DIR = ZXing\CMakeFiles\ZXing.dir
-
 build ZXing/CMakeFiles/ZXing.dir/src/onnx/NanoDet.cpp.o: CXX_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx/NanoDet.cpp || cmake_object_order_depends_target_ZXing
   CONFIG = Release
   DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\onnx\NanoDet.cpp.o.d
@@ -1224,7 +887,7 @@ build ZXing/CMakeFiles/ZXing.dir/src/onnx/NanoDetModelData.cpp.o: CXX_COMPILER__
 build ZXing/CMakeFiles/ZXing.dir/src/libzueci/zueci.c.o: C_COMPILER__ZXing_unscanned_Release C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/libzueci/zueci.c || cmake_object_order_depends_target_ZXing
   CONFIG = Release
   DEP_FILE = ZXing\CMakeFiles\ZXing.dir\src\libzueci\zueci.c.o.d
-  FLAGS = -O3 -DNDEBUG -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/=
+  FLAGS = -O3 -DNDEBUG -fPIC   -s DISABLE_EXCEPTION_CATCHING=0 -DZXING_WITH_1D -DZXING_WITH_AZTEC -DZXING_WITH_DATAMATRIX -DZXING_WITH_MAXICODE -DZXING_WITH_PDF417 -DZXING_WITH_QRCODE -Wall -Wextra -Wno-missing-braces -Werror=undef -Werror=return-type -fmacro-prefix-map=C:/Users/Rex/Documents/GitHub/zxing-cpp/core/=  -DZUECI_EMBED_NO_TO_ECI
   INCLUDES = -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src -IC:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing -IC:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/onnx
   OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
   OBJECT_FILE_DIR = ZXing\CMakeFiles\ZXing.dir\src\libzueci
@@ -1238,7 +901,7 @@ build ZXing/CMakeFiles/ZXing.dir/src/libzueci/zueci.c.o: C_COMPILER__ZXing_unsca
 #############################################
 # Link the static library ZXing\libZXing.a
 
-build ZXing/libZXing.a: CXX_STATIC_LIBRARY_LINKER__ZXing_Release ZXing/CMakeFiles/ZXing.dir/src/Barcode.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BarcodeFormat.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BitMatrix.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BitMatrixIO.cpp.o ZXing/CMakeFiles/ZXing.dir/src/CharacterSet.cpp.o ZXing/CMakeFiles/ZXing.dir/src/Content.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ECI.cpp.o ZXing/CMakeFiles/ZXing.dir/src/Error.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GTIN.cpp.o ZXing/CMakeFiles/ZXing.dir/src/JSON.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ReadBarcode.cpp.o ZXing/CMakeFiles/ZXing.dir/src/Utf.cpp.o ZXing/CMakeFiles/ZXing.dir/src/WriteBarcode.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ZXingCpp.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BitArray.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GenericGF.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GenericGFPoly.cpp.o ZXing/CMakeFiles/ZXing.dir/src/TextUtfEncoding.cpp.o ZXing/CMakeFiles/ZXing.dir/src/HRI.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BinaryBitmap.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BitSource.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ConcentricFinder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GlobalHistogramBinarizer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GridSampler.cpp.o ZXing/CMakeFiles/ZXing.dir/src/HybridBinarizer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/MultiFormatReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/PerspectiveTransform.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ReedSolomonDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ResultPoint.cpp.o ZXing/CMakeFiles/ZXing.dir/src/TextDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/WhiteRectDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/TextEncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ReedSolomonEncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/MultiFormatWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZEncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZHighLevelEncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZToken.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMBitLayout.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMVersion.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMDataBlock.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMECEncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMHighLevelEncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMSymbolInfo.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/maxicode/MCBitMatrixParser.cpp.o ZXing/CMakeFiles/ZXing.dir/src/maxicode/MCDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/maxicode/MCReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODUPCEANCommon.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode128Patterns.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCodabarReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode39Reader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode93Reader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode128Reader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarCommon.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarExpandedBitDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarExpandedReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarLimitedReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDXFilmEdgeReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODITFReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODMultiUPCEANReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCodabarWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode39Writer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode93Writer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode128Writer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODEAN8Writer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODEAN13Writer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODITFWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODUPCEWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODUPCAWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODWriterHelper.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/ZXBigInteger.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFBarcodeValue.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFBoundingBox.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFCodewordDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDetectionResult.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDetectionResultColumn.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFModulusGF.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFModulusPoly.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFScanningDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFEncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFHighLevelEncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRCodecMode.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRErrorCorrectionLevel.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRVersion.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRBitMatrixParser.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRDataBlock.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRFormatInformation.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QREncoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRMaskUtil.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRMatrixUtil.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRWriter.cpp.o ZXing/CMakeFiles/ZXing.dir/src/onnx/NanoDet.cpp.o ZXing/CMakeFiles/ZXing.dir/src/onnx/NanoDetModelData.cpp.o ZXing/CMakeFiles/ZXing.dir/src/libzueci/zueci.c.o
+build ZXing/libZXing.a: CXX_STATIC_LIBRARY_LINKER__ZXing_Release ZXing/CMakeFiles/ZXing.dir/src/Barcode.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BarcodeFormat.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BitMatrix.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BitMatrixIO.cpp.o ZXing/CMakeFiles/ZXing.dir/src/CharacterSet.cpp.o ZXing/CMakeFiles/ZXing.dir/src/Content.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ECI.cpp.o ZXing/CMakeFiles/ZXing.dir/src/Error.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GTIN.cpp.o ZXing/CMakeFiles/ZXing.dir/src/JSON.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ReadBarcode.cpp.o ZXing/CMakeFiles/ZXing.dir/src/Utf.cpp.o ZXing/CMakeFiles/ZXing.dir/src/WriteBarcode.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ZXingCpp.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BitArray.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GenericGF.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GenericGFPoly.cpp.o ZXing/CMakeFiles/ZXing.dir/src/TextUtfEncoding.cpp.o ZXing/CMakeFiles/ZXing.dir/src/HRI.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BinaryBitmap.cpp.o ZXing/CMakeFiles/ZXing.dir/src/BitSource.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ConcentricFinder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GlobalHistogramBinarizer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/GridSampler.cpp.o ZXing/CMakeFiles/ZXing.dir/src/HybridBinarizer.cpp.o ZXing/CMakeFiles/ZXing.dir/src/MultiFormatReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/PerspectiveTransform.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ReedSolomonDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/ResultPoint.cpp.o ZXing/CMakeFiles/ZXing.dir/src/TextDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/WhiteRectDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/aztec/AZReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMBitLayout.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMVersion.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMDataBlock.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/datamatrix/DMReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/maxicode/MCBitMatrixParser.cpp.o ZXing/CMakeFiles/ZXing.dir/src/maxicode/MCDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/maxicode/MCReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODUPCEANCommon.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode128Patterns.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCodabarReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode39Reader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode93Reader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODCode128Reader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarCommon.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarExpandedBitDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarExpandedReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDataBarLimitedReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODDXFilmEdgeReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODITFReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODMultiUPCEANReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/oned/ODReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/ZXBigInteger.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFBarcodeValue.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFBoundingBox.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFCodewordDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDetectionResult.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDetectionResultColumn.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFModulusGF.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFModulusPoly.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/pdf417/PDFScanningDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRCodecMode.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRErrorCorrectionLevel.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRVersion.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRBitMatrixParser.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRDataBlock.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRDecoder.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRDetector.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRFormatInformation.cpp.o ZXing/CMakeFiles/ZXing.dir/src/qrcode/QRReader.cpp.o ZXing/CMakeFiles/ZXing.dir/src/onnx/NanoDet.cpp.o ZXing/CMakeFiles/ZXing.dir/src/onnx/NanoDetModelData.cpp.o ZXing/CMakeFiles/ZXing.dir/src/libzueci/zueci.c.o
   CONFIG = Release
   LANGUAGE_COMPILE_FLAGS = -O3 -DNDEBUG
   OBJECT_DIR = ZXing\CMakeFiles\ZXing.dir
@@ -1309,11 +972,7 @@ build ZXing: phony ZXing/libZXing.a
 
 build libZXing.a: phony ZXing/libZXing.a
 
-build zxing: phony zxing.js
-
 build zxing_reader: phony zxing_reader.js
-
-build zxing_writer: phony zxing_writer.js
 
 # =============================================================================
 # Folder targets.
@@ -1323,7 +982,7 @@ build zxing_writer: phony zxing_writer.js
 #############################################
 # Folder: C:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm
 
-build all: phony zxing.js zxing_reader.js zxing_writer.js ZXing/all
+build all: phony zxing_reader.js ZXing/all
 
 # =============================================================================
 
@@ -1339,14 +998,14 @@ build ZXing/all: phony ZXing/libZXing.a
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja C$:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/cmake_install.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/cmake_install.cmake: RERUN_CMAKE | C$:/Program$ Files/CMake/share/cmake-4.2/Modules/BasicConfigVersion-SameMajorVersion.cmake.in C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakePackageConfigHelpers.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXCompilerFlag.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckIncludeFile.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/ExternalProject/shared_internal_commands.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FetchContent.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FetchContent/CMakeLists.cmake.in C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindGit.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageMessage.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindThreads.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/GNUInstallDirs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckCompilerFlag.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckFlagCommonConfig.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Initialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/WriteBasicConfigVersionFile.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/CMakeLists.txt C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/Version.h.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/ZXingConfig.cmake.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/zxing.pc.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/CMakeLists.txt C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_cam_reader.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_reader.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_writer.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/zxing.cmake CMakeCache.txt CMakeFiles/4.2.1/CMakeCCompiler.cmake CMakeFiles/4.2.1/CMakeCXXCompiler.cmake CMakeFiles/4.2.1/CMakeSystem.cmake
+build build.ninja C$:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/cmake_install.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/build-wasm/ZXing/cmake_install.cmake: RERUN_CMAKE | C$:/Program$ Files/CMake/share/cmake-4.2/Modules/BasicConfigVersion-SameMajorVersion.cmake.in C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakePackageConfigHelpers.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXCompilerFlag.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckIncludeFile.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/ExternalProject/shared_internal_commands.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FetchContent.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FetchContent/CMakeLists.cmake.in C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindGit.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageMessage.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindThreads.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/GNUInstallDirs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckCompilerFlag.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckFlagCommonConfig.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Initialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/WriteBasicConfigVersionFile.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/CMakeLists.txt C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/Version.h.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/ZXingConfig.cmake.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/zxing.pc.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/CMakeLists.txt C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_cam_reader.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_reader.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/zxing.cmake CMakeCache.txt CMakeFiles/4.2.1/CMakeCCompiler.cmake CMakeFiles/4.2.1/CMakeCXXCompiler.cmake CMakeFiles/4.2.1/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build C$:/Program$ Files/CMake/share/cmake-4.2/Modules/BasicConfigVersion-SameMajorVersion.cmake.in C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakePackageConfigHelpers.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXCompilerFlag.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckIncludeFile.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/ExternalProject/shared_internal_commands.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FetchContent.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FetchContent/CMakeLists.cmake.in C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindGit.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageMessage.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindThreads.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/GNUInstallDirs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckCompilerFlag.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckFlagCommonConfig.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Initialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/WriteBasicConfigVersionFile.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/CMakeLists.txt C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/Version.h.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/ZXingConfig.cmake.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/zxing.pc.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/CMakeLists.txt C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_cam_reader.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_reader.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_writer.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/zxing.cmake CMakeCache.txt CMakeFiles/4.2.1/CMakeCCompiler.cmake CMakeFiles/4.2.1/CMakeCXXCompiler.cmake CMakeFiles/4.2.1/CMakeSystem.cmake: phony
+build C$:/Program$ Files/CMake/share/cmake-4.2/Modules/BasicConfigVersion-SameMajorVersion.cmake.in C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakePackageConfigHelpers.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXCompilerFlag.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckCXXSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckIncludeFile.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/CheckLibraryExists.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/Clang.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Compiler/GNU.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/ExternalProject/shared_internal_commands.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FetchContent.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FetchContent/CMakeLists.cmake.in C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindGit.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindPackageMessage.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/FindThreads.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/GNUInstallDirs.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCXXLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CMakeCommonLinkerInformation.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckCompilerFlag.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckFlagCommonConfig.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Internal/CheckSourceCompiles.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Clang.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten-Initialize.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Emscripten.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD-C.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD-CXX.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/Platform/Linker/Emscripten-LLD.cmake C$:/Program$ Files/CMake/share/cmake-4.2/Modules/WriteBasicConfigVersionFile.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/CMakeLists.txt C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/Version.h.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/ZXingConfig.cmake.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/core/zxing.pc.in C$:/Users/Rex/Documents/GitHub/zxing-cpp/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/CMakeLists.txt C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_cam_reader.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/demo_reader.html C$:/Users/Rex/Documents/GitHub/zxing-cpp/zxing.cmake CMakeCache.txt CMakeFiles/4.2.1/CMakeCCompiler.cmake CMakeFiles/4.2.1/CMakeCXXCompiler.cmake CMakeFiles/4.2.1/CMakeSystem.cmake: phony
 
 
 #############################################

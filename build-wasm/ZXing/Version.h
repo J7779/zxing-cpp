@@ -7,7 +7,7 @@
 #pragma once
 
 #define ZXING_READERS
-#define ZXING_WRITERS
+/* #undef ZXING_WRITERS */
 
 // Version numbering
 #define ZXING_VERSION_MAJOR 2

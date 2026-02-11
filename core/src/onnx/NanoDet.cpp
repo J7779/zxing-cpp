@@ -153,6 +153,7 @@ std::vector<Detection> ApplyNMS(const std::vector<Detection>& detections, float 
 }
 
 // DFL (Distribution Focal Loss) decode: softmax over bins then weighted sum
+// Uses stack array (max 16 bins) to avoid heap allocation per call
 static float DecodeDFL(const float* data, int regMax)
 {
     // Find max for numerical stability
@@ -160,18 +161,18 @@ static float DecodeDFL(const float* data, int regMax)
     for (int j = 1; j <= regMax; ++j)
         maxVal = std::max(maxVal, data[j]);
 
-    // Softmax
+    // Softmax + weighted sum in single pass to minimize memory access
+    float exps[16]; // Stack allocation, regMax is typically 7
     float sum = 0;
-    std::vector<float> exps(regMax + 1);
     for (int j = 0; j <= regMax; ++j) {
         exps[j] = std::exp(data[j] - maxVal);
         sum += exps[j];
     }
 
-    // Weighted sum: sum(softmax(x) * index)
     float dist = 0;
+    float invSum = 1.0f / sum;
     for (int j = 0; j <= regMax; ++j)
-        dist += (exps[j] / sum) * j;
+        dist += exps[j] * invSum * j;
 
     return dist;
 }

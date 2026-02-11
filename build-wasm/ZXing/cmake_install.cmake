@@ -65,10 +65,6 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
     "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/ZXVersion.h"
     "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/DecodeHints.h"
     "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/Result.h"
-    "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/BitMatrix.h"
-    "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/BitMatrixIO.h"
-    "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/Matrix.h"
-    "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/MultiFormatWriter.h"
     )
 endif()
 

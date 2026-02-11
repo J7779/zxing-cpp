@@ -21,8 +21,4 @@
 #include "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/TextUtfEncoding.h"
 #include "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/ZXingCpp.h"
 #include "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/ZXAlgorithms.h"
-#include "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/BitMatrix.h"
-#include "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/BitMatrixIO.h"
-#include "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/Matrix.h"
-#include "C:/Users/Rex/Documents/GitHub/zxing-cpp/core/src/MultiFormatWriter.h"
 #endif // __cplusplus
