@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/cmake_install.cmake",
+		"C:/Users/Rex/Documents/GitHub/zxing-cpp/wrappers/wasm/build/ZXing/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
