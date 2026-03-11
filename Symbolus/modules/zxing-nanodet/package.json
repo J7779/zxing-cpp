@@ -1,0 +1,13 @@
+{
+  "name": "zxing-nanodet",
+  "version": "1.0.0",
+  "description": "VisionCamera frame processor plugin — NanoDet ONNX barcode detection + ZXing decode",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {},
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-vision-camera": "^4.7.3"
+  }
+}

@@ -1,0 +1,6 @@
+-- [zxing-nanodet] ZXING_CORE_ROOT = C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android/../../../../core
+-- [zxing-nanodet] ZXING_CORE_ROOT (normalized) = C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/../../../../core
+-- [zxing-nanodet] ZINT_BACKEND_ROOT = C:/Users/RexMobile/Documents/GitHub/zxing-cpp/zint/backend
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/.cxx/Debug/1f191ei4/arm64-v8a

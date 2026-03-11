@@ -1,0 +1,40 @@
+{
+  "buildFiles": [
+    "C:\\Users\\RexMobile\\Documents\\GitHub\\zxing-cpp\\Symbolus\\modules\\zxing-nanodet\\android\\src\\main\\cpp\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\RexMobile\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "C:\\Users\\RexMobile\\Documents\\GitHub\\zxing-cpp\\Symbolus\\modules\\zxing-nanodet\\android\\.cxx\\Debug\\1u44142v\\x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\RexMobile\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "C:\\Users\\RexMobile\\Documents\\GitHub\\zxing-cpp\\Symbolus\\modules\\zxing-nanodet\\android\\.cxx\\Debug\\1u44142v\\x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "zxing_nanodet_jni::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "zxing_nanodet_jni",
+      "output": "C:\\Users\\RexMobile\\Documents\\GitHub\\zxing-cpp\\Symbolus\\modules\\zxing-nanodet\\android\\build\\intermediates\\cxx\\Debug\\1u44142v\\obj\\x86_64\\libzxing_nanodet_jni.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "C:\\Users\\RexMobile\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "cppCompilerExecutable": "C:\\Users\\RexMobile\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

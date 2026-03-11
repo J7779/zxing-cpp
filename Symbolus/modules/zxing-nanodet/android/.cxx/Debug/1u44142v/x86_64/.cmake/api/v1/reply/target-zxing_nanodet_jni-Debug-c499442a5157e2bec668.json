@@ -1,0 +1,1166 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/build/intermediates/cxx/Debug/1u44142v/obj/x86_64/libzxing_nanodet_jni.so"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"target_link_options",
+			"target_link_libraries",
+			"target_compile_definitions",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 51,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 87,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 91,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 68,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 72,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 58,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -std=c++17 -fno-limit-debug-info  -fPIC"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 4,
+					"define" : "ZXING_READERS"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_1D"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_AZTEC"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_DATAMATRIX"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_MAXICODE"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_PDF417"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_QRCODE"
+				},
+				{
+					"define" : "zxing_nanodet_jni_EXPORTS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/../../../../core/src"
+				},
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/../../../../core/src/onnx"
+				},
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/../../../../core/src/libzueci"
+				},
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/.cxx/Debug/1u44142v/x86_64"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80,
+				81,
+				82,
+				83,
+				84,
+				85,
+				86,
+				87,
+				88,
+				89,
+				90,
+				91,
+				92,
+				93,
+				94,
+				95,
+				96,
+				97,
+				98,
+				99,
+				100,
+				101,
+				102,
+				103,
+				104,
+				105,
+				106,
+				107,
+				108,
+				109,
+				110,
+				111,
+				112
+			],
+			"sysroot" : 
+			{
+				"path" : "C:/Users/RexMobile/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/sysroot"
+			}
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 4,
+					"define" : "ZXING_READERS"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_1D"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_AZTEC"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_DATAMATRIX"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_MAXICODE"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_PDF417"
+				},
+				{
+					"backtrace" : 5,
+					"define" : "ZXING_WITH_QRCODE"
+				},
+				{
+					"define" : "zxing_nanodet_jni_EXPORTS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/../../../../core/src"
+				},
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/../../../../core/src/onnx"
+				},
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/../../../../core/src/libzueci"
+				},
+				{
+					"backtrace" : 6,
+					"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/.cxx/Debug/1u44142v/x86_64"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" : 
+			[
+				2
+			],
+			"sysroot" : 
+			{
+				"path" : "C:/Users/RexMobile/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/sysroot"
+			}
+		}
+	],
+	"id" : "zxing_nanodet_jni::@6890427a1f51a3e7e1df",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-static-libstdc++ -Wl,--build-id=sha1 -Wl,--no-rosegment -Wl,--no-undefined-version -Wl,--fatal-warnings -Wl,--no-undefined -Qunused-arguments",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "-Wl,-z,max-page-size=16384",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "-landroid",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "-llog",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "-latomic -lm",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX",
+		"sysroot" : 
+		{
+			"path" : "C:/Users/RexMobile/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/sysroot"
+		}
+	},
+	"name" : "zxing_nanodet_jni",
+	"nameOnDisk" : "libzxing_nanodet_jni.so",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80,
+				81,
+				82,
+				83,
+				84,
+				85,
+				86,
+				87,
+				88,
+				89,
+				90,
+				91,
+				92,
+				93,
+				94,
+				95,
+				96,
+				97,
+				98,
+				99,
+				100,
+				101,
+				102,
+				103,
+				104,
+				105,
+				106,
+				107,
+				108,
+				109,
+				110,
+				111,
+				112
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "ZXingNanoDetJNI.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "NanoDetModelDataStub.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 1,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/libzueci/zueci.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/Barcode.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BarcodeFormat.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BinaryBitmap.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BitArray.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BitMatrix.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BitMatrixIO.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BitSource.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/CharacterSet.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ConcentricFinder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/Content.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/DecodeHints.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ECI.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/Error.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GTIN.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GenericGF.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GenericGFPoly.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GlobalHistogramBinarizer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GridSampler.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/HRI.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/HybridBinarizer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/JSON.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/MultiFormatReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/MultiFormatWriter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/PerspectiveTransform.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ReadBarcode.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ReedSolomonDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ReedSolomonEncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ResultPoint.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/TextDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/TextEncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/TextUtfEncoding.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/Utf.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/WhiteRectDetector.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/WriteBarcode.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ZXingC.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ZXingCpp.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZDetector.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZEncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZHighLevelEncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZToken.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZWriter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMBitLayout.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMDataBlock.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMDetector.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMECEncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMHighLevelEncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMSymbolInfo.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMVersion.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMWriter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/maxicode/MCBitMatrixParser.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/maxicode/MCDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/maxicode/MCReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCodabarReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCodabarWriter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode128Patterns.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode128Reader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode128Writer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode39Reader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode39Writer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode93Reader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode93Writer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDXFilmEdgeReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarCommon.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarExpandedBitDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarExpandedReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarLimitedReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODEAN13Writer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODEAN8Writer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODITFReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODITFWriter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODMultiUPCEANReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODUPCAWriter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODUPCEANCommon.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODUPCEWriter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODWriterHelper.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/onnx/NanoDet.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFBarcodeValue.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFBoundingBox.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFCodewordDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFDetectionResult.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFDetectionResultColumn.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFDetector.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFEncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFHighLevelEncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFModulusGF.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFModulusPoly.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFScanningDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFWriter.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/ZXBigInteger.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRBitMatrixParser.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRCodecMode.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRDataBlock.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRDecoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRDetector.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QREncoder.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRErrorCorrectionLevel.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRFormatInformation.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRMaskUtil.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRMatrixUtil.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRReader.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRVersion.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRWriter.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "SHARED_LIBRARY"
+}

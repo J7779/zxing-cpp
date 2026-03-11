@@ -1,0 +1,363 @@
+// SPDX-License-Identifier: Apache-2.0
+// ZXingNanoDetPlugin.kt
+//
+// VisionCamera v4 frame processor plugin (Android).
+// Plugin name: "detectBarcodes"
+//
+// Pipeline per frame (async):
+//   callback(): YUV->RGBA copy (sync) -> dispatch to worker -> return cached results
+//   worker:     preprocess -> ORT inference -> postprocess -> ZXing decode -> update cache
+
+package expo.modules.zxing.nanodet
+
+import ai.onnxruntime.OnnxTensor
+import ai.onnxruntime.OrtEnvironment
+import ai.onnxruntime.OrtSession
+import android.graphics.ImageFormat
+import android.util.Log
+import com.mrousavy.camera.frameprocessors.Frame
+import com.mrousavy.camera.frameprocessors.FrameProcessorPlugin
+import com.mrousavy.camera.frameprocessors.VisionCameraProxy
+import java.nio.FloatBuffer
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+
+private const val TAG = "ZXingNanoDetPlugin"
+private const val MODEL_ASSET = "nanodet_barcode.onnx"
+
+class ZXingNanoDetPlugin(
+    proxy: VisionCameraProxy,
+    options: Map<String, Any>?,
+) : FrameProcessorPlugin() {
+
+    private val appContext = proxy.context.applicationContext
+    private val ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
+    private var ortSession: OrtSession? = null
+
+    // Single background thread for inference - avoids blocking the camera pipeline
+    private val executor = Executors.newSingleThreadExecutor { r ->
+        Thread(r, "ZXingNanoDetWorker").apply { isDaemon = true }
+    }
+    private val isProcessing = AtomicBoolean(false)
+    @Volatile private var cachedResults: List<Map<String, Any>> = emptyList()
+
+    init {
+        try {
+            val modelBytes = appContext.assets.open(MODEL_ASSET).readBytes()
+            val sessionOptions = OrtSession.SessionOptions().apply {
+                setIntraOpNumThreads(2)
+                setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
+            }
+            ortSession = ortEnv.createSession(modelBytes, sessionOptions)
+            Log.i(TAG, "ORT session ready - inputs: ${ortSession?.inputNames}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to init ORT session: ${e.message}", e)
+        }
+    }
+
+    // -- Frame processor callback (runs on VisionCamera thread) -------------------
+    // Returns IMMEDIATELY with the last known results.
+    // Copies RGBA bytes and dispatches heavy work to the background thread.
+
+    override fun callback(frame: Frame, params: Map<String, Any>?): Any {
+        val session = ortSession ?: return cachedResults
+
+        val image = frame.image ?: return cachedResults
+        val width  = image.width
+        val height = image.height
+
+        // If worker is still busy, skip this frame entirely
+        if (!isProcessing.compareAndSet(false, true)) {
+            return cachedResults
+        }
+
+        // Copy RGBA bytes synchronously - frame is only valid inside this callback
+        val rgba = yuv420ToRGBA(image, width, height)
+        image.close()
+
+        if (rgba.isEmpty()) {
+            isProcessing.set(false)
+            return cachedResults
+        }
+
+        val confidence     = (params?.get("confidence")     as? Number)?.toFloat() ?: 0.35f
+        val modelInputSize = (params?.get("modelInputSize") as? Number)?.toInt()   ?: 640
+        val maxDetections  = (params?.get("maxDetections")  as? Number)?.toInt()   ?: 10
+        val debug          = (params?.get("debug")          as? Boolean)           ?: false
+
+        // Dispatch all heavy work to background thread
+        executor.execute {
+            try {
+                val results = runInference(
+                    session, rgba, width, height,
+                    confidence, modelInputSize, maxDetections, debug
+                )
+                cachedResults = results
+            } catch (e: Exception) {
+                Log.e(TAG, "Inference error: ${e.message}", e)
+            } finally {
+                isProcessing.set(false)
+            }
+        }
+
+        // Return last known results immediately (non-blocking)
+        return cachedResults
+    }
+
+    // -- Background inference pipeline -------------------------------------------
+
+    private fun runInference(
+        session: OrtSession,
+        rgba: ByteArray,
+        width: Int,
+        height: Int,
+        confidence: Float,
+        modelInputSize: Int,
+        maxDetections: Int,
+        debug: Boolean = false,
+    ): List<Map<String, Any>> {
+        val frameLog = mutableListOf<String>()
+        fun log(msg: String) { Log.d(TAG, msg); if (debug) frameLog += msg }
+
+        log("[FRAME] ${width}x${height} landscape=${width > height} debug=$debug")
+
+        // 1. NanoDet preprocessing (C++)
+        val preprocessed = ZXingNanoDetJNI.nativePreprocess(rgba, width, height, modelInputSize)
+        val tensorSize = 3 * modelInputSize * modelInputSize
+        if (preprocessed.size < tensorSize + 5) {
+            log("[ERROR] preprocessed array too small: ${preprocessed.size}")
+            return emptyList()
+        }
+
+        val scale = preprocessed[tensorSize]
+        val padX  = preprocessed[tensorSize + 1]
+        val padY  = preprocessed[tensorSize + 2]
+        val newW  = preprocessed[tensorSize + 3].toInt()
+        val newH  = preprocessed[tensorSize + 4].toInt()
+        log("[NANODET_PRE] modelSize=$modelInputSize scale=$scale padX=$padX padY=$padY letterbox=${newW}x${newH}")
+
+        // 2. ORT inference
+        val inputShape  = longArrayOf(1, 3, modelInputSize.toLong(), modelInputSize.toLong())
+        val tensorBuf   = FloatBuffer.wrap(preprocessed, 0, tensorSize)
+        val inputTensor = OnnxTensor.createTensor(ortEnv, tensorBuf, inputShape)
+        val inputName   = session.inputNames.first()
+        log("[ORT] running session, input='$inputName'")
+        val outputs     = session.run(mapOf(inputName to inputTensor))
+        inputTensor.close()
+
+        val outputTensor = outputs.get(session.outputNames.first()).get() as OnnxTensor
+        val shape       = outputTensor.info.shape
+        val outputBuf   = outputTensor.floatBuffer
+        val outputArray = FloatArray(outputBuf.remaining()).also { outputBuf.get(it) }
+        outputTensor.close()
+        outputs.close()
+
+        val numBoxes = if (shape.size >= 2) shape[1].toInt() else outputArray.size / 34
+        val boxSize  = if (shape.size >= 3) shape[2].toInt() else 34
+        log("[ORT_OUT] shape=${shape.toList()} numBoxes=$numBoxes boxSize=$boxSize")
+
+        // 3. NanoDet postprocessing (C++)
+        val boxes = ZXingNanoDetJNI.nativePostprocessGFL(
+            outputArray, numBoxes, boxSize,
+            width, height,
+            scale, padX, padY,
+            modelInputSize, confidence,
+        )
+        log("[NANODET_POST] detections=${boxes.size} (confidence threshold=$confidence)")
+        for (i in boxes.indices) {
+            val b = boxes[i]
+            log("[DET#$i] x1=${b[0]} y1=${b[1]} x2=${b[2]} y2=${b[3]} score=${b[4]} class=${b[5]}")
+        }
+
+        // 4. ZXing decode per detected box
+        val results = mutableListOf<Map<String, Any>>()
+        val limit = minOf(boxes.size, maxDetections)
+
+        for (i in 0 until limit) {
+            val b = boxes[i]
+            val bx1 = b[0].toFloat().toInt()
+            val by1 = b[1].toFloat().toInt()
+            val bx2 = b[2].toFloat().toInt()
+            val by2 = b[3].toFloat().toInt()
+            val detScore = b[4].toFloat()
+
+            // 30% padding for ZXing quiet zone
+            val padW = ((bx2 - bx1) * 0.3f).toInt()
+            val padH = ((by2 - by1) * 0.3f).toInt()
+            val cx = maxOf(0, bx1 - padW)
+            val cy = maxOf(0, by1 - padH)
+            val cw = minOf(width  - cx, bx2 - bx1 + 2 * padW)
+            val ch = minOf(height - cy, by2 - by1 + 2 * padH)
+            log("[CROP#$i] raw=(${bx1},${by1})-(${bx2},${by2}) padded=($cx,$cy ${cw}x${ch}) score=$detScore")
+            if (cw <= 0 || ch <= 0) { log("[CROP#$i] SKIPPED (zero area after padding)"); continue }
+
+            // Debug: encode the ROTATED luma crop that ZXing actually receives.
+            // The JNI layer applies 90° CW when frame is landscape; replicate that
+            // here so the debug preview matches what ZXing sees.
+            val debugCropBase64: String? = if (debug) generateZxingInputBase64(rgba, width, height, cx, cy, cw, ch) else null
+
+            // Pass debug=true to JNI so it returns a log entry as first element
+            val rawBarcodes = ZXingNanoDetJNI.nativeDecodeBarcode(
+                rgba, width, height, cx, cy, cw, ch, debug
+            )
+
+            // Extract JNI log entry if present
+            var startIdx = 0
+            if (debug && rawBarcodes.isNotEmpty() && rawBarcodes[0].getOrNull(0) == "__log__") {
+                val jniLog = rawBarcodes[0].getOrNull(1) ?: ""
+                jniLog.split("\n").filter { it.isNotBlank() }.forEach { log("[JNI] $it") }
+                startIdx = 1
+            }
+            val barcodes = if (startIdx > 0) rawBarcodes.drop(startIdx) else rawBarcodes.toList()
+
+            log("[ZXING#$i] decoded ${barcodes.size} barcode(s)")
+
+            // Snapshot frameLog now so all JNI logs are included
+            val snapshotLogs = if (debug) frameLog.toList() else null
+
+            if (barcodes.isNotEmpty()) {
+                for (barcode in barcodes) {
+                    log("[BARCODE#$i] format=${barcode[0]} text=${barcode[1].take(40)}")
+                    val cornerPoints = (0..3).map { c ->
+                        mapOf(
+                            "x" to barcode[2 + c * 2].toDouble(),
+                            "y" to barcode[3 + c * 2].toDouble(),
+                        )
+                    }
+                    val resultMap = mutableMapOf<String, Any>(
+                        "format"      to barcode[0],
+                        "text"        to barcode[1],
+                        "confidence"  to detScore.toDouble(),
+                        "boundingBox" to mapOf(
+                            "x"      to cx.toDouble(),
+                            "y"      to cy.toDouble(),
+                            "width"  to cw.toDouble(),
+                            "height" to ch.toDouble(),
+                        ),
+                        "cornerPoints" to cornerPoints,
+                    )
+                    if (debug) {
+                        if (debugCropBase64 != null) resultMap["debugCropBase64"] = debugCropBase64
+                        if (snapshotLogs != null) resultMap["debugLogs"] = snapshotLogs
+                    }
+                    results += resultMap
+                }
+            } else {
+                val resultMap = mutableMapOf<String, Any>(
+                    "format"      to "UNKNOWN",
+                    "text"        to "",
+                    "confidence"  to detScore.toDouble(),
+                    "boundingBox" to mapOf(
+                        "x"      to bx1.toDouble(),
+                        "y"      to by1.toDouble(),
+                        "width"  to (bx2 - bx1).toDouble(),
+                        "height" to (by2 - by1).toDouble(),
+                    ),
+                    "cornerPoints" to emptyList<Any>(),
+                )
+                if (debug) {
+                    if (debugCropBase64 != null) resultMap["debugCropBase64"] = debugCropBase64
+                    if (snapshotLogs != null) resultMap["debugLogs"] = snapshotLogs
+                }
+                results += resultMap
+            }
+        }
+
+        if (debug && results.isEmpty() && frameLog.isNotEmpty()) {
+            // No detections at all — still surface logs via a sentinel entry
+            results += mutableMapOf<String, Any>(
+                "format" to "__debug__", "text" to "",
+                "confidence" to 0.0,
+                "boundingBox" to mapOf("x" to 0.0, "y" to 0.0, "width" to 0.0, "height" to 0.0),
+                "cornerPoints" to emptyList<Any>(),
+                "debugLogs" to frameLog.toList(),
+            )
+        }
+
+        return results
+    }
+
+    // -- Debug: encode the EXACT image that ZXing decodes (post-rotation) ------
+    // Replicates the same 90° CW rotation the JNI layer applies when the sensor
+    // frame is landscape, so the thumbnail matches what ZXing actually sees.
+
+    private fun generateZxingInputBase64(
+        rgba: ByteArray,
+        frameWidth: Int,
+        frameHeight: Int,
+        cx: Int, cy: Int, cw: Int, ch: Int,
+    ): String? = try {
+        val pixels = IntArray(cw * ch) { idx ->
+            val row = idx / cw
+            val col = idx % cw
+            val srcIdx = ((cy + row) * frameWidth + (cx + col)) * 4
+            val r = rgba[srcIdx].toInt() and 0xFF
+            val g = rgba[srcIdx + 1].toInt() and 0xFF
+            val b = rgba[srcIdx + 2].toInt() and 0xFF
+            val gray = (r * 77 + g * 150 + b * 29) shr 8
+            android.graphics.Color.rgb(gray, gray, gray)
+        }
+        var bmp = android.graphics.Bitmap.createBitmap(pixels, cw, ch, android.graphics.Bitmap.Config.ARGB_8888)
+        // Apply the same 90° CW rotation as the JNI ZXing path
+        if (frameWidth > frameHeight) {
+            val matrix = android.graphics.Matrix().apply { postRotate(90f) }
+            val rotated = android.graphics.Bitmap.createBitmap(bmp, 0, 0, cw, ch, matrix, true)
+            bmp.recycle()
+            bmp = rotated
+        }
+        val baos = java.io.ByteArrayOutputStream()
+        bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, baos)
+        bmp.recycle()
+        android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
+    } catch (e: Exception) {
+        Log.e(TAG, "generateZxingInputBase64 error: ${e.message}")
+        null
+    }
+
+    // -- YUV_420_888 -> RGBA conversion -----------------------------------------
+
+    private fun yuv420ToRGBA(image: android.media.Image, width: Int, height: Int): ByteArray {
+        if (image.format != ImageFormat.YUV_420_888) return ByteArray(0)
+
+        val planes        = image.planes
+        val yBuf          = planes[0].buffer
+        val uBuf          = planes[1].buffer
+        val vBuf          = planes[2].buffer
+        val yRowStride    = planes[0].rowStride
+        val uvRowStride   = planes[1].rowStride
+        val uvPixelStride = planes[1].pixelStride
+
+        val rgba   = ByteArray(width * height * 4)
+        var outIdx = 0
+
+        for (row in 0 until height) {
+            for (col in 0 until width) {
+                val y = yBuf[row * yRowStride + col].toInt() and 0xFF
+                val uvRow = row / 2
+                val uvCol = col / 2
+                val uvIdx = uvRow * uvRowStride + uvCol * uvPixelStride
+                val u = (uBuf[uvIdx].toInt() and 0xFF) - 128
+                val v = (vBuf[uvIdx].toInt() and 0xFF) - 128
+
+                val r = clamp(y + (1.370705f * v).toInt())
+                val g = clamp(y - (0.337633f * u).toInt() - (0.698001f * v).toInt())
+                val b = clamp(y + (1.732446f * u).toInt())
+
+                rgba[outIdx++] = r.toByte()
+                rgba[outIdx++] = g.toByte()
+                rgba[outIdx++] = b.toByte()
+                rgba[outIdx++] = 255.toByte()
+            }
+        }
+        return rgba
+    }
+
+    private fun clamp(v: Int): Int = v.coerceIn(0, 255)
+
+    // -- Plugin registration ----------------------------------------------------
+
+    companion object {
+        fun register(proxy: VisionCameraProxy, options: Map<String, Any>?): ZXingNanoDetPlugin =
+            ZXingNanoDetPlugin(proxy, options)
+    }
+}

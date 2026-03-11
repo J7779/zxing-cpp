@@ -28,3 +28,5 @@ CMakeLists.txt.user
 /wrappers/wasm/build/_deps
 /wrappers/wasm/emsdk
 /build-wasm
+/Symbolus/modules/zxing-nanodet/android/build/kotlin/compileDebugKotlin/cacheable
+/Symbolus/modules/zxing-nanodet/android/build/.transforms

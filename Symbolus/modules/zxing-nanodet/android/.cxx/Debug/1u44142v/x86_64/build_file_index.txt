@@ -1,0 +1,1 @@
+C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android\src\main\cpp\CMakeLists.txt

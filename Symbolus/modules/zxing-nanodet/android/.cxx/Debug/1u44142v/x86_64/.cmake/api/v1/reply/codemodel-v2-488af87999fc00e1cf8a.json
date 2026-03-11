@@ -1,0 +1,60 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.6.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "zxing_nanodet_jni",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "zxing_nanodet_jni::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-zxing_nanodet_jni-Debug-c499442a5157e2bec668.json",
+					"name" : "zxing_nanodet_jni",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/.cxx/Debug/1u44142v/x86_64",
+		"source" : "C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/src/main/cpp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

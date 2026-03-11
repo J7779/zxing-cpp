@@ -1,0 +1,68 @@
+// SPDX-License-Identifier: Apache-2.0
+// build.gradle for the zxing-nanodet VisionCamera frame-processor plugin.
+//
+// Architecture:
+//   • ORT inference  → Kotlin / Java ORT Android API   (no ORT C headers in CMake)
+//   • ZXing decode   → C++ JNI via zxing_nanodet_jni.so
+//
+// ZXING_CORE_ROOT path from this module's project dir (4 parents → repo root):
+//   android/ → zxing-nanodet/ → modules/ → Symbolus/ → zxing-cpp/
+
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'expo.modules.zxing.nanodet'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 24
+        targetSdk 35
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+                // project.projectDir = .../Symbolus/modules/zxing-nanodet/android/
+                // 4 parents up → zxing-cpp/ then /core
+                arguments "-DZXING_CORE_ROOT=${project.projectDir}/../../../../core"
+            }
+        }
+        ndk {
+            abiFilters 'arm64-v8a', 'x86_64'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1+"
+        }
+    }
+
+    buildFeatures {
+        buildConfig false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+dependencies {
+    // VisionCamera — resolved via React Native autolinking (local project, not Maven)
+    compileOnly project(':react-native-vision-camera')
+
+    // React Native core — published to Maven Central since RN 0.71
+    compileOnly "com.facebook.react:react-android:+"
+
+    // ORT Android Java API (inference for NanoDet)
+    implementation "com.microsoft.onnxruntime:onnxruntime-android:1.18.0"
+}
+
