@@ -220,7 +220,7 @@ class ZXingNanoDetPlugin(
 
             // ── ZXing decode ─────────────────────────────────────────────────
             val rawBarcodes = if (enableZxing) {
-                ZXingNanoDetJNI.nativeDecodeBarcode(rgba, width, height, cx, cy, cw, ch, debug)
+                ZXingNanoDetJNI.nativeDecodeBarcode(rgba, width, height, cx, cy, cw, ch, debug, enableDamagedBarcode)
             } else {
                 log("[ZXING#$i] SKIPPED (enableZxing=false)")
                 emptyArray()
@@ -350,7 +350,7 @@ class ZXingNanoDetPlugin(
         if (enableDirectZxing && enableZxing) {
             log("[DIRECT_ZXING] running ZXing on full frame ${width}x${height}")
             val directBarcodes = ZXingNanoDetJNI.nativeDecodeBarcode(
-                rgba, width, height, 0, 0, width, height, debug
+                rgba, width, height, 0, 0, width, height, debug, false /* fast scan — no damaged mode */
             )
             var dStartIdx = 0
             if (debug && directBarcodes.isNotEmpty() && directBarcodes[0].getOrNull(0) == "__log__") {

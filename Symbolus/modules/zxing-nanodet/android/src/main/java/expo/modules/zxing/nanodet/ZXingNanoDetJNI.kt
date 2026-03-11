@@ -65,6 +65,7 @@ object ZXingNanoDetJNI {
         cropW: Int,
         cropH: Int,
         debug: Boolean,
+        enableDamagedBarcode: Boolean = false,
     ): Array<Array<String>>
 }
 

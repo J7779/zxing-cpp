@@ -30,6 +30,7 @@ import {
 import {
   Camera,
   useCameraDevice,
+  useCameraFormat,
   useCameraPermission,
   type CameraDevice,
 } from 'react-native-vision-camera';
@@ -297,6 +298,12 @@ export default function BarcodeScanner({
   const { hasPermission, requestPermission } = useCameraPermission();
   const device: CameraDevice | undefined = useCameraDevice(facing);
 
+  // ── Camera format: pick 1080p for high-res ZXing crops ────────────────────
+  const format = useCameraFormat(device, [
+    { videoResolution: { width: 1920, height: 1080 } },
+    { fps: 30 },
+  ]);
+
   // ── Torch state ───────────────────────────────────────────────────────────
   // 'on' = always on, 'off' = always off, 'auto' = managed by native brightness
   const torchMode = detectionOptions.torchMode ?? 'off';
@@ -503,7 +510,7 @@ export default function BarcodeScanner({
             setContainerSize({ width, height });
           }}
         >
-          {/* Camera */}
+          {/* Camera — explicit 1080p format for high-res ZXing crops */}
           <Camera
             ref={cameraRef}
             style={StyleSheet.absoluteFill}
@@ -514,6 +521,7 @@ export default function BarcodeScanner({
             pixelFormat="yuv"
             zoom={zoom}
             torch={torchEnabled ? 'on' : 'off'}
+            {...(format ? { format } : {})}
           />
 
           {/* Scan region overlay */}

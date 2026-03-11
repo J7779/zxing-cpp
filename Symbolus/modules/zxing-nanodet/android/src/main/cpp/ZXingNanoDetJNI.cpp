@@ -158,9 +158,11 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
     jbyteArray jRGBA,
     jint frameW, jint frameH,
     jint cropX, jint cropY, jint cropW, jint cropH,
-    jboolean jDebug)
+    jboolean jDebug,
+    jboolean jDamagedBarcode)
 {
     bool dbg = (jDebug == JNI_TRUE);
+    bool damaged = (jDamagedBarcode == JNI_TRUE);
     jclass stringClass = env->FindClass("java/lang/String");
     jclass stringArrayClass = env->FindClass("[Ljava/lang/String;");
 
@@ -213,26 +215,28 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
     addLog("[CROP_CLAMPED] x=" + std::to_string(bx) + " y=" + std::to_string(by) +
            " w=" + std::to_string(bw) + " h=" + std::to_string(bh));
 
-    // Compute luma stats from RGBA for diagnostics
-    long lumaSum = 0;
-    uint8_t lumaMin = 255, lumaMax = 0;
-    for (int row = 0; row < bh; ++row) {
-        for (int col = 0; col < bw; ++col) {
-            int srcIdx = ((by + row) * frameW + (bx + col)) * 4;
-            int r = rgba[srcIdx + 0] & 0xFF;
-            int g = rgba[srcIdx + 1] & 0xFF;
-            int b = rgba[srcIdx + 2] & 0xFF;
-            uint8_t y = (uint8_t)((r * 77 + g * 150 + b * 29) >> 8);
-            lumaSum += y;
-            if (y < lumaMin) lumaMin = y;
-            if (y > lumaMax) lumaMax = y;
+    // Compute luma stats from RGBA for diagnostics (debug only — expensive)
+    if (dbg) {
+        long lumaSum = 0;
+        uint8_t lumaMin = 255, lumaMax = 0;
+        for (int row = 0; row < bh; ++row) {
+            for (int col = 0; col < bw; ++col) {
+                int srcIdx = ((by + row) * frameW + (bx + col)) * 4;
+                int r = rgba[srcIdx + 0] & 0xFF;
+                int g = rgba[srcIdx + 1] & 0xFF;
+                int b = rgba[srcIdx + 2] & 0xFF;
+                uint8_t y = (uint8_t)((r * 77 + g * 150 + b * 29) >> 8);
+                lumaSum += y;
+                if (y < lumaMin) lumaMin = y;
+                if (y > lumaMax) lumaMax = y;
+            }
         }
+        float lumaMean = (bw * bh > 0) ? (float)lumaSum / (bw * bh) : 0.f;
+        addLog("[LUMA_STATS] min=" + std::to_string(lumaMin) +
+               " max=" + std::to_string(lumaMax) +
+               " mean=" + std::to_string((int)lumaMean) +
+               " contrast=" + std::to_string(lumaMax - lumaMin));
     }
-    float lumaMean = (bw * bh > 0) ? (float)lumaSum / (bw * bh) : 0.f;
-    addLog("[LUMA_STATS] min=" + std::to_string(lumaMin) +
-           " max=" + std::to_string(lumaMax) +
-           " mean=" + std::to_string((int)lumaMean) +
-           " contrast=" + std::to_string(lumaMax - lumaMin));
 
     // Pass RGBA crop directly to ZXing via rowStride (zero-copy).
     // ZXing handles its own luma conversion and rotation internally.
@@ -244,14 +248,19 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
     opts.setTryDownscale(true);
     opts.setIsPure(false);
     opts.setReturnErrors(true);
-    addLog("[ZXING_OPTS] tryHarder=true tryRotate=true tryInvert=true tryDownscale=true formats=Any");
 
-    // Verify readers are instantiated (diagnose missing ZXING_WITH_* defines)
-    {
-        MultiFormatReader testReader(opts);
-        // The reader count is private, but we can check by trying a small decode
-        addLog("[ZXING_READERS_CHECK] MultiFormatReader created (if 0 results on clear image, ZXING_WITH_* may be missing)");
+    // Aggressive options only when damaged/curved barcode mode is enabled.
+    // These multiply ZXing work by ~6x and must not run on every frame.
+    if (damaged) {
+        opts.setTryAngledScanning(true);
+        opts.setTryUpscale(true);
+        opts.setRelaxedLinearTolerance(true);
+        opts.setMinLineCount(1);
     }
+    addLog(std::string("[ZXING_OPTS] tryHarder=true tryRotate=true tryInvert=true tryDownscale=true")
+           + " damaged=" + (damaged ? "true" : "false")
+           + (damaged ? " tryAngledScanning=true tryUpscale=true relaxedLinearTolerance=true minLineCount=1" : "")
+           + " formats=Any");
 
     const uint8_t* cropOrigin = rgba + (by * frameW + bx) * 4;
     ImageView rgbaView(cropOrigin, bw, bh, ImageFormat::RGBA, frameW * 4, 4);
@@ -265,16 +274,29 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
 
     addLog("[ZXING_RGBA] total=" + std::to_string(barcodes.size()));
 
-    // Fallback: try on full frame if crop failed
-    if (barcodes.empty()) {
-        addLog("[ZXING_FULL_FRAME] trying full 640x480 frame");
-        ImageView fullView(rgba, frameW, frameH, ImageFormat::RGBA);
-        try {
-            barcodes = ReadBarcodes(fullView, opts);
-        } catch (const std::exception& ex) {
-            addLog(std::string("[ZXING_FULL_THREW] ") + ex.what());
+    // ── Curved-barcode fallback: scan horizontal strips (damaged mode only) ─
+    // On cylindrical surfaces (bottles), the full crop is too warped.
+    // Scanning narrow horizontal strips finds a "flat enough" slice.
+    if (damaged && barcodes.empty() && bh > 20) {
+        const int NUM_STRIPS = 5;
+        const int stripH = bh / NUM_STRIPS;
+        addLog("[CURVED_STRIPS] trying " + std::to_string(NUM_STRIPS) +
+               " horizontal strips of height " + std::to_string(stripH));
+        for (int s = 0; s < NUM_STRIPS && barcodes.empty(); ++s) {
+            int stripY = s * stripH;
+            const uint8_t* stripOrigin = rgba + ((by + stripY) * frameW + bx) * 4;
+            // Use full width but narrow height — captures one "ring" of the cylinder
+            ImageView stripView(stripOrigin, bw, stripH, ImageFormat::RGBA, frameW * 4, 4);
+            try {
+                barcodes = ReadBarcodes(stripView, opts);
+            } catch (const std::exception& ex) {
+                addLog(std::string("[CURVED_STRIP#") + std::to_string(s) + "_THREW] " + ex.what());
+            }
+            if (!barcodes.empty()) {
+                addLog("[CURVED_STRIP#" + std::to_string(s) + "] decoded " +
+                       std::to_string(barcodes.size()) + " barcode(s)");
+            }
         }
-        addLog("[ZXING_FULL_FRAME] total=" + std::to_string(barcodes.size()));
     }
 
     // Release RGBA bytes

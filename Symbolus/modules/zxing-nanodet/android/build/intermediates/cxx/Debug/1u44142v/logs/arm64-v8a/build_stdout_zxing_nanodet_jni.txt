@@ -1,2 +1,3 @@
 ninja: Entering directory `C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android\.cxx\Debug\1u44142v\arm64-v8a'
-[1/1] Linking CXX shared library C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android\build\intermediates\cxx\Debug\1u44142v\obj\arm64-v8a\libzxing_nanodet_jni.so
+[1/2] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/ZXingNanoDetJNI.cpp.o
+[2/2] Linking CXX shared library C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android\build\intermediates\cxx\Debug\1u44142v\obj\arm64-v8a\libzxing_nanodet_jni.so
