@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // ScannerSettingsContext.tsx
 //
-// Global scanner settings: engine toggles (ZXing / OCR) and per-format enables.
-// Defaults to everything on. Wrap the app root with <ScannerSettingsProvider>.
+// Global scanner settings: engine toggles, per-format enables, lighting,
+// parallel scan, damaged-barcode merge, consensus algorithm.
+// Defaults to safe values. Wrap the app root with <ScannerSettingsProvider>.
 
 import React, { createContext, useCallback, useContext, useState } from 'react';
 
@@ -64,14 +65,38 @@ export const ALL_FORMAT_IDS: string[] = FORMAT_GROUPS.flatMap((g) =>
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Torch / lighting types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TorchMode = 'off' | 'on' | 'auto';
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Context types
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface ScannerSettings {
+  // Engines
   enableZxing: boolean;
   enableOcr: boolean;
   /** Set of active format ids — filter applied in Kotlin after ZXing decodes */
   enabledFormats: ReadonlySet<string>;
+
+  // Lighting
+  torchMode: TorchMode;
+  autoTorchThreshold: number;
+
+  // Parallel direct-ZXing on scan-box region (bypasses NanoDet)
+  enableDirectZxing: boolean;
+
+  // ZXing resolution multiplier (>1 = upscale crop for better decode)
+  zxingResolutionScale: number;
+
+  // Damaged/ripped barcode: merge partial ZXing + OCR reads
+  enableDamagedBarcode: boolean;
+
+  // Consensus algorithm
+  enableConsensus: boolean;
+  consensusCount: number;
 }
 
 interface ScannerSettingsContextValue {
@@ -80,30 +105,64 @@ interface ScannerSettingsContextValue {
   setEnableOcr: (v: boolean) => void;
   toggleFormat: (id: string) => void;
   setAllFormats: (enabled: boolean) => void;
+  setTorchMode: (v: TorchMode) => void;
+  setAutoTorchThreshold: (v: number) => void;
+  setEnableDirectZxing: (v: boolean) => void;
+  setZxingResolutionScale: (v: number) => void;
+  setEnableDamagedBarcode: (v: boolean) => void;
+  setEnableConsensus: (v: boolean) => void;
+  setConsensusCount: (v: number) => void;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Defaults
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DEFAULT_SETTINGS: ScannerSettings = {
+  enableZxing: true,
+  enableOcr: true,
+  enabledFormats: new Set(ALL_FORMAT_IDS),
+  torchMode: 'off',
+  autoTorchThreshold: 60,
+  enableDirectZxing: false,
+  zxingResolutionScale: 1.0,
+  enableDamagedBarcode: false,
+  enableConsensus: false,
+  consensusCount: 3,
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Context
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ScannerSettingsContext = createContext<ScannerSettingsContextValue>({
-  settings: {
-    enableZxing: true,
-    enableOcr: true,
-    enabledFormats: new Set(ALL_FORMAT_IDS),
-  },
+  settings: DEFAULT_SETTINGS,
   setEnableZxing: () => {},
   setEnableOcr: () => {},
   toggleFormat: () => {},
   setAllFormats: () => {},
+  setTorchMode: () => {},
+  setAutoTorchThreshold: () => {},
+  setEnableDirectZxing: () => {},
+  setZxingResolutionScale: () => {},
+  setEnableDamagedBarcode: () => {},
+  setEnableConsensus: () => {},
+  setConsensusCount: () => {},
 });
 
 export function ScannerSettingsProvider({ children }: { children: React.ReactNode }) {
-  const [enableZxing, setEnableZxing] = useState(true);
-  const [enableOcr, setEnableOcr] = useState(true);
+  const [enableZxing, setEnableZxing] = useState(DEFAULT_SETTINGS.enableZxing);
+  const [enableOcr, setEnableOcr] = useState(DEFAULT_SETTINGS.enableOcr);
   const [enabledFormats, setEnabledFormats] = useState<Set<string>>(
     () => new Set(ALL_FORMAT_IDS),
   );
+  const [torchMode, setTorchMode] = useState<TorchMode>(DEFAULT_SETTINGS.torchMode);
+  const [autoTorchThreshold, setAutoTorchThreshold] = useState(DEFAULT_SETTINGS.autoTorchThreshold);
+  const [enableDirectZxing, setEnableDirectZxing] = useState(DEFAULT_SETTINGS.enableDirectZxing);
+  const [zxingResolutionScale, setZxingResolutionScale] = useState(DEFAULT_SETTINGS.zxingResolutionScale);
+  const [enableDamagedBarcode, setEnableDamagedBarcode] = useState(DEFAULT_SETTINGS.enableDamagedBarcode);
+  const [enableConsensus, setEnableConsensus] = useState(DEFAULT_SETTINGS.enableConsensus);
+  const [consensusCount, setConsensusCount] = useState(DEFAULT_SETTINGS.consensusCount);
 
   const toggleFormat = useCallback((id: string) => {
     setEnabledFormats((prev) => {
@@ -121,11 +180,17 @@ export function ScannerSettingsProvider({ children }: { children: React.ReactNod
   return (
     <ScannerSettingsContext.Provider
       value={{
-        settings: { enableZxing, enableOcr, enabledFormats },
-        setEnableZxing,
-        setEnableOcr,
-        toggleFormat,
-        setAllFormats,
+        settings: {
+          enableZxing, enableOcr, enabledFormats,
+          torchMode, autoTorchThreshold,
+          enableDirectZxing, zxingResolutionScale,
+          enableDamagedBarcode, enableConsensus, consensusCount,
+        },
+        setEnableZxing, setEnableOcr,
+        toggleFormat, setAllFormats,
+        setTorchMode, setAutoTorchThreshold,
+        setEnableDirectZxing, setZxingResolutionScale,
+        setEnableDamagedBarcode, setEnableConsensus, setConsensusCount,
       }}
     >
       {children}

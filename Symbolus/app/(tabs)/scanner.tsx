@@ -73,6 +73,18 @@ export default function ScannerScreen() {
       settings.enabledFormats.size === ALL_FORMAT_IDS.length
         ? undefined
         : Array.from(settings.enabledFormats),
+    // Lighting
+    torchMode: settings.torchMode,
+    autoTorchThreshold: settings.autoTorchThreshold,
+    // Parallel direct-ZXing on full scan box
+    enableDirectZxing: settings.enableDirectZxing,
+    // ZXing resolution upscale
+    zxingResolutionScale: settings.zxingResolutionScale,
+    // Damaged / ripped barcode merge
+    enableDamagedBarcode: settings.enableDamagedBarcode,
+    // Consensus
+    enableConsensus: settings.enableConsensus,
+    consensusCount: settings.consensusCount,
   }), [settings]);
 
   const handleDetected = useCallback((det: BarcodeDetection) => {

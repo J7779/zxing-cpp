@@ -23,6 +23,21 @@ export interface BarcodeDetection {
   /** Corner points of the barcode (4 points from ZXing position) */
   cornerPoints?: Array<{ x: number; y: number }>;
   /**
+   * Source of the detection: 'nanodet' (model-detected region), 'direct' (scan-box
+   * ZXing pass), or 'consensus' (verified by consensus algorithm).
+   */
+  source?: 'nanodet' | 'direct' | 'consensus';
+  /**
+   * When enableDamagedBarcode is true, the merged text from partial ZXing +
+   * OCR reads. Present only when the merge actually contributed.
+   */
+  mergedText?: string;
+  /**
+   * Number of consistent reads that confirmed this result via the consensus
+   * algorithm. Only populated when enableConsensus is true.
+   */
+  consensusCount?: number;
+  /**
    * Base64-encoded JPEG of the RAW (unrotated) luma crop from the camera sensor.
    * Only populated when `DetectBarcodesOptions.debug` is true (dev mode).
    */
@@ -64,6 +79,58 @@ export interface DetectBarcodesOptions {
    * formats are accepted. Filtering happens in Kotlin after ZXing decodes.
    */
   enabledFormats?: string[];
+
+  // ── New advanced features ─────────────────────────────────────────────
+
+  /**
+   * Run ZXing directly on the full scan-box region in parallel with NanoDet.
+   * If NanoDet misses a barcode, the direct ZXing pass may still decode it.
+   * Default: false.
+   */
+  enableDirectZxing?: boolean;
+
+  /**
+   * Resolution multiplier for the crop passed to ZXing. Values > 1 upscale
+   * the region for better decode rates on small or dense barcodes.
+   * Default: 1.0 (native resolution).
+   */
+  zxingResolutionScale?: number;
+
+  /**
+   * Torch / flash mode for low-light environments.
+   *   'off'  — torch always off
+   *   'on'   — torch always on
+   *   'auto' — native code enables torch when frame brightness is below threshold
+   * Default: 'off'.
+   */
+  torchMode?: 'off' | 'on' | 'auto';
+
+  /**
+   * Target luma threshold (0-255) for the auto-torch feature.
+   * When average frame brightness falls below this, the torch is activated.
+   * Default: 60.
+   */
+  autoTorchThreshold?: number;
+
+  /**
+   * Run ZXing in parallel with OCR for damaged/ripped barcodes. Partial ZXing
+   * digits + OCR text are merged to reconstruct the full barcode value.
+   * Default: false.
+   */
+  enableDamagedBarcode?: boolean;
+
+  /**
+   * Enable the consensus algorithm. Buffers the last N reads and only reports
+   * a barcode when at least `consensusCount` identical values are seen.
+   * Default: false.
+   */
+  enableConsensus?: boolean;
+
+  /**
+   * Number of identical reads required before the consensus algorithm reports
+   * a barcode as confirmed. Default: 3.
+   */
+  consensusCount?: number;
 }
 
 export interface ZXingNanoDetFrameProcessorPlugin {

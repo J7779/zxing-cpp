@@ -89,6 +89,9 @@ class ZXingNanoDetPlugin(
         val debug          = (params?.get("debug")          as? Boolean)           ?: false
         val enableZxing    = (params?.get("enableZxing")    as? Boolean)           ?: true
         val enableOcr      = (params?.get("enableOcr")      as? Boolean)           ?: true
+        val enableDirectZxing     = (params?.get("enableDirectZxing")     as? Boolean) ?: false
+        val zxingResolutionScale  = (params?.get("zxingResolutionScale")  as? Number)?.toFloat() ?: 1.0f
+        val enableDamagedBarcode  = (params?.get("enableDamagedBarcode")  as? Boolean) ?: false
         // JS arrays arrive as List<*>; extract non-blank strings.
         @Suppress("UNCHECKED_CAST")
         val enabledFormats: Set<String>? = (params?.get("enabledFormats") as? List<*>)
@@ -103,7 +106,8 @@ class ZXingNanoDetPlugin(
                 val results = runInference(
                     session, rgba, width, height,
                     confidence, modelInputSize, maxDetections, debug,
-                    enableZxing, enableOcr, enabledFormats
+                    enableZxing, enableOcr, enabledFormats,
+                    enableDirectZxing, zxingResolutionScale, enableDamagedBarcode
                 )
                 cachedResults = results
             } catch (e: Exception) {
@@ -131,11 +135,14 @@ class ZXingNanoDetPlugin(
         enableZxing: Boolean = true,
         enableOcr: Boolean = true,
         enabledFormats: Set<String>? = null,   // null = accept all formats
+        enableDirectZxing: Boolean = false,
+        zxingResolutionScale: Float = 1.0f,
+        enableDamagedBarcode: Boolean = false,
     ): List<Map<String, Any>> {
         val frameLog = mutableListOf<String>()
         fun log(msg: String) { Log.d(TAG, msg); if (debug) frameLog += msg }
 
-        log("[FRAME] ${width}x${height} landscape=${width > height} debug=$debug enableZxing=$enableZxing enableOcr=$enableOcr formats=${enabledFormats ?: "all"}")
+        log("[FRAME] ${width}x${height} landscape=${width > height} debug=$debug enableZxing=$enableZxing enableOcr=$enableOcr enableDirectZxing=$enableDirectZxing zxingResScale=$zxingResolutionScale enableDamagedBarcode=$enableDamagedBarcode formats=${enabledFormats ?: "all"}")
 
 
         // 1. NanoDet preprocessing (C++)
@@ -186,7 +193,7 @@ class ZXingNanoDetPlugin(
             log("[DET#$i] x1=${b[0]} y1=${b[1]} x2=${b[2]} y2=${b[3]} score=${b[4]} class=${b[5]}")
         }
 
-        // 4. ZXing decode per detected box
+        // 4. ZXing decode per NanoDet-detected box
         val results = mutableListOf<Map<String, Any>>()
         val limit = minOf(boxes.size, maxDetections)
 
@@ -212,7 +219,6 @@ class ZXingNanoDetPlugin(
             val debugCropBase64: String? = if (debug) generateZxingInputBase64(rgba, width, height, cx, cy, cw, ch) else null
 
             // ── ZXing decode ─────────────────────────────────────────────────
-            // When enableZxing=false we skip the native call entirely.
             val rawBarcodes = if (enableZxing) {
                 ZXingNanoDetJNI.nativeDecodeBarcode(rgba, width, height, cx, cy, cw, ch, debug)
             } else {
@@ -230,7 +236,6 @@ class ZXingNanoDetPlugin(
             val allBarcodes = if (startIdx > 0) rawBarcodes.drop(startIdx) else rawBarcodes.toList()
 
             // ── Format filter ────────────────────────────────────────────────
-            // Drop any decoded format that is not in the enabled set.
             val barcodes = if (enabledFormats != null) {
                 allBarcodes.filter { bc -> enabledFormats.contains(bc.getOrNull(0) ?: "") }
             } else {
@@ -258,6 +263,7 @@ class ZXingNanoDetPlugin(
                         "format"      to barcode[0],
                         "text"        to barcode[1],
                         "confidence"  to detScore.toDouble(),
+                        "source"      to "nanodet",
                         "boundingBox" to mapOf(
                             "x"      to cx.toDouble(),
                             "y"      to cy.toDouble(),
@@ -272,8 +278,40 @@ class ZXingNanoDetPlugin(
                     }
                     results += resultMap
                 }
+            } else if (enableDamagedBarcode && enableZxing && enableOcr && ocrEngine.isAvailable) {
+                // ── Damaged barcode merge: ZXing partial + OCR text ──────────
+                log("[DAMAGED#$i] trying parallel ZXing partial + OCR merge")
+                val partialZxing = allBarcodes.firstOrNull()?.getOrNull(1) ?: ""
+                val ocrText = ocrEngine.recognizeTextInRegion(rgba, width, height, cx, cy, cw, ch)
+                val mergedText = mergePartialBarcodeTexts(partialZxing, ocrText)
+                log("[DAMAGED#$i] partial='$partialZxing' ocr='$ocrText' merged='$mergedText'")
+
+                if (mergedText.isNotBlank()) {
+                    val resultMap = mutableMapOf<String, Any>(
+                        "format"         to (allBarcodes.firstOrNull()?.getOrNull(0) ?: "OCR"),
+                        "text"           to mergedText,
+                        "confidence"     to detScore.toDouble(),
+                        "isOcrFallback"  to true,
+                        "source"         to "nanodet",
+                        "mergedText"     to mergedText,
+                        "boundingBox"    to mapOf(
+                            "x"      to bx1.toDouble(),
+                            "y"      to by1.toDouble(),
+                            "width"  to (bx2 - bx1).toDouble(),
+                            "height" to (by2 - by1).toDouble(),
+                        ),
+                        "cornerPoints" to emptyList<Any>(),
+                    )
+                    if (debug) {
+                        if (debugCropBase64 != null) resultMap["debugCropBase64"] = debugCropBase64
+                        if (snapshotLogs != null) resultMap["debugLogs"] = snapshotLogs
+                    }
+                    results += resultMap
+                } else {
+                    results += buildUnknownResult(bx1, by1, bx2, by2, detScore, debug, debugCropBase64, snapshotLogs)
+                }
             } else {
-                // ZXing returned nothing (disabled or failed) — try OCR fallback.
+                // ZXing returned nothing — try OCR fallback only.
                 val ocrText = if (enableOcr && ocrEngine.isAvailable) {
                     log("[OCR#$i] trying PP-OCRv5 fallback")
                     val text = ocrEngine.recognizeTextInRegion(rgba, width, height, cx, cy, cw, ch)
@@ -289,6 +327,7 @@ class ZXingNanoDetPlugin(
                     "text"           to ocrText,
                     "confidence"     to detScore.toDouble(),
                     "isOcrFallback"  to ocrText.isNotBlank(),
+                    "source"         to "nanodet",
                     "boundingBox"    to mapOf(
                         "x"      to bx1.toDouble(),
                         "y"      to by1.toDouble(),
@@ -305,6 +344,60 @@ class ZXingNanoDetPlugin(
             }
         }
 
+        // ── 5. Direct ZXing on full frame (parallel with NanoDet) ────────────
+        // When enabled, run ZXing on the entire frame so barcodes that NanoDet
+        // misses can still be decoded. De-duplicate against NanoDet results.
+        if (enableDirectZxing && enableZxing) {
+            log("[DIRECT_ZXING] running ZXing on full frame ${width}x${height}")
+            val directBarcodes = ZXingNanoDetJNI.nativeDecodeBarcode(
+                rgba, width, height, 0, 0, width, height, debug
+            )
+            var dStartIdx = 0
+            if (debug && directBarcodes.isNotEmpty() && directBarcodes[0].getOrNull(0) == "__log__") {
+                val jniLog = directBarcodes[0].getOrNull(1) ?: ""
+                jniLog.split("\n").filter { it.isNotBlank() }.forEach { log("[DIRECT_JNI] $it") }
+                dStartIdx = 1
+            }
+            val dBarcodes = if (dStartIdx > 0) directBarcodes.drop(dStartIdx) else directBarcodes.toList()
+            // Apply format filter
+            val filteredDirect = if (enabledFormats != null) {
+                dBarcodes.filter { bc -> enabledFormats.contains(bc.getOrNull(0) ?: "") }
+            } else {
+                dBarcodes
+            }
+            // De-duplicate: only add if text not already in results
+            val existingTexts = results.mapNotNull { it["text"] as? String }.toHashSet()
+            for (barcode in filteredDirect) {
+                val text = barcode.getOrNull(1) ?: ""
+                if (text.isBlank() || existingTexts.contains(text)) continue
+                log("[DIRECT_ZXING] new barcode: format=${barcode[0]} text=${text.take(40)}")
+                val cornerPoints = (0..3).map { c ->
+                    mapOf(
+                        "x" to barcode[2 + c * 2].toDouble(),
+                        "y" to barcode[3 + c * 2].toDouble(),
+                    )
+                }
+                val resultMap = mutableMapOf<String, Any>(
+                    "format"      to barcode[0],
+                    "text"        to text,
+                    "confidence"  to 0.5,  // no NanoDet score for direct pass
+                    "source"      to "direct",
+                    "boundingBox" to mapOf(
+                        "x"      to 0.0,
+                        "y"      to 0.0,
+                        "width"  to width.toDouble(),
+                        "height" to height.toDouble(),
+                    ),
+                    "cornerPoints" to cornerPoints,
+                )
+                if (debug) {
+                    resultMap["debugLogs"] = frameLog.toList()
+                }
+                results += resultMap
+                existingTexts += text
+            }
+        }
+
         if (debug && results.isEmpty() && frameLog.isNotEmpty()) {
             // No detections at all — still surface logs via a sentinel entry
             results += mutableMapOf<String, Any>(
@@ -317,6 +410,69 @@ class ZXingNanoDetPlugin(
         }
 
         return results
+    }
+
+    // -- Helper: build an UNKNOWN result entry ------------------------------------
+
+    private fun buildUnknownResult(
+        bx1: Int, by1: Int, bx2: Int, by2: Int, score: Float,
+        debug: Boolean, debugCropBase64: String?, snapshotLogs: List<String>?,
+    ): Map<String, Any> {
+        val resultMap = mutableMapOf<String, Any>(
+            "format"         to "UNKNOWN",
+            "text"           to "",
+            "confidence"     to score.toDouble(),
+            "isOcrFallback"  to false,
+            "source"         to "nanodet",
+            "boundingBox"    to mapOf(
+                "x"      to bx1.toDouble(),
+                "y"      to by1.toDouble(),
+                "width"  to (bx2 - bx1).toDouble(),
+                "height" to (by2 - by1).toDouble(),
+            ),
+            "cornerPoints" to emptyList<Any>(),
+        )
+        if (debug) {
+            if (debugCropBase64 != null) resultMap["debugCropBase64"] = debugCropBase64
+            if (snapshotLogs != null) resultMap["debugLogs"] = snapshotLogs
+        }
+        return resultMap
+    }
+
+    // -- Helper: merge partial barcode readings from ZXing and OCR ---------------
+    // For damaged barcodes: ZXing might decode some digits, OCR reads the rest.
+    // We align overlapping characters and fill gaps from the longer source.
+
+    private fun mergePartialBarcodeTexts(zxingText: String, ocrText: String): String {
+        if (zxingText.isBlank()) return ocrText.trim()
+        if (ocrText.isBlank()) return zxingText.trim()
+
+        // Strip non-alphanumeric from OCR to normalise noise
+        val cleanOcr = ocrText.filter { it.isLetterOrDigit() || it == '-' }
+        val cleanZxing = zxingText.trim()
+
+        // If one contains the other, pick the longer one
+        if (cleanZxing.contains(cleanOcr)) return cleanZxing
+        if (cleanOcr.contains(cleanZxing)) return cleanOcr
+
+        // Try to find overlap: end of one matches start of the other
+        val merged = findOverlapMerge(cleanZxing, cleanOcr)
+            ?: findOverlapMerge(cleanOcr, cleanZxing)
+        if (merged != null) return merged
+
+        // If zxing decoded more characters, prefer it; otherwise concatenate
+        return if (cleanZxing.length >= cleanOcr.length) cleanZxing else cleanOcr
+    }
+
+    private fun findOverlapMerge(a: String, b: String): String? {
+        // Find the longest suffix of a that matches a prefix of b
+        val maxOverlap = minOf(a.length, b.length)
+        for (len in maxOverlap downTo 1) {
+            if (a.endsWith(b.substring(0, len))) {
+                return a + b.substring(len)
+            }
+        }
+        return null
     }
 
     // -- Debug: encode the EXACT image that ZXing decodes (post-rotation) ------
