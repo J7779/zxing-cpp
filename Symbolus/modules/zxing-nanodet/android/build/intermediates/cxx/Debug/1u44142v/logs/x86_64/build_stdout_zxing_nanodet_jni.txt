@@ -1,0 +1,131 @@
+ninja: Entering directory `C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android\.cxx\Debug\1u44142v\x86_64'
+[1/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/Error.cpp.o
+[2/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BitArray.cpp.o
+[3/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BitSource.cpp.o
+[4/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BitMatrix.cpp.o
+[5/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ECI.cpp.o
+[6/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/CharacterSet.cpp.o
+[7/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/DecodeHints.cpp.o
+[8/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BinaryBitmap.cpp.o
+[9/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GenericGFPoly.cpp.o
+[10/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GlobalHistogramBinarizer.cpp.o
+[11/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GridSampler.cpp.o
+[12/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BitMatrixIO.cpp.o
+[13/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ConcentricFinder.cpp.o
+[14/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GenericGF.cpp.o
+[15/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/GTIN.cpp.o
+[16/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/Content.cpp.o
+[17/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/HybridBinarizer.cpp.o
+[18/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/BarcodeFormat.cpp.o
+[19/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/WriteBarcode.cpp.o
+[20/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/HRI.cpp.o
+[21/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ResultPoint.cpp.o
+[22/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/JSON.cpp.o
+[23/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/PerspectiveTransform.cpp.o
+[24/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/TextEncoder.cpp.o
+[25/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/MultiFormatReader.cpp.o
+[26/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ReedSolomonDecoder.cpp.o
+[27/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/TextDecoder.cpp.o
+[28/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/TextUtfEncoding.cpp.o
+[29/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ReadBarcode.cpp.o
+[30/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/WhiteRectDetector.cpp.o
+[31/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ZXingCpp.cpp.o
+In file included from C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ZXingCpp.cpp:9:
+C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/.cxx/Debug/1u44142v/x86_64/Version.h:9:9: warning: 'ZXING_READERS' macro redefined [-Wmacro-redefined]
+    9 | #define ZXING_READERS
+      |         ^
+<command line>:1:9: note: previous definition is here
+    1 | #define ZXING_READERS 1
+      |         ^
+1 warning generated.
+[32/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/MultiFormatWriter.cpp.o
+[33/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ReedSolomonEncoder.cpp.o
+[34/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/Utf.cpp.o
+[35/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMVersion.cpp.o
+[36/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZHighLevelEncoder.cpp.o
+[37/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ZXingC.cpp.o
+In file included from C:/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/ZXingC.cpp:13:
+C:/Users/RexMobile/Documents/GitHub/zxing-cpp/Symbolus/modules/zxing-nanodet/android/.cxx/Debug/1u44142v/x86_64/Version.h:9:9: warning: 'ZXING_READERS' macro redefined [-Wmacro-redefined]
+    9 | #define ZXING_READERS
+      |         ^
+<command line>:1:9: note: previous definition is here
+    1 | #define ZXING_READERS 1
+      |         ^
+1 warning generated.
+[38/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZDecoder.cpp.o
+[39/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZEncoder.cpp.o
+[40/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZReader.cpp.o
+[41/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZToken.cpp.o
+[42/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZDetector.cpp.o
+[43/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode128Patterns.cpp.o
+[44/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMDecoder.cpp.o
+[45/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMDataBlock.cpp.o
+[46/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMSymbolInfo.cpp.o
+[47/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/aztec/AZWriter.cpp.o
+[48/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMBitLayout.cpp.o
+[49/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMECEncoder.cpp.o
+[50/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMReader.cpp.o
+[51/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMHighLevelEncoder.cpp.o
+[52/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMDetector.cpp.o
+[53/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/maxicode/MCBitMatrixParser.cpp.o
+[54/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/maxicode/MCReader.cpp.o
+[55/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCodabarWriter.cpp.o
+[56/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/datamatrix/DMWriter.cpp.o
+[57/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCodabarReader.cpp.o
+[58/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/maxicode/MCDecoder.cpp.o
+[59/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode93Reader.cpp.o
+[60/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode128Writer.cpp.o
+[61/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode39Writer.cpp.o
+[62/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode39Reader.cpp.o
+[63/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode93Writer.cpp.o
+[64/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODCode128Reader.cpp.o
+[65/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarExpandedBitDecoder.cpp.o
+[66/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarLimitedReader.cpp.o
+[67/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarExpandedReader.cpp.o
+[68/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODITFWriter.cpp.o
+[69/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarCommon.cpp.o
+[70/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODITFReader.cpp.o
+[71/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFDetectionResult.cpp.o
+[72/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODEAN13Writer.cpp.o
+[73/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDataBarReader.cpp.o
+[74/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODMultiUPCEANReader.cpp.o
+[75/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODEAN8Writer.cpp.o
+[76/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODWriterHelper.cpp.o
+[77/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFBoundingBox.cpp.o
+[78/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODDXFilmEdgeReader.cpp.o
+[79/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODUPCAWriter.cpp.o
+[80/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODUPCEANCommon.cpp.o
+[81/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODUPCEWriter.cpp.o
+[82/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/NanoDetModelDataStub.cpp.o
+[83/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFBarcodeValue.cpp.o
+[84/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFCodewordDecoder.cpp.o
+[85/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/oned/ODReader.cpp.o
+[86/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFDetectionResultColumn.cpp.o
+[87/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFHighLevelEncoder.cpp.o
+[88/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFEncoder.cpp.o
+[89/114] Building C object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/libzueci/zueci.c.o
+[90/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/onnx/NanoDet.cpp.o
+[91/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFDetector.cpp.o
+[92/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFWriter.cpp.o
+[93/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFDecoder.cpp.o
+[94/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRErrorCorrectionLevel.cpp.o
+[95/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFScanningDecoder.cpp.o
+[96/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFModulusGF.cpp.o
+[97/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFReader.cpp.o
+[98/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/PDFModulusPoly.cpp.o
+[99/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/pdf417/ZXBigInteger.cpp.o
+[100/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRMaskUtil.cpp.o
+[101/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/ZXingNanoDetJNI.cpp.o
+[102/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRCodecMode.cpp.o
+[103/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRVersion.cpp.o
+[104/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRWriter.cpp.o
+[105/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/Barcode.cpp.o
+[106/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRDataBlock.cpp.o
+[107/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRReader.cpp.o
+[108/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRMatrixUtil.cpp.o
+[109/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRBitMatrixParser.cpp.o
+[110/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRFormatInformation.cpp.o
+[111/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRDecoder.cpp.o
+[112/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QREncoder.cpp.o
+[113/114] Building CXX object CMakeFiles/zxing_nanodet_jni.dir/C_/Users/RexMobile/Documents/GitHub/zxing-cpp/core/src/qrcode/QRDetector.cpp.o
+[114/114] Linking CXX shared library C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android\build\intermediates\cxx\Debug\1u44142v\obj\x86_64\libzxing_nanodet_jni.so
