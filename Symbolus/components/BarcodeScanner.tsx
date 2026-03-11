@@ -3,8 +3,6 @@
 //
 // Full-screen camera view with:
 //  • Scan-region box (Scandit-style) — only detections inside the box are processed
-//  • Live NanoDet bounding-box overlays
-//  • ZXing-decoded text label beneath each box
 //  • Pinch-to-zoom, tap-to-focus
 //  • Haptic + callback when a new barcode is confirmed
 
@@ -18,13 +16,10 @@ import React, {
 } from 'react';
 import {
   Linking,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Image,
   type ViewStyle,
 } from 'react-native';
 import {
@@ -68,149 +63,6 @@ export interface BarcodeScannerProps {
   style?: ViewStyle;
   /** Which camera to use — defaults to 'back'. */
   facing?: 'front' | 'back';
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Detection overlay
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface OverlayBoxProps {
-  detection: BarcodeDetection;
-  frameWidth: number;
-  frameHeight: number;
-  containerWidth: number;
-  containerHeight: number;
-}
-
-function OverlayBox({
-  detection,
-  frameWidth,
-  frameHeight,
-  containerWidth,
-  containerHeight,
-}: OverlayBoxProps) {
-  const { boundingBox, text, format, confidence, isOcrFallback } = detection;
-  const borderColor = isOcrFallback ? OCR_BORDER_COLOR : BORDER_COLOR;
-
-  // Detect rotation: sensor frame is landscape (w>h) but container is portrait (h>w)
-  const needsRotation = frameWidth > frameHeight && containerHeight > containerWidth;
-
-  let displayX: number, displayY: number, displayW: number, displayH: number;
-  let displayFrameW: number, displayFrameH: number;
-
-  if (needsRotation) {
-    // 90° CW rotation: sensor landscape → display portrait
-    displayX = frameHeight - boundingBox.y - boundingBox.height;
-    displayY = boundingBox.x;
-    displayW = boundingBox.height;
-    displayH = boundingBox.width;
-    displayFrameW = frameHeight;
-    displayFrameH = frameWidth;
-  } else {
-    displayX = boundingBox.x;
-    displayY = boundingBox.y;
-    displayW = boundingBox.width;
-    displayH = boundingBox.height;
-    displayFrameW = frameWidth;
-    displayFrameH = frameHeight;
-  }
-
-  const scaleX = containerWidth  / displayFrameW;
-  const scaleY = containerHeight / displayFrameH;
-
-  const left   = displayX * scaleX;
-  const top    = displayY * scaleY;
-  const width  = displayW * scaleX;
-  const height = displayH * scaleY;
-
-  console.log(
-    `[OverlayBox] format=${format} text="${text?.substring(0, 30)}" conf=${confidence}\n` +
-    `  boundingBox: x=${boundingBox.x} y=${boundingBox.y} w=${boundingBox.width} h=${boundingBox.height}\n` +
-    `  frame: ${frameWidth}x${frameHeight} container: ${containerWidth}x${containerHeight}\n` +
-    `  scale: scaleX=${scaleX.toFixed(4)} scaleY=${scaleY.toFixed(4)}\n` +
-    `  rendered: left=${left.toFixed(1)} top=${top.toFixed(1)} width=${width.toFixed(1)} height=${height.toFixed(1)}`,
-  );
-
-  return (
-    <View
-      pointerEvents="none"
-      style={[
-        styles.overlayBox,
-        { left, top, width, height, borderColor },
-      ]}
-    >
-      <View style={[styles.overlayLabel, isOcrFallback && styles.overlayLabelOcr]}>
-        <Text style={[styles.overlayFormat, isOcrFallback && styles.overlayFormatOcr]}>
-          {isOcrFallback ? `OCR \u2192 ${format}` : format}
-        </Text>
-        <Text style={styles.overlayText} numberOfLines={2}>{text}</Text>
-        <Text style={styles.overlayConf}>{(confidence * 100).toFixed(0)}%</Text>
-      </View>
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DEV-ONLY: Debug panel showing the exact image regions passed to ZXing
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ZXingDebugPanel({ detections }: { detections: BarcodeDetection[] }) {
-  // Show all detections including sentinels so logs always surface
-  const debugDets = detections.filter(
-    (d) => d.debugCropBase64 || (d.debugLogs && d.debugLogs.length > 0),
-  );
-  if (debugDets.length === 0) return null;
-
-  // Collect all unique logs from first detection that has them
-  const logs = debugDets.find((d) => d.debugLogs?.length)?.debugLogs ?? [];
-  // Filter out sentinel-only entries that have no crop
-  const cropDets = debugDets.filter((d) => d.debugCropBase64 && d.format !== '__debug__');
-
-  return (
-    <View pointerEvents="none" style={styles.debugPanel}>
-      <Text style={styles.debugPanelTitle}>
-        ZXing Debug (dev) — exact image passed to ZXing
-      </Text>
-
-      {/* Crop thumbnails */}
-      {cropDets.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
-          {cropDets.map((det, idx) => (
-            <View key={idx} style={styles.debugCropItem}>
-              <Image
-                source={{ uri: `data:image/jpeg;base64,${det.debugCropBase64}` }}
-                style={styles.debugCropImage}
-                resizeMode="contain"
-              />
-              <Text style={styles.debugCropFormat} numberOfLines={1}>
-                {det.format || '?'}
-              </Text>
-              <Text style={styles.debugCropText} numberOfLines={1}>
-                {det.text ? det.text.substring(0, 24) : '(no decode)'}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-      )}
-
-      {/* Native pipeline log */}
-      {logs.length > 0 && (
-        <ScrollView style={styles.debugLogScroll} nestedScrollEnabled>
-          {logs.map((line, i) => (
-            <Text key={i} style={[
-              styles.debugLogLine,
-              line.includes('[ERROR]') || line.includes('THROW') ? styles.debugLogError :
-              line.includes('VALID#') ? styles.debugLogSuccess :
-              line.includes('[LUMA') || line.includes('[ROTATION') ? styles.debugLogHighlight :
-              null,
-            ]}>
-              {line}
-            </Text>
-          ))}
-        </ScrollView>
-      )}
-    </View>
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -454,18 +306,6 @@ export default function BarcodeScanner({
   // ── Choose which detections to surface ────────────────────────────────────
   const surfacedDetections = consensusEnabled ? confirmedDetections : filteredDetections;
 
-  // ── Conditional bbox display ──────────────────────────────────────────────
-  // Only show bounding box overlays when:
-  //  • ZXing decoded the barcode (format not UNKNOWN), OR
-  //  • OCR fallback produced text, OR
-  //  • Direct-ZXing pass decoded something
-  const visibleOverlays = useMemo(
-    () => surfacedDetections.filter(
-      (det) => det.text && det.text.length > 0 && det.format !== 'UNKNOWN' && det.format !== '__debug__',
-    ),
-    [surfacedDetections],
-  );
-
   // Deduplicate fired callbacks via a cooldown map
   const cooldownMap = useRef<Map<string, number>>(new Map());
 
@@ -537,23 +377,8 @@ export default function BarcodeScanner({
             </View>
           )}
 
-          {/* Bounding-box overlays — only shown when barcode is decoded */}
-          {visibleOverlays.map((det: BarcodeDetection, idx: number) => (
-            <OverlayBox
-              key={`${det.format}-${det.text}-${idx}`}
-              detection={det}
-              frameWidth={frameSize.width}
-              frameHeight={frameSize.height}
-              containerWidth={containerSize.width}
-              containerHeight={containerSize.height}
-            />
-          ))}
-
           {/* Caller-provided children */}
           {children}
-
-          {/* DEV-ONLY: ZXing input crop viewer */}
-          {__DEV__ && <ZXingDebugPanel detections={surfacedDetections} />}
         </View>
       </GestureDetector>
     </GestureHandlerRootView>
@@ -564,56 +389,9 @@ export default function BarcodeScanner({
 // Styles
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BORDER_COLOR     = '#00E5FF';
-const OCR_BORDER_COLOR = '#FFB300'; // amber — indicates PaddleOCR fallback
-const LABEL_BG         = 'rgba(0, 0, 0, 0.65)';
-const LABEL_BG_OCR     = 'rgba(80, 50, 0, 0.75)';
-
 const styles = StyleSheet.create({
   fill:    { flex: 1 },
   centered:{ alignItems: 'center', justifyContent: 'center' },
-
-  // ── Overlay box ───────────────────────────────────────────────────────────
-  overlayBox: {
-    position:     'absolute',
-    borderWidth:  2,
-    borderColor:  BORDER_COLOR,
-    borderRadius: 4,
-    overflow:     'visible',
-  },
-  overlayLabel: {
-    position:        'absolute',
-    bottom:          -52,
-    left:            0,
-    right:           0,
-    backgroundColor: LABEL_BG,
-    paddingHorizontal: 6,
-    paddingVertical:   4,
-    borderRadius:    4,
-    alignItems:      'center',
-  },
-  overlayLabelOcr: {
-    backgroundColor: LABEL_BG_OCR,
-  },
-  overlayFormat: {
-    color:      BORDER_COLOR,
-    fontSize:   10,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  overlayFormatOcr: {
-    color: OCR_BORDER_COLOR,
-  },
-  overlayText: {
-    color:    '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  overlayConf: {
-    color:    'rgba(255,255,255,0.55)',
-    fontSize: 10,
-  },
 
   // ── Scan region ────────────────────────────────────────────────────────────
   dimOverlay: {
@@ -658,65 +436,6 @@ const styles = StyleSheet.create({
     color:      '#000',
     fontWeight: '600',
     fontSize:   15,
-  },
-
-  // ── DEV debug panel ───────────────────────────────────────────────────────
-  debugPanel: {
-    position:         'absolute',
-    bottom:           0,
-    left:             0,
-    right:            0,
-    maxHeight:        260,
-    backgroundColor:  'rgba(0, 0, 0, 0.88)',
-    paddingVertical:  8,
-    paddingHorizontal: 10,
-  },
-  debugPanelTitle: {
-    color:        '#FFD600',
-    fontSize:     10,
-    fontWeight:   '700',
-    letterSpacing: 0.8,
-    marginBottom:  6,
-    textTransform: 'uppercase',
-  },
-  debugCropItem: {
-    marginRight:   10,
-    alignItems:    'center',
-  },
-  debugCropImage: {
-    width:        100,
-    height:       60,
-    borderWidth:  1,
-    borderColor:  '#FFD600',
-    borderRadius: 3,
-    backgroundColor: '#111',
-  },
-  debugCropFormat: {
-    color:    '#FFD600',
-    fontSize: 9,
-    marginTop: 3,
-  },
-  debugCropText: {
-    color:    '#FFF',
-    fontSize: 9,
-  },
-  debugLogScroll: {
-    maxHeight: 130,
-  },
-  debugLogLine: {
-    color:        'rgba(255,255,255,0.75)',
-    fontSize:     8.5,
-    fontFamily:   Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    lineHeight:   13,
-  },
-  debugLogError: {
-    color: '#FF5252',
-  },
-  debugLogSuccess: {
-    color: '#69FF47',
-  },
-  debugLogHighlight: {
-    color: '#40C4FF',
   },
 
   // ── Zoom indicator ────────────────────────────────────────────────────────
