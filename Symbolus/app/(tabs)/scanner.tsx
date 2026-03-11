@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // app/(tabs)/scanner.tsx — Barcode scanner tab screen
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Animated,
   FlatList,
@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { ThemedText } from '@/components/themed-text';
+import { useScannerSettings, ALL_FORMAT_IDS } from '@/contexts/ScannerSettingsContext';
 import type { BarcodeDetection } from '../../modules/zxing-nanodet/src/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,6 +59,21 @@ export default function ScannerScreen() {
   const insets = useSafeAreaInsets();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [panelOpen, setPanelOpen] = useState(false);
+  const { settings } = useScannerSettings();
+
+  // Build detection options from settings; recompute only when settings change.
+  const detectionOptions = useMemo(() => ({
+    confidence: 0.35,
+    modelInputSize: 640,
+    maxDetections: 10,
+    enableZxing: settings.enableZxing,
+    enableOcr: settings.enableOcr,
+    // When all formats enabled pass undefined (no filter) — avoids passing a huge array every frame.
+    enabledFormats:
+      settings.enabledFormats.size === ALL_FORMAT_IDS.length
+        ? undefined
+        : Array.from(settings.enabledFormats),
+  }), [settings]);
 
   const handleDetected = useCallback((det: BarcodeDetection) => {
     setHistory((prev) => {
@@ -86,7 +102,7 @@ export default function ScannerScreen() {
       <BarcodeScanner
         style={panelOpen ? styles.cameraSmall : styles.cameraFull}
         onBarcodeDetected={handleDetected}
-        detectionOptions={{ confidence: 0.35, modelInputSize: 640, maxDetections: 10 }}
+        detectionOptions={detectionOptions}
         cooldownMs={1500}
       >
         {/* Top bar */}

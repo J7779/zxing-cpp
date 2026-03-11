@@ -87,13 +87,23 @@ class ZXingNanoDetPlugin(
         val modelInputSize = (params?.get("modelInputSize") as? Number)?.toInt()   ?: 640
         val maxDetections  = (params?.get("maxDetections")  as? Number)?.toInt()   ?: 10
         val debug          = (params?.get("debug")          as? Boolean)           ?: false
+        val enableZxing    = (params?.get("enableZxing")    as? Boolean)           ?: true
+        val enableOcr      = (params?.get("enableOcr")      as? Boolean)           ?: true
+        // JS arrays arrive as List<*>; extract non-blank strings.
+        @Suppress("UNCHECKED_CAST")
+        val enabledFormats: Set<String>? = (params?.get("enabledFormats") as? List<*>)
+            ?.mapNotNull { it as? String }
+            ?.filter { it.isNotBlank() }
+            ?.toHashSet()
+            ?.takeIf { it.isNotEmpty() }
 
         // Dispatch all heavy work to background thread
         executor.execute {
             try {
                 val results = runInference(
                     session, rgba, width, height,
-                    confidence, modelInputSize, maxDetections, debug
+                    confidence, modelInputSize, maxDetections, debug,
+                    enableZxing, enableOcr, enabledFormats
                 )
                 cachedResults = results
             } catch (e: Exception) {
@@ -118,11 +128,15 @@ class ZXingNanoDetPlugin(
         modelInputSize: Int,
         maxDetections: Int,
         debug: Boolean = false,
+        enableZxing: Boolean = true,
+        enableOcr: Boolean = true,
+        enabledFormats: Set<String>? = null,   // null = accept all formats
     ): List<Map<String, Any>> {
         val frameLog = mutableListOf<String>()
         fun log(msg: String) { Log.d(TAG, msg); if (debug) frameLog += msg }
 
-        log("[FRAME] ${width}x${height} landscape=${width > height} debug=$debug")
+        log("[FRAME] ${width}x${height} landscape=${width > height} debug=$debug enableZxing=$enableZxing enableOcr=$enableOcr formats=${enabledFormats ?: "all"}")
+
 
         // 1. NanoDet preprocessing (C++)
         val preprocessed = ZXingNanoDetJNI.nativePreprocess(rgba, width, height, modelInputSize)
@@ -195,14 +209,16 @@ class ZXingNanoDetPlugin(
             if (cw <= 0 || ch <= 0) { log("[CROP#$i] SKIPPED (zero area after padding)"); continue }
 
             // Debug: encode the ROTATED luma crop that ZXing actually receives.
-            // The JNI layer applies 90° CW when frame is landscape; replicate that
-            // here so the debug preview matches what ZXing sees.
             val debugCropBase64: String? = if (debug) generateZxingInputBase64(rgba, width, height, cx, cy, cw, ch) else null
 
-            // Pass debug=true to JNI so it returns a log entry as first element
-            val rawBarcodes = ZXingNanoDetJNI.nativeDecodeBarcode(
-                rgba, width, height, cx, cy, cw, ch, debug
-            )
+            // ── ZXing decode ─────────────────────────────────────────────────
+            // When enableZxing=false we skip the native call entirely.
+            val rawBarcodes = if (enableZxing) {
+                ZXingNanoDetJNI.nativeDecodeBarcode(rgba, width, height, cx, cy, cw, ch, debug)
+            } else {
+                log("[ZXING#$i] SKIPPED (enableZxing=false)")
+                emptyArray()
+            }
 
             // Extract JNI log entry if present
             var startIdx = 0
@@ -211,7 +227,18 @@ class ZXingNanoDetPlugin(
                 jniLog.split("\n").filter { it.isNotBlank() }.forEach { log("[JNI] $it") }
                 startIdx = 1
             }
-            val barcodes = if (startIdx > 0) rawBarcodes.drop(startIdx) else rawBarcodes.toList()
+            val allBarcodes = if (startIdx > 0) rawBarcodes.drop(startIdx) else rawBarcodes.toList()
+
+            // ── Format filter ────────────────────────────────────────────────
+            // Drop any decoded format that is not in the enabled set.
+            val barcodes = if (enabledFormats != null) {
+                allBarcodes.filter { bc -> enabledFormats.contains(bc.getOrNull(0) ?: "") }
+            } else {
+                allBarcodes
+            }
+            if (allBarcodes.size != barcodes.size) {
+                log("[FORMAT_FILTER#$i] ${allBarcodes.size - barcodes.size} result(s) removed by format filter")
+            }
 
             log("[ZXING#$i] decoded ${barcodes.size} barcode(s)")
 
@@ -246,13 +273,16 @@ class ZXingNanoDetPlugin(
                     results += resultMap
                 }
             } else {
-                // ZXing failed — attempt PP-OCRv5 text recognition as fallback
-                val ocrText = if (ocrEngine.isAvailable) {
-                    log("[OCR#$i] ZXing returned no result, trying PP-OCRv5 OCR fallback")
+                // ZXing returned nothing (disabled or failed) — try OCR fallback.
+                val ocrText = if (enableOcr && ocrEngine.isAvailable) {
+                    log("[OCR#$i] trying PP-OCRv5 fallback")
                     val text = ocrEngine.recognizeTextInRegion(rgba, width, height, cx, cy, cw, ch)
                     log("[OCR#$i] result='$text'")
                     text
-                } else ""
+                } else {
+                    if (!enableOcr) log("[OCR#$i] SKIPPED (enableOcr=false)")
+                    ""
+                }
 
                 val resultMap = mutableMapOf<String, Any>(
                     "format"         to if (ocrText.isNotBlank()) "OCR" else "UNKNOWN",

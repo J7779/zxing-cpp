@@ -48,6 +48,22 @@ export interface DetectBarcodesOptions {
    * passed to ZXing. Intended for development only — adds encoding overhead.
    */
   debug?: boolean;
+  /**
+   * When false, the ZXing structured barcode decoder is skipped entirely.
+   * Useful for testing OCR in isolation. Default: true.
+   */
+  enableZxing?: boolean;
+  /**
+   * When false, the PP-OCRv5 fallback is never invoked even when ZXing fails.
+   * Useful for testing ZXing in isolation. Default: true.
+   */
+  enableOcr?: boolean;
+  /**
+   * Restrict which barcode formats are reported. Exact ZXing-C++ format strings
+   * (e.g. "Code128", "QRCode", "EAN-13", "ITF"). When omitted or empty, all
+   * formats are accepted. Filtering happens in Kotlin after ZXing decodes.
+   */
+  enabledFormats?: string[];
 }
 
 export interface ZXingNanoDetFrameProcessorPlugin {
