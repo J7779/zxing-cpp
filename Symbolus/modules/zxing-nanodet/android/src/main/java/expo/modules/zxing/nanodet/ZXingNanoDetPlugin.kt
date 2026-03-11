@@ -23,6 +23,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 private const val TAG = "ZXingNanoDetPlugin"
 private const val MODEL_ASSET = "nanodet_barcode.onnx"
@@ -43,12 +44,20 @@ class ZXingNanoDetPlugin(
     private val executor = Executors.newSingleThreadExecutor { r ->
         Thread(r, "ZXingNanoDetWorker").apply { isDaemon = true }
     }
-    // Thread pool for parallel ZXing/OCR decode (runs inside the NanoDet worker)
+    // Thread pool for parallel ZXing decode (runs inside the NanoDet worker)
     private val decodePool = Executors.newFixedThreadPool(3) { r ->
         Thread(r, "DecodeWorker").apply { isDaemon = true }
     }
+    // Dedicated single thread for OCR — never blocks the decode pipeline
+    private val ocrExecutor = Executors.newSingleThreadExecutor { r ->
+        Thread(r, "OcrWorker").apply { isDaemon = true }
+    }
     private val isProcessing = AtomicBoolean(false)
     @Volatile private var cachedResults: List<Map<String, Any>> = emptyList()
+    // Async OCR result from previous frame — injected into next inference results
+    @Volatile private var pendingOcrResult: Map<String, Any>? = null
+    // Monotonically increasing counter — tags each inference so JS can detect new results
+    private val inferenceCounter = AtomicLong(0)
 
     init {
         try {
@@ -202,6 +211,8 @@ class ZXingNanoDetPlugin(
         // 4. ZXing + OCR decode per NanoDet-detected box (PARALLEL)
         val results = mutableListOf<Map<String, Any>>()
         val limit = minOf(boxes.size, maxDetections)
+        // Only one crop per frame may trigger async OCR (avoid queueing N slow inferences)
+        val ocrSlotTaken = AtomicBoolean(false)
 
         // Prepare crop data for all detections
         data class CropInfo(
@@ -242,7 +253,7 @@ class ZXingNanoDetPlugin(
                     crop.cx, crop.cy, crop.cw, crop.ch,
                     crop.detScore, crop.debugCropBase64,
                     debug, enableZxing, enableOcr, enabledFormats,
-                    enableDamagedBarcode,
+                    enableDamagedBarcode, ocrSlotTaken,
                 )
             })
         }
@@ -290,6 +301,24 @@ class ZXingNanoDetPlugin(
             )
         }
 
+        // Inject any pending async OCR result from the previous frame's background run
+        pendingOcrResult?.let { ocrResult ->
+            val existingTexts = results.mapNotNull { it["text"] as? String }.toHashSet()
+            val ocrText = ocrResult["text"] as? String ?: ""
+            if (ocrText.isNotBlank() && !existingTexts.contains(ocrText)) {
+                results += ocrResult
+            }
+            pendingOcrResult = null
+        }
+
+        // Tag every result with a unique inference ID so the JS consensus algorithm
+        // can distinguish genuinely new inference frames from cached repeats.
+        // Convert to Double — VisionCamera's JSI bridge cannot serialise java.lang.Long.
+        val infId = inferenceCounter.incrementAndGet().toDouble()
+        for (result in results) {
+            (result as? MutableMap<String, Any>)?.set("_inferenceId", infId)
+        }
+
         return results
     }
 
@@ -333,6 +362,7 @@ class ZXingNanoDetPlugin(
         enableZxing: Boolean, enableOcr: Boolean,
         enabledFormats: Set<String>?,
         enableDamagedBarcode: Boolean,
+        ocrSlotTaken: AtomicBoolean,
     ): List<Map<String, Any>> {
         val results = mutableListOf<Map<String, Any>>()
 
@@ -384,54 +414,69 @@ class ZXingNanoDetPlugin(
                 results += resultMap
             }
         } else if (enableDamagedBarcode && enableZxing && enableOcr && ocrEngine.isAvailable) {
-            // Damaged barcode merge: ZXing partial + OCR
+            // Damaged barcode merge: ZXing partial + OCR (async to avoid blocking)
             val partialZxing = allBarcodes.firstOrNull()?.getOrNull(1) ?: ""
-            val ocrText = ocrEngine.recognizeTextInRegion(rgba, width, height, cx, cy, cw, ch)
-            val mergedText = mergePartialBarcodeTexts(partialZxing, ocrText)
 
-            if (mergedText.isNotBlank()) {
-                val resultMap = mutableMapOf<String, Any>(
-                    "format"         to (allBarcodes.firstOrNull()?.getOrNull(0) ?: "OCR"),
-                    "text"           to mergedText,
-                    "confidence"     to detScore.toDouble(),
-                    "isOcrFallback"  to true,
-                    "source"         to "nanodet",
-                    "mergedText"     to mergedText,
-                    "boundingBox"    to mapOf(
-                        "x"      to bx1.toDouble(),
-                        "y"      to by1.toDouble(),
-                        "width"  to (bx2 - bx1).toDouble(),
-                        "height" to (by2 - by1).toDouble(),
-                    ),
-                    "cornerPoints" to emptyList<Any>(),
-                )
-                if (debug && debugCropBase64 != null) resultMap["debugCropBase64"] = debugCropBase64
-                results += resultMap
-            } else {
-                results += buildUnknownResult(bx1, by1, bx2, by2, detScore, debug, debugCropBase64, snapshotLogs)
+            if (ocrSlotTaken.compareAndSet(false, true)) {
+                // Submit OCR to dedicated thread — result injected on next frame
+                val rgbaCopy = rgba // already a ByteArray copy; safe to close over
+                ocrExecutor.submit {
+                    try {
+                        val ocrText = ocrEngine.recognizeTextInRegion(rgbaCopy, width, height, cx, cy, cw, ch)
+                        val mergedText = mergePartialBarcodeTexts(partialZxing, ocrText)
+                        if (mergedText.isNotBlank()) {
+                            pendingOcrResult = mutableMapOf<String, Any>(
+                                "format"         to (allBarcodes.firstOrNull()?.getOrNull(0) ?: "OCR"),
+                                "text"           to mergedText,
+                                "confidence"     to detScore.toDouble(),
+                                "isOcrFallback"  to true,
+                                "source"         to "nanodet",
+                                "mergedText"     to mergedText,
+                                "boundingBox"    to mapOf(
+                                    "x"      to bx1.toDouble(),
+                                    "y"      to by1.toDouble(),
+                                    "width"  to (bx2 - bx1).toDouble(),
+                                    "height" to (by2 - by1).toDouble(),
+                                ),
+                                "cornerPoints" to emptyList<Any>(),
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Async damaged OCR error: ${e.message}", e)
+                    }
+                }
             }
+            // Return UNKNOWN immediately — OCR result arrives next frame
+            results += buildUnknownResult(bx1, by1, bx2, by2, detScore, debug, debugCropBase64, snapshotLogs)
         } else {
-            // OCR fallback only
-            val ocrText = if (enableOcr && ocrEngine.isAvailable) {
-                ocrEngine.recognizeTextInRegion(rgba, width, height, cx, cy, cw, ch)
-            } else ""
-
-            val resultMap = mutableMapOf<String, Any>(
-                "format"         to if (ocrText.isNotBlank()) "OCR" else "UNKNOWN",
-                "text"           to ocrText,
-                "confidence"     to detScore.toDouble(),
-                "isOcrFallback"  to ocrText.isNotBlank(),
-                "source"         to "nanodet",
-                "boundingBox"    to mapOf(
-                    "x"      to bx1.toDouble(),
-                    "y"      to by1.toDouble(),
-                    "width"  to (bx2 - bx1).toDouble(),
-                    "height" to (by2 - by1).toDouble(),
-                ),
-                "cornerPoints" to emptyList<Any>(),
-            )
-            if (debug && debugCropBase64 != null) resultMap["debugCropBase64"] = debugCropBase64
-            results += resultMap
+            // OCR fallback (async — submit to dedicated thread, return UNKNOWN now)
+            if (enableOcr && ocrEngine.isAvailable && ocrSlotTaken.compareAndSet(false, true)) {
+                val rgbaCopy = rgba
+                ocrExecutor.submit {
+                    try {
+                        val ocrText = ocrEngine.recognizeTextInRegion(rgbaCopy, width, height, cx, cy, cw, ch)
+                        if (ocrText.isNotBlank()) {
+                            pendingOcrResult = mutableMapOf<String, Any>(
+                                "format"         to "OCR",
+                                "text"           to ocrText,
+                                "confidence"     to detScore.toDouble(),
+                                "isOcrFallback"  to true,
+                                "source"         to "nanodet",
+                                "boundingBox"    to mapOf(
+                                    "x"      to bx1.toDouble(),
+                                    "y"      to by1.toDouble(),
+                                    "width"  to (bx2 - bx1).toDouble(),
+                                    "height" to (by2 - by1).toDouble(),
+                                ),
+                                "cornerPoints" to emptyList<Any>(),
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Async OCR error: ${e.message}", e)
+                    }
+                }
+            }
+            results += buildUnknownResult(bx1, by1, bx2, by2, detScore, debug, debugCropBase64, snapshotLogs)
         }
 
         return results

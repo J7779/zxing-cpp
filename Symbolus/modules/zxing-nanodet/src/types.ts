@@ -49,6 +49,12 @@ export interface BarcodeDetection {
    * Only populated when `DetectBarcodesOptions.debug` is true (dev mode).
    */
   debugLogs?: string[];
+  /**
+   * Monotonically increasing ID from the native inference pipeline.
+   * Used by the consensus algorithm to distinguish new inference frames
+   * from cached repeats of the same results. Internal use only.
+   */
+  _inferenceId?: number;
 }
 
 export interface DetectBarcodesOptions {

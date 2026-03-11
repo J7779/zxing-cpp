@@ -270,12 +270,23 @@ export default function BarcodeScanner({
 
   // ── Consensus algorithm ───────────────────────────────────────────────────
   // Buffer recent reads; only report a barcode once N identical values seen.
+  // IMPORTANT: Only increment when we get a genuinely new inference frame from
+  // native (identified by _inferenceId), NOT on cached/stale repeats.
   const consensusEnabled = detectionOptions.enableConsensus ?? false;
   const consensusRequired = detectionOptions.consensusCount ?? 3;
   const consensusBufferRef = useRef<Map<string, number>>(new Map());
+  const lastInferenceIdRef = useRef<number>(-1);
 
   const confirmedDetections = useMemo(() => {
     if (!consensusEnabled) return filteredDetections;
+
+    // Check if this is a new inference frame or a stale cached repeat
+    const currentInferenceId = filteredDetections[0]?._inferenceId ?? -1;
+    if (currentInferenceId !== -1 && currentInferenceId === lastInferenceIdRef.current) {
+      // Same cached results from native — don't increment consensus buffer
+      return [];
+    }
+    lastInferenceIdRef.current = currentInferenceId;
 
     const buf = consensusBufferRef.current;
     const confirmed: BarcodeDetection[] = [];

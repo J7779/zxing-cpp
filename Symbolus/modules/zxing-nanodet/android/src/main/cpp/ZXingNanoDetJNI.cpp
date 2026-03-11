@@ -41,6 +41,92 @@
 
 using namespace ZXing;
 
+
+// Small-crop upscale helpers
+// When a barcode crop is small (few pixels per module), bilinear 2x upscale
+// combined with a light unsharp-mask dramatically improves decode rate.
+
+// Threshold: if max(cropW,cropH) < this, upscale 2x before ZXing decode.
+static constexpr int UPSCALE_THRESHOLD = 200;
+
+// Bilinear 2x upscale of an RGBA sub-image into a contiguous buffer.
+static std::vector<uint8_t> bilinearUpscale2x(
+    const uint8_t* src, int srcW, int srcH, int srcRowStride)
+{
+    const int dstW = srcW * 2;
+    const int dstH = srcH * 2;
+    std::vector<uint8_t> dst(dstW * dstH * 4);
+
+    for (int dy = 0; dy < dstH; ++dy) {
+        float sy = dy * 0.5f;
+        int y0 = std::min((int)sy, srcH - 1);
+        int y1 = std::min(y0 + 1, srcH - 1);
+        float fy = sy - y0;
+        for (int dx = 0; dx < dstW; ++dx) {
+            float sx = dx * 0.5f;
+            int x0 = std::min((int)sx, srcW - 1);
+            int x1 = std::min(x0 + 1, srcW - 1);
+            float fx = sx - x0;
+
+            const uint8_t* p00 = src + y0 * srcRowStride + x0 * 4;
+            const uint8_t* p10 = src + y0 * srcRowStride + x1 * 4;
+            const uint8_t* p01 = src + y1 * srcRowStride + x0 * 4;
+            const uint8_t* p11 = src + y1 * srcRowStride + x1 * 4;
+
+            uint8_t* out = dst.data() + (dy * dstW + dx) * 4;
+            for (int c = 0; c < 4; ++c) {
+                float v = p00[c] * (1 - fx) * (1 - fy)
+                        + p10[c] *      fx  * (1 - fy)
+                        + p01[c] * (1 - fx) *      fy
+                        + p11[c] *      fx  *      fy;
+                out[c] = (uint8_t)std::min(std::max((int)(v + 0.5f), 0), 255);
+            }
+        }
+    }
+    return dst;
+}
+
+// Light unsharp-mask on a contiguous RGBA buffer (in-place).
+// 3x3 box blur kernel, amount 0.5.
+static void unsharpMask(uint8_t* img, int w, int h)
+{
+    const float amount = 0.5f;
+    std::vector<uint8_t> blur(w * h * 4);
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            int sum[3] = {0, 0, 0};
+            int count = 0;
+            for (int ky = -1; ky <= 1; ++ky) {
+                int ny = y + ky;
+                if (ny < 0 || ny >= h) continue;
+                for (int kx = -1; kx <= 1; ++kx) {
+                    int nx = x + kx;
+                    if (nx < 0 || nx >= w) continue;
+                    const uint8_t* p = img + (ny * w + nx) * 4;
+                    sum[0] += p[0]; sum[1] += p[1]; sum[2] += p[2];
+                    ++count;
+                }
+            }
+            uint8_t* out = blur.data() + (y * w + x) * 4;
+            out[0] = sum[0] / count;
+            out[1] = sum[1] / count;
+            out[2] = sum[2] / count;
+            out[3] = img[(y * w + x) * 4 + 3];
+        }
+    }
+
+    for (int i = 0; i < w * h; ++i) {
+        uint8_t* p = img + i * 4;
+        const uint8_t* b = blur.data() + i * 4;
+        for (int c = 0; c < 3; ++c) {
+            float v = p[c] + amount * (p[c] - b[c]);
+            p[c] = (uint8_t)std::min(std::max((int)(v + 0.5f), 0), 255);
+        }
+    }
+}
+
+
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 1. nativePreprocess
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
