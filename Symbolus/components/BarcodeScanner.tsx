@@ -75,7 +75,8 @@ function OverlayBox({
   containerWidth,
   containerHeight,
 }: OverlayBoxProps) {
-  const { boundingBox, text, format, confidence } = detection;
+  const { boundingBox, text, format, confidence, isOcrFallback } = detection;
+  const borderColor = isOcrFallback ? OCR_BORDER_COLOR : BORDER_COLOR;
 
   // Detect rotation: sensor frame is landscape (w>h) but container is portrait (h>w)
   const needsRotation = frameWidth > frameHeight && containerHeight > containerWidth;
@@ -121,11 +122,13 @@ function OverlayBox({
       pointerEvents="none"
       style={[
         styles.overlayBox,
-        { left, top, width, height },
+        { left, top, width, height, borderColor },
       ]}
     >
-      <View style={styles.overlayLabel}>
-        <Text style={styles.overlayFormat}>{format}</Text>
+      <View style={[styles.overlayLabel, isOcrFallback && styles.overlayLabelOcr]}>
+        <Text style={[styles.overlayFormat, isOcrFallback && styles.overlayFormatOcr]}>
+          {isOcrFallback ? `OCR \u2192 ${format}` : format}
+        </Text>
         <Text style={styles.overlayText} numberOfLines={2}>{text}</Text>
         <Text style={styles.overlayConf}>{(confidence * 100).toFixed(0)}%</Text>
       </View>
@@ -345,8 +348,10 @@ export default function BarcodeScanner({
 // Styles
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BORDER_COLOR = '#00E5FF';
-const LABEL_BG     = 'rgba(0, 0, 0, 0.65)';
+const BORDER_COLOR     = '#00E5FF';
+const OCR_BORDER_COLOR = '#FFB300'; // amber — indicates PaddleOCR fallback
+const LABEL_BG         = 'rgba(0, 0, 0, 0.65)';
+const LABEL_BG_OCR     = 'rgba(80, 50, 0, 0.75)';
 
 const styles = StyleSheet.create({
   fill:    { flex: 1 },
@@ -371,11 +376,17 @@ const styles = StyleSheet.create({
     borderRadius:    4,
     alignItems:      'center',
   },
+  overlayLabelOcr: {
+    backgroundColor: LABEL_BG_OCR,
+  },
   overlayFormat: {
     color:      BORDER_COLOR,
     fontSize:   10,
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  overlayFormatOcr: {
+    color: OCR_BORDER_COLOR,
   },
   overlayText: {
     color:    '#FFFFFF',

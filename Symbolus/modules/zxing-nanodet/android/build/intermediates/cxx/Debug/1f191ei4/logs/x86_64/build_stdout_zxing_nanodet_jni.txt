@@ -1,2 +1,0 @@
-ninja: Entering directory `C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android\.cxx\Debug\1f191ei4\x86_64'
-[1/1] Linking CXX shared library C:\Users\RexMobile\Documents\GitHub\zxing-cpp\Symbolus\modules\zxing-nanodet\android\build\intermediates\cxx\Debug\1f191ei4\obj\x86_64\libzxing_nanodet_jni.so

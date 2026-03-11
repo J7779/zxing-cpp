@@ -34,6 +34,9 @@ class ZXingNanoDetPlugin(
     private val ortEnv: OrtEnvironment = OrtEnvironment.getEnvironment()
     private var ortSession: OrtSession? = null
 
+    // PP-OCRv5 fallback for barcodes ZXing cannot decode
+    private val ocrEngine: OcrEngine by lazy { OcrEngine(appContext, ortEnv) }
+
     // Single background thread for inference - avoids blocking the camera pipeline
     private val executor = Executors.newSingleThreadExecutor { r ->
         Thread(r, "ZXingNanoDetWorker").apply { isDaemon = true }
@@ -243,11 +246,20 @@ class ZXingNanoDetPlugin(
                     results += resultMap
                 }
             } else {
+                // ZXing failed — attempt PP-OCRv5 text recognition as fallback
+                val ocrText = if (ocrEngine.isAvailable) {
+                    log("[OCR#$i] ZXing returned no result, trying PP-OCRv5 OCR fallback")
+                    val text = ocrEngine.recognizeTextInRegion(rgba, width, height, cx, cy, cw, ch)
+                    log("[OCR#$i] result='$text'")
+                    text
+                } else ""
+
                 val resultMap = mutableMapOf<String, Any>(
-                    "format"      to "UNKNOWN",
-                    "text"        to "",
-                    "confidence"  to detScore.toDouble(),
-                    "boundingBox" to mapOf(
+                    "format"         to if (ocrText.isNotBlank()) "OCR" else "UNKNOWN",
+                    "text"           to ocrText,
+                    "confidence"     to detScore.toDouble(),
+                    "isOcrFallback"  to ocrText.isNotBlank(),
+                    "boundingBox"    to mapOf(
                         "x"      to bx1.toDouble(),
                         "y"      to by1.toDouble(),
                         "width"  to (bx2 - bx1).toDouble(),

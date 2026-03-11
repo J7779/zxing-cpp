@@ -2,12 +2,17 @@
 // ZXing + NanoDet frame processor plugin — shared TypeScript types
 
 export interface BarcodeDetection {
-  /** ZXing barcode format string, e.g. "QR_CODE", "CODE_128" */
+  /** ZXing barcode format string, e.g. "QR_CODE", "CODE_128", "OCR", or "UNKNOWN" */
   format: string;
-  /** Decoded barcode text */
+  /** Decoded barcode text, or OCR-extracted text when ZXing fails */
   text: string;
   /** NanoDet confidence score [0, 1] */
   confidence: number;
+  /**
+   * True when ZXing could not decode the barcode and PP-OCRv5 was used
+   * to read the text from the detected region instead.
+   */
+  isOcrFallback?: boolean;
   /** Bounding box in frame pixel coordinates */
   boundingBox: {
     x: number;
