@@ -37,6 +37,11 @@ import {
   useZXingNanoDet,
   type BarcodeDetection,
   type DetectBarcodesOptions,
+  applyISPSettings,
+  resetISPSettings,
+  ISP_BARCODE_PRESET,
+  ISP_HIGH_QUALITY_PRESET,
+  BarcodeOverlay,
 } from '../modules/zxing-nanodet/src';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -150,9 +155,9 @@ export default function BarcodeScanner({
   const { hasPermission, requestPermission } = useCameraPermission();
   const device: CameraDevice | undefined = useCameraDevice(facing);
 
-  // ── Camera format: pick 1080p for high-res ZXing crops ────────────────────
+  // ── Camera format: use MAX resolution for best distance scanning ───────────
   const format = useCameraFormat(device, [
-    { videoResolution: { width: 1920, height: 1080 } },
+    { videoResolution: 'max' },
     { fps: 30 },
   ]);
 
@@ -161,6 +166,23 @@ export default function BarcodeScanner({
   const torchMode = detectionOptions.torchMode ?? 'off';
   const [autoTorchOn, setAutoTorchOn] = useState(false);
   const torchEnabled = torchMode === 'on' || (torchMode === 'auto' && autoTorchOn);
+
+  // ── Camera2 ISP (Android) ────────────────────────────────────────────────
+  // Apply ISP settings when the camera device is available. Resolve presets.
+  const ispSettings = detectionOptions.ispSettings;
+  useEffect(() => {
+    if (!device || !ispSettings) return;
+    const config =
+      ispSettings === 'barcode' ? ISP_BARCODE_PRESET
+        : ispSettings === 'high_quality' ? ISP_HIGH_QUALITY_PRESET
+        : ispSettings;
+    // Small delay to let CameraX bind before applying Camera2 interop
+    const timer = setTimeout(() => { applyISPSettings(config); }, 500);
+    return () => {
+      clearTimeout(timer);
+      resetISPSettings();
+    };
+  }, [device, ispSettings]);
 
   // ── Zoom & focus ──────────────────────────────────────────────────────────
   const cameraRef = useRef<Camera>(null);
@@ -332,6 +354,10 @@ export default function BarcodeScanner({
       const last = cooldownMap.current.get(key) ?? 0;
       if (now - last < cooldownMs) return;
       cooldownMap.current.set(key, now);
+      console.log(
+        `[BarcodeScanner:CONFIRMED] format=${det.format} text="${det.text}" ` +
+        `confidence=${det.confidence?.toFixed(3)} source=${det.source ?? 'unknown'}`,
+      );
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       onBarcodeDetected(det);
     },
@@ -374,6 +400,9 @@ export default function BarcodeScanner({
             torch={torchEnabled ? 'on' : 'off'}
             {...(format ? { format } : {})}
           />
+
+          {/* Native barcode bounding-box overlay (Kotlin Canvas) */}
+          <BarcodeOverlay mirrorX={facing === 'front'} />
 
           {/* Scan region overlay */}
           <ScanRegionOverlay

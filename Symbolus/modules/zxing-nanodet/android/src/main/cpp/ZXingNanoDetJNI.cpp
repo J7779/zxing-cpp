@@ -34,6 +34,7 @@
 #include "BarcodeFormat.h"
 #include "ImageView.h"
 #include "MultiFormatReader.h"
+#include "oned/ODDiagnostics.h"
 
 #define LOG_TAG "ZXingNanoDetJNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  LOG_TAG, __VA_ARGS__)
@@ -259,7 +260,18 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
         if (dbg) logLines.push_back(line);
     };
 
+    // Enable the C++ 1D diagnostics collector when debug mode is on
+    if (dbg) {
+        ZXing::OneD::Diagnostics::Enable();
+    }
+
     auto makeEmpty = [&]() {
+        // Collect C++ diagnostics before returning
+        if (dbg) {
+            auto cppLogs = ZXing::OneD::Diagnostics::Collect();
+            for (auto& cl : cppLogs) logLines.push_back(cl);
+            ZXing::OneD::Diagnostics::Disable();
+        }
         if (!dbg || logLines.empty()) return env->NewObjectArray(0, stringArrayClass, nullptr);
         // Return log entry even on early-exit
         std::string joined;
@@ -301,10 +313,15 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
     addLog("[CROP_CLAMPED] x=" + std::to_string(bx) + " y=" + std::to_string(by) +
            " w=" + std::to_string(bw) + " h=" + std::to_string(bh));
 
-    // Compute luma stats from RGBA for diagnostics (debug only — expensive)
+    // Compute detailed luma stats from RGBA for diagnostics (debug only — expensive)
     if (dbg) {
         long lumaSum = 0;
+        long lumaSqSum = 0;
         uint8_t lumaMin = 255, lumaMax = 0;
+        int histogram[256] = {};
+        int edgeCount = 0;  // count of strong luminance transitions
+        uint8_t prevLuma = 0;
+
         for (int row = 0; row < bh; ++row) {
             for (int col = 0; col < bw; ++col) {
                 int srcIdx = ((by + row) * frameW + (bx + col)) * 4;
@@ -313,15 +330,46 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
                 int b = rgba[srcIdx + 2] & 0xFF;
                 uint8_t y = (uint8_t)((r * 77 + g * 150 + b * 29) >> 8);
                 lumaSum += y;
+                lumaSqSum += (long)y * y;
                 if (y < lumaMin) lumaMin = y;
                 if (y > lumaMax) lumaMax = y;
+                histogram[y]++;
+                // Count horizontal edges (black-white transitions) for barcode-ness estimate
+                if (col > 0 && std::abs((int)y - (int)prevLuma) > 40)
+                    ++edgeCount;
+                prevLuma = y;
             }
         }
-        float lumaMean = (bw * bh > 0) ? (float)lumaSum / (bw * bh) : 0.f;
+        int totalPixels = bw * bh;
+        float lumaMean = totalPixels > 0 ? (float)lumaSum / totalPixels : 0.f;
+        float lumaVariance = totalPixels > 0 ? (float)lumaSqSum / totalPixels - lumaMean * lumaMean : 0.f;
+        float lumaStdDev = std::sqrt(std::max(0.f, lumaVariance));
+        float edgeDensity = (bw > 1 && bh > 0) ? (float)edgeCount / ((bw - 1) * bh) : 0.f;
+
+        // Find bimodal peaks for threshold quality estimate
+        int darkPeak = 0, darkCount = 0, lightPeak = 255, lightCount = 0;
+        for (int i = 0; i < 128; ++i) { if (histogram[i] > darkCount) { darkCount = histogram[i]; darkPeak = i; } }
+        for (int i = 128; i < 256; ++i) { if (histogram[i] > lightCount) { lightCount = histogram[i]; lightPeak = i; } }
+        int valleyMin = INT32_MAX;
+        for (int i = darkPeak + 1; i < lightPeak; ++i) { if (histogram[i] < valleyMin) valleyMin = histogram[i]; }
+        float bimodalSep = (darkCount > 0 && lightCount > 0 && valleyMin < INT32_MAX)
+            ? 1.0f - (float)valleyMin / std::max(darkCount, lightCount) : 0.f;
+
         addLog("[LUMA_STATS] min=" + std::to_string(lumaMin) +
                " max=" + std::to_string(lumaMax) +
                " mean=" + std::to_string((int)lumaMean) +
+               " stdDev=" + std::to_string((int)lumaStdDev) +
                " contrast=" + std::to_string(lumaMax - lumaMin));
+        addLog("[IMAGE_QUALITY] edgeDensity=" + std::to_string(edgeDensity) +
+               " edgeCount=" + std::to_string(edgeCount) +
+               " darkPeak=" + std::to_string(darkPeak) +
+               " lightPeak=" + std::to_string(lightPeak) +
+               " bimodalSeparation=" + std::to_string(bimodalSep) +
+               " barcodeConfidence=" + (edgeDensity > 0.05f && bimodalSep > 0.5f ? "HIGH" :
+                                        edgeDensity > 0.02f ? "MEDIUM" : "LOW"));
+        addLog("[CROP_ASPECT] ratio=" + std::to_string(bw > 0 ? (float)bw / bh : 0.f) +
+               " pixels=" + std::to_string(totalPixels) +
+               " is1D=" + (((float)bw / std::max(bh, 1)) > 1.5f ? "likely" : "unlikely"));
     }
 
     // Pass RGBA crop directly to ZXing via rowStride (zero-copy).
@@ -332,25 +380,29 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
     opts.setTryRotate(true);
     opts.setTryInvert(true);
     opts.setTryDownscale(true);
+    opts.setTryUpscale(true);
     opts.setIsPure(false);
     opts.setReturnErrors(true);
+    opts.setMinLineCount(1);
 
-    // Aggressive options only when damaged/curved barcode mode is enabled.
-    // These multiply ZXing work by ~6x and must not run on every frame.
+    // Multi-directional scanning: always enabled for 1D barcodes.
+    // Scans at ±15°, ±45°, ±75°, ±90° in addition to horizontal/vertical,
+    // allowing decode of tilted or rotated barcodes.
+    opts.setTryAngledScanning(true);
+
+    // Additional aggressive options only when damaged/curved barcode mode is enabled.
     if (damaged) {
-        opts.setTryAngledScanning(true);
-        opts.setTryUpscale(true);
         opts.setRelaxedLinearTolerance(true);
-        opts.setMinLineCount(1);
     }
-    addLog(std::string("[ZXING_OPTS] tryHarder=true tryRotate=true tryInvert=true tryDownscale=true")
+    addLog(std::string("[ZXING_OPTS] tryHarder=true tryRotate=true tryInvert=true tryDownscale=true tryUpscale=true tryAngledScanning=true minLineCount=1")
            + " damaged=" + (damaged ? "true" : "false")
-           + (damaged ? " tryAngledScanning=true tryUpscale=true relaxedLinearTolerance=true minLineCount=1" : "")
+           + (damaged ? " relaxedLinearTolerance=true" : "")
            + " formats=Any");
 
     const uint8_t* cropOrigin = rgba + (by * frameW + bx) * 4;
     ImageView rgbaView(cropOrigin, bw, bh, ImageFormat::RGBA, frameW * 4, 4);
 
+    // ── Strategy 1: Standard ZXing decode on the RGBA crop ─────────────
     Barcodes barcodes;
     try {
         barcodes = ReadBarcodes(rgbaView, opts);
@@ -359,6 +411,35 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
     }
 
     addLog("[ZXING_RGBA] total=" + std::to_string(barcodes.size()));
+
+    // ── Strategy 2: Retry with relaxed tolerances if standard failed ───
+    if (barcodes.empty() && !damaged) {
+        addLog("[RETRY_RELAXED] standard decode failed, retrying with relaxed tolerances");
+        ReaderOptions relaxedOpts;
+        relaxedOpts.setFormats(BarcodeFormat::Any);
+        relaxedOpts.setTryHarder(true);
+        relaxedOpts.setTryRotate(true);
+        relaxedOpts.setTryInvert(true);
+        relaxedOpts.setTryDownscale(true);
+        relaxedOpts.setTryUpscale(true);
+        relaxedOpts.setIsPure(false);
+        relaxedOpts.setReturnErrors(true);
+        relaxedOpts.setRelaxedLinearTolerance(true);
+        relaxedOpts.setMinLineCount(1);
+        try {
+            barcodes = ReadBarcodes(rgbaView, relaxedOpts);
+        } catch (const std::exception& ex) {
+            addLog(std::string("[RETRY_RELAXED_THREW] ") + ex.what());
+        }
+        addLog("[RETRY_RELAXED] found=" + std::to_string(barcodes.size()));
+    }
+
+    // Collect C++ 1D diagnostics from the ReadBarcodes call
+    if (dbg) {
+        auto cppLogs = ZXing::OneD::Diagnostics::Collect();
+        addLog("[CPP_DIAG] 1D decoder produced " + std::to_string(cppLogs.size()) + " diagnostic lines");
+        for (auto& cl : cppLogs) logLines.push_back(cl);
+    }
 
     // ── Curved-barcode fallback: scan horizontal strips (damaged mode only) ─
     // On cylindrical surfaces (bottles), the full crop is too warped.
@@ -387,6 +468,13 @@ Java_expo_modules_zxing_nanodet_ZXingNanoDetJNI_nativeDecodeBarcode(
 
     // Release RGBA bytes
     env->ReleaseByteArrayElements(jRGBA, raw, JNI_ABORT);
+
+    // Disable diagnostics after all decoding is done
+    if (dbg) {
+        auto finalLogs = ZXing::OneD::Diagnostics::Collect();
+        for (auto& cl : finalLogs) logLines.push_back(cl);
+        ZXing::OneD::Diagnostics::Disable();
+    }
 
     int validCount = 0, invalidCount = 0;
     for (const auto& bc : barcodes) { if (bc.isValid()) ++validCount; else ++invalidCount; }

@@ -12,6 +12,7 @@
 #include "ReaderOptions.h"
 #include "GTIN.h"
 #include "ODUPCEANCommon.h"
+#include "ODDiagnostics.h"
 #include "Barcode.h"
 #include "JSON.h"
 
@@ -282,7 +283,6 @@ static bool AddOn(PartialResult& res, PatternView begin, int digitCount)
 
 Barcode MultiUPCEANReader::decodePattern(int rowNumber, PatternView& next, std::unique_ptr<RowReader::DecodingState>&) const
 {
-	// ENHANCED: Set tolerance context based on options
 	if (_opts.relaxedLinearTolerance()) {
 		g_maxAvgVariance = RELAXED_MAX_AVG_VARIANCE;
 		g_maxIndVariance = RELAXED_MAX_INDIVIDUAL_VARIANCE;
@@ -290,7 +290,6 @@ Barcode MultiUPCEANReader::decodePattern(int rowNumber, PatternView& next, std::
 		g_maxAvgVariance = STD_MAX_AVG_VARIANCE;
 		g_maxIndVariance = STD_MAX_INDIVIDUAL_VARIANCE;
 	}
-
 	const int minSize = 3 + 6*4 + 6; // UPC-E
 
 	next = FindLeftGuard(next, minSize, END_PATTERN, QUIET_ZONE_LEFT);
@@ -301,10 +300,14 @@ Barcode MultiUPCEANReader::decodePattern(int rowNumber, PatternView& next, std::
 	PartialResult res;
 	auto begin = next;
 	
-	if (!(((_opts.hasFormat(BarcodeFormat::EAN13 | BarcodeFormat::UPCA)) && EAN13(res, begin)) ||
-		  (_opts.hasFormat(BarcodeFormat::EAN8) && EAN8(res, begin)) ||
-		  (_opts.hasFormat(BarcodeFormat::UPCE) && UPCE(res, begin))))
+	bool ean13ok = (_opts.hasFormat(BarcodeFormat::EAN13 | BarcodeFormat::UPCA)) && EAN13(res, begin);
+	bool ean8ok  = !ean13ok && (_opts.hasFormat(BarcodeFormat::EAN8) && EAN8(res, begin));
+	bool upceok  = !ean13ok && !ean8ok && (_opts.hasFormat(BarcodeFormat::UPCE) && UPCE(res, begin));
+
+	if (!(ean13ok || ean8ok || upceok))
 		return {};
+	OD_DIAG("[UPC_EAN] format matched row=" + std::to_string(rowNumber)
+		+ " format=" + ToString(res.format) + " rawText=" + res.txt);
 
 	// ISO/IEC 15420:2009 (& GS1 General Specifications 5.1.3) states that the content for "]E0" should be 13 digits,
 	// i.e. converted to EAN-13 if UPC-A/E
@@ -315,6 +318,8 @@ Barcode MultiUPCEANReader::decodePattern(int rowNumber, PatternView& next, std::
 	}
 
 	Error error = !GTIN::IsCheckDigitValid(res.txt) ? ChecksumError() : Error();
+	if (error)
+		OD_DIAG("[UPC_EAN] CHECKSUM FAIL row=" + std::to_string(rowNumber) + " text=" + res.txt);
 
 	// if we explicitly excluded EAN13, don't return an EAN13 symbol
 	if (res.format == BarcodeFormat::EAN13 && !_opts.hasFormat(BarcodeFormat::EAN13)) {

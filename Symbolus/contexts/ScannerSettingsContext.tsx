@@ -120,11 +120,11 @@ interface ScannerSettingsContextValue {
 
 const DEFAULT_SETTINGS: ScannerSettings = {
   enableZxing: true,
-  enableOcr: true,
+  enableOcr: false,
   enabledFormats: new Set(ALL_FORMAT_IDS),
   torchMode: 'off',
   autoTorchThreshold: 60,
-  enableDirectZxing: false,
+  enableDirectZxing: true,
   zxingResolutionScale: 1.0,
   enableDamagedBarcode: false,
   enableConsensus: false,

@@ -15,6 +15,7 @@
 #include "MultiFormatReader.h"
 #include "Pattern.h"
 #include "ThresholdBinarizer.h"
+#include "oned/ODDiagnostics.h"
 #endif
 
 #include <climits>
@@ -205,6 +206,18 @@ Barcode ReadBarcode(const ImageView& _iv, const ReaderOptions& opts)
 
 Barcodes ReadBarcodes(const ImageView& _iv, const ReaderOptions& opts)
 {
+	OD_DIAG("[ReadBarcodes] START image=" + std::to_string(_iv.width()) + "x" + std::to_string(_iv.height())
+		+ " format=" + std::to_string(static_cast<int>(_iv.format()))
+		+ " pixStride=" + std::to_string(_iv.pixStride())
+		+ " tryHarder=" + (opts.tryHarder() ? "true" : "false")
+		+ " tryRotate=" + (opts.tryRotate() ? "true" : "false")
+		+ " tryInvert=" + (opts.tryInvert() ? "true" : "false")
+		+ " tryDownscale=" + (opts.tryDownscale() ? "true" : "false")
+		+ " tryUpscale=" + (opts.tryUpscale() ? "true" : "false")
+		+ " isPure=" + (opts.isPure() ? "true" : "false")
+		+ " maxSymbols=" + std::to_string(opts.maxNumberOfSymbols())
+		+ " binarizer=" + std::to_string(static_cast<int>(opts.binarizer())));
+
 	if (sizeof(PatternType) < 4 && (_iv.width() > 0xffff || _iv.height() > 0xffff))
 		throw std::invalid_argument("Maximum image width/height is 65535");
 
@@ -213,6 +226,8 @@ Barcodes ReadBarcodes(const ImageView& _iv, const ReaderOptions& opts)
 
 	LumImage lum;
 	ImageView iv = SetupLumImageView(_iv, lum, opts);
+	OD_DIAG("[ReadBarcodes] lum extracted, iv=" + std::to_string(iv.width()) + "x" + std::to_string(iv.height())
+		+ " format=" + std::to_string(static_cast<int>(iv.format())));
 	MultiFormatReader reader(opts);
 
 	if (opts.isPure())
@@ -228,6 +243,7 @@ Barcodes ReadBarcodes(const ImageView& _iv, const ReaderOptions& opts)
 	}
 #endif
 	LumImagePyramid pyramid(iv, opts.downscaleThreshold() * opts.tryDownscale(), opts.downscaleFactor());
+	OD_DIAG("[ReadBarcodes] pyramid layers=" + std::to_string(pyramid.layers.size()));
 
 	Barcodes res;
 	int maxSymbols = opts.maxNumberOfSymbols() ? opts.maxNumberOfSymbols() : INT_MAX;
@@ -243,8 +259,10 @@ Barcodes ReadBarcodes(const ImageView& _iv, const ReaderOptions& opts)
 
 			// TODO: check if closing after invert would be beneficial
 			for (int invert = 0; invert <= static_cast<int>(opts.tryInvert() && !close); ++invert) {
-				if (invert)
+				if (invert) {
+					OD_DIAG("[ReadBarcodes] trying inverted image");
 					bitmap->invert();
+				}
 				auto rs = (close ? *closedReader : reader).readMultiple(*bitmap, maxSymbols);
 				for (auto& r : rs) {
 					if (iv.width() != _iv.width())
@@ -263,11 +281,14 @@ Barcodes ReadBarcodes(const ImageView& _iv, const ReaderOptions& opts)
 	}
 
 	// ENHANCED: Try upscaled image if no results found and upscaling is enabled
-	// This helps with barcodes that are far away where bars are only 1-2 pixels wide
-	if (res.empty() && opts.tryUpscale()) {
-		// Try multiple upscale factors - start with 2x, then 3x, then 4x if needed
-		// 4x is aggressive but helps with very distant barcodes
+	// This helps with barcodes that are far away where bars are only 1-2 pixels wide.
+	// Size guard: only upscale images where min(w,h) <= upscaleThreshold to avoid
+	// blowing up memory on large frames (e.g. 1920x1080 -> 5760x3240 at 3x).
+	if (res.empty() && opts.tryUpscale() && std::min(iv.width(), iv.height()) <= opts.upscaleThreshold()) {
+		OD_DIAG("[ReadBarcodes] no results, trying upscale (minDim=" + std::to_string(std::min(iv.width(), iv.height()))
+			+ " threshold=" + std::to_string(opts.upscaleThreshold()) + ")");
 		for (int factor : {2, 3, 4}) {
+			OD_DIAG("[ReadBarcodes] upscale factor=" + std::to_string(factor));
 			LumImageUpscaler upscaler(iv, factor);
 			if (!upscaler.isValid())
 				continue;

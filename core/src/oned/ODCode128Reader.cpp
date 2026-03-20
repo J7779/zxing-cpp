@@ -7,6 +7,7 @@
 #include "ODCode128Reader.h"
 
 #include "ODCode128Patterns.h"
+#include "ODDiagnostics.h"
 #include "ReaderOptions.h"
 #include "Barcode.h"
 #include "ZXAlgorithms.h"
@@ -183,10 +184,9 @@ static auto E2E_PATTERNS = [] {
 
 Barcode Code128Reader::decodePattern(int rowNumber, PatternView& next, std::unique_ptr<DecodingState>&) const
 {
-	// ENHANCED: Use relaxed tolerances if configured for better distance/blur tolerance
 	const float avgVariance = _opts.relaxedLinearTolerance() ? RELAXED_MAX_AVG_VARIANCE : MAX_AVG_VARIANCE;
 	const float indVariance = _opts.relaxedLinearTolerance() ? RELAXED_MAX_INDIVIDUAL_VARIANCE : MAX_INDIVIDUAL_VARIANCE;
-	
+
 	int minCharCount = 4; // start + payload + checksum + stop
 	auto decodePattern = [avgVariance, indVariance](const PatternView& view, bool start = false) {
 		// This is basically the reference algorithm from the specification
@@ -204,7 +204,6 @@ Barcode Code128Reader::decodePattern(int rowNumber, PatternView& next, std::uniq
 	int startCode = decodePattern(next, true);
 	if (!(CODE_START_A <= startCode && startCode <= CODE_START_C))
 		return {};
-
 	int xStart = next.pixelsInFront();
 	ByteArray rawCodes;
 	rawCodes.reserve(20);
@@ -243,11 +242,17 @@ Barcode Code128Reader::decodePattern(int rowNumber, PatternView& next, std::uniq
 	int checksum = rawCodes.front();
 	for (int i = 1; i < Size(rawCodes) - 1; ++i)
 		checksum += i * rawCodes[i];
-	// the last code is the checksum:
-	if (checksum % 103 != rawCodes.back())
+	if (checksum % 103 != rawCodes.back()) {
 		error = ChecksumError();
+		OD_DIAG("[C128] CHECKSUM FAIL row=" + std::to_string(rowNumber)
+			+ " computed=" + std::to_string(checksum % 103) + " expected=" + std::to_string(rawCodes.back())
+			+ " text=" + raw2txt.text().substr(0, 40));
+	}
 
 	int xStop = next.pixelsTillEnd();
+	OD_DIAG("[C128] DECODED row=" + std::to_string(rowNumber) + " text=" + raw2txt.text().substr(0, 40)
+		+ " xStart=" + std::to_string(xStart) + " xStop=" + std::to_string(xStop)
+		+ " rawCodes=" + std::to_string(rawCodes.size()) + " error=" + (error ? "checksum" : "none"));
 	return Barcode(raw2txt.text(), rowNumber, xStart, xStop, BarcodeFormat::Code128, raw2txt.symbologyIdentifier(), error,
 				   raw2txt.readerInit());
 }

@@ -39,7 +39,33 @@ export function useZXingNanoDet(
     setFrameWidth(fw);
     setFrameHeight(fh);
     setDetections(results);
-  }, []);
+
+    // Surface ALL native debug logs to the JS console so they are visible
+    // without logcat. This includes C++ 1D decoder diagnostics, luma stats,
+    // image quality metrics, ZXing decode attempts, and pipeline timing.
+    if (options?.debug) {
+      for (const det of results) {
+        if (det.debugLogs && det.debugLogs.length > 0) {
+          console.log(
+            `[ZXingNanoDet] ${det.format} ${det.text ? `"${det.text}"` : '(no text)'} — ${det.debugLogs.length} log lines:`,
+          );
+          for (const line of det.debugLogs) {
+            console.log(`  ${line}`);
+          }
+        }
+        // Also log the detection itself with key data points
+        if (det.format !== '__debug__') {
+          console.log(
+            `[ZXingNanoDet:DETECTION] format=${det.format} text="${det.text}" confidence=${det.confidence?.toFixed(3)} source=${det.source ?? 'unknown'} isOcr=${det.isOcrFallback ?? false} bbox=(${det.boundingBox?.x?.toFixed(0)},${det.boundingBox?.y?.toFixed(0)} ${det.boundingBox?.width?.toFixed(0)}x${det.boundingBox?.height?.toFixed(0)}) corners=${det.cornerPoints?.length ?? 0}`,
+          );
+        }
+      }
+      // Summary line even when no detections (for frame-level visibility)
+      if (results.length === 0) {
+        console.log(`[ZXingNanoDet] frame ${fw}x${fh}: no detections`);
+      }
+    }
+  }, [options?.debug]);
 
   const runOnJsSetDetections = Worklets.createRunOnJS(handleDetections);
 

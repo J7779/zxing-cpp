@@ -64,5 +64,8 @@ dependencies {
 
     // ORT Android Java API (inference for NanoDet)
     implementation "com.microsoft.onnxruntime:onnxruntime-android:1.18.0"
+
+    // Camera2 interop for ISP control (noise reduction, edge, tonemap, exposure)
+    implementation "androidx.camera:camera-camera2:1.4.1"
 }
 

@@ -6,6 +6,7 @@
 
 #include "ODCode39Reader.h"
 
+#include "ODDiagnostics.h"
 #include "ReaderOptions.h"
 #include "Barcode.h"
 #include "ZXAlgorithms.h"
@@ -75,7 +76,6 @@ std::string DecodeCode39AndCode93FullASCII(std::string encoded, const char ctrl[
 
 Barcode Code39Reader::decodePattern(int rowNumber, PatternView& next, std::unique_ptr<RowReader::DecodingState>&) const
 {
-	// minimal number of characters that must be present (including start, stop and checksum characters)
 	int minCharCount = _opts.validateCode39CheckSum() ? 4 : 3;
 	bool relaxed = _opts.relaxedLinearTolerance();
 	auto isStartOrStopSymbol = [](char c) { return c == '*'; };
@@ -139,6 +139,10 @@ Barcode Code39Reader::decodePattern(int rowNumber, PatternView& next, std::uniqu
 	SymbologyIdentifier symbologyIdentifier = {'A', symbologyModifiers[(int)hasValidCheckSum + 2 * (int)hasFullASCII]};
 
 	int xStop = next.pixelsTillEnd();
+	OD_DIAG("[C39] DECODED row=" + std::to_string(rowNumber) + " text=" + txt
+		+ " xStart=" + std::to_string(xStart) + " xStop=" + std::to_string(xStop)
+		+ " checksum=" + (hasValidCheckSum ? "valid" : "invalid")
+		+ " fullASCII=" + (hasFullASCII ? "yes" : "no"));
 	return {std::move(txt), rowNumber, xStart, xStop, BarcodeFormat::Code39, symbologyIdentifier, error};
 }
 

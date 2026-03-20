@@ -22,6 +22,8 @@
 #include "ODMultiUPCEANReader.h"
 #include "Barcode.h"
 
+#include "ODDiagnostics.h"
+
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -95,16 +97,22 @@ static Barcodes DoDecode(const std::vector<std::unique_ptr<RowReader>>& readers,
 	int width = image.width();
 	int height = image.height();
 
+	OD_DIAG("[1D_DECODE] DoDecode START image=" + std::to_string(width) + "x" + std::to_string(height)
+		+ " rotate=" + (rotate ? "true" : "false") + " tryHarder=" + (tryHarder ? "true" : "false")
+		+ " isPure=" + (isPure ? "true" : "false") + " maxSymbols=" + std::to_string(maxSymbols)
+		+ " minLineCount=" + std::to_string(minLineCount) + " readers=" + std::to_string(readers.size()));
+
 	if (rotate)
 		std::swap(width, height);
 
 	int middle = height / 2;
-	// ENHANCED: Increased scan density for better detection at distance
-	// In tryHarder mode, we now scan up to 512 divisions (was 256/512) and more rows (was 15, now 30)
 	int rowStep = std::max(1, height / ((tryHarder && !isPure) ? (maxSymbols == 1 ? 512 : 1024) : 64));
 	int maxLines = tryHarder ?
-		height :	// Look at the whole image, not just the center
-		30;			// ENHANCED: 30 rows spaced 1/64 apart covers more of the image (was 15)
+		height :
+		30;
+
+	OD_DIAG("[1D_SCAN_PARAMS] middle=" + std::to_string(middle) + " rowStep=" + std::to_string(rowStep)
+		+ " maxLines=" + std::to_string(maxLines) + " dims=" + std::to_string(width) + "x" + std::to_string(height));
 
 	if (isPure)
 		minLineCount = 1;
@@ -113,7 +121,12 @@ static Barcodes DoDecode(const std::vector<std::unique_ptr<RowReader>>& readers,
 	std::vector<int> checkRows;
 
 	PatternRow bars;
-	bars.reserve(128); // e.g. EAN-13 has 59 bars/spaces
+	bars.reserve(128);
+	int rowsScanned = 0;
+	int rowsWithBars = 0;
+	int totalDecodeAttempts = 0;
+	int totalValidResults = 0;
+	int totalInvalidResults = 0;
 
 #ifdef PRINT_DEBUG
 	BitMatrix dbg(width, height);
@@ -141,8 +154,14 @@ static Barcodes DoDecode(const std::vector<std::unique_ptr<RowReader>>& readers,
 				continue;
 		}
 
-		if (!image.getPatternRow(rowNumber, rotate ? 90 : 0, bars))
+		++rowsScanned;
+		if (!image.getPatternRow(rowNumber, rotate ? 90 : 0, bars)) {
+			OD_DIAG("[1D_ROW#" + std::to_string(rowNumber) + "] getPatternRow failed (empty/threshold)");
 			continue;
+		}
+		++rowsWithBars;
+		OD_DIAG("[1D_ROW#" + std::to_string(rowNumber) + "] bars=" + std::to_string(bars.size())
+			+ " isCheckRow=" + (isCheckRow ? "true" : "false"));
 
 #ifdef PRINT_DEBUG
 		bool val = false;
@@ -168,15 +187,25 @@ static Barcodes DoDecode(const std::vector<std::unique_ptr<RowReader>>& readers,
 			}
 			// Look for a barcode
 			for (size_t r = 0; r < readers.size(); ++r) {
-				// If this is a pure symbol, then checking a single non-empty line is sufficient for all but the stacked
-				// DataBar codes. They are the only ones using the decodingState, which we can use as a flag here.
 				if (isPure && i && !decodingState[r])
 					continue;
 
 				PatternView next(bars);
 				do {
+					++totalDecodeAttempts;
 					Barcode result = readers[r]->decodePattern(rowNumber, next, decodingState[r]);
 					if (result.isValid() || (returnErrors && result.error())) {
+						if (result.isValid()) {
+							++totalValidResults;
+							OD_DIAG("[1D_MATCH] row=" + std::to_string(rowNumber) + " reader=" + std::to_string(r)
+								+ " format=" + ToString(result.format()) + " text=" + result.text().substr(0, 40)
+								+ " upsideDown=" + (upsideDown ? "true" : "false")
+								+ " lineCount=" + std::to_string(result.lineCount()));
+						} else {
+							++totalInvalidResults;
+							OD_DIAG("[1D_ERROR] row=" + std::to_string(rowNumber) + " reader=" + std::to_string(r)
+								+ " format=" + ToString(result.format()) + " error=" + ToString(result.error()));
+						}
 						IncrementLineCount(result);
 						if (upsideDown) {
 							// update position (flip horizontally).
@@ -244,6 +273,13 @@ static Barcodes DoDecode(const std::vector<std::unique_ptr<RowReader>>& readers,
 	}
 
 out:
+	OD_DIAG("[1D_DECODE_SUMMARY] rowsScanned=" + std::to_string(rowsScanned)
+		+ " rowsWithBars=" + std::to_string(rowsWithBars)
+		+ " decodeAttempts=" + std::to_string(totalDecodeAttempts)
+		+ " validHits=" + std::to_string(totalValidResults)
+		+ " invalidHits=" + std::to_string(totalInvalidResults)
+		+ " rawResults=" + std::to_string(res.size()));
+
 	// remove all symbols with insufficient line count
 #ifdef __cpp_lib_erase_if
 	std::erase_if(res, [&](auto&& r) { return r.lineCount() < minLineCount; });
@@ -507,48 +543,69 @@ static Barcodes DoDecodePerspective(const std::vector<std::unique_ptr<RowReader>
 
 Barcode Reader::decode(const BinaryBitmap& image) const
 {
+	OD_DIAG("[1D_READER] decode(single) START image=" + std::to_string(image.width()) + "x" + std::to_string(image.height())
+		+ " tryHarder=" + (_opts.tryHarder() ? "true" : "false") + " tryRotate=" + (_opts.tryRotate() ? "true" : "false")
+		+ " tryAngledScanning=" + (_opts.tryAngledScanning() ? "true" : "false")
+		+ " relaxedLinearTolerance=" + (_opts.relaxedLinearTolerance() ? "true" : "false"));
+
 	auto result =
 		DoDecode(_readers, image, _opts.tryHarder(), false, _opts.isPure(), 1, _opts.minLineCount(), _opts.returnErrors());
 	
-	if (result.empty() && _opts.tryRotate())
+	if (result.empty() && _opts.tryRotate()) {
+		OD_DIAG("[1D_READER] trying 90deg rotation");
 		result = DoDecode(_readers, image, _opts.tryHarder(), true, _opts.isPure(), 1, _opts.minLineCount(), _opts.returnErrors());
+	}
 
-	// ENHANCED: Try angled scanning if enabled and no result found
 	if (result.empty() && _opts.tryAngledScanning()) {
-		for (float angle : AngledScanner::GetScanAngles()) {
+		auto angles = AngledScanner::GetScanAngles();
+		OD_DIAG("[1D_READER] trying angled scanning, " + std::to_string(angles.size()) + " angles");
+		for (float angle : angles) {
+			OD_DIAG("[1D_ANGLE] trying " + std::to_string(angle) + " deg");
 			result = DoDecodeAngled(_readers, image, angle, _opts.tryHarder(), 1, 
 									_opts.minLineCount(), _opts.returnErrors());
-			if (!result.empty())
+			if (!result.empty()) {
+				OD_DIAG("[1D_ANGLE] SUCCESS at " + std::to_string(angle) + " deg");
 				break;
+			}
 		}
 	}
 	
-	// ENHANCED: Try perspective correction for Z-axis tilted barcodes
 	if (result.empty() && _opts.tryAngledScanning()) {
+		OD_DIAG("[1D_READER] trying perspective correction");
 		result = DoDecodePerspective(_readers, image, _opts.tryHarder(), 1, 
 									 _opts.minLineCount(), _opts.returnErrors());
 	}
 
+	OD_DIAG("[1D_READER] decode(single) END found=" + std::to_string(result.size()));
 	return FirstOrDefault(std::move(result));
 }
 
 Barcodes Reader::decode(const BinaryBitmap& image, int maxSymbols) const
 {
+	OD_DIAG("[1D_READER] decode(multi) START maxSymbols=" + std::to_string(maxSymbols));
+
 	auto resH = DoDecode(_readers, image, _opts.tryHarder(), false, _opts.isPure(), maxSymbols, _opts.minLineCount(),
 						 _opts.returnErrors());
+	OD_DIAG("[1D_READER] horizontal pass found=" + std::to_string(resH.size()));
+
 	if ((!maxSymbols || Size(resH) < maxSymbols) && _opts.tryRotate()) {
+		OD_DIAG("[1D_READER] trying 90deg rotation");
 		auto resV = DoDecode(_readers, image, _opts.tryHarder(), true, _opts.isPure(), maxSymbols - Size(resH),
 							 _opts.minLineCount(), _opts.returnErrors());
+		OD_DIAG("[1D_READER] rotated pass found=" + std::to_string(resV.size()));
 		resH.insert(resH.end(), resV.begin(), resV.end());
 	}
 	
-	// ENHANCED: Try angled scanning if enabled and we haven't found enough symbols
 	if ((!maxSymbols || Size(resH) < maxSymbols) && _opts.tryAngledScanning()) {
-		for (float angle : AngledScanner::GetScanAngles()) {
+		auto angles = AngledScanner::GetScanAngles();
+		OD_DIAG("[1D_READER] trying angled scanning, " + std::to_string(angles.size()) + " angles");
+		for (float angle : angles) {
+			OD_DIAG("[1D_ANGLE] trying " + std::to_string(angle) + " deg");
 			auto resA = DoDecodeAngled(_readers, image, angle, _opts.tryHarder(), 
 									   maxSymbols - Size(resH), _opts.minLineCount(), _opts.returnErrors());
 			for (auto& r : resA) {
 				if (!Contains(resH, r)) {
+					OD_DIAG("[1D_ANGLE] found new symbol at " + std::to_string(angle) + " deg: " + ToString(r.format()));
 					resH.push_back(std::move(r));
 					if (maxSymbols && Size(resH) >= maxSymbols)
 						return resH;
@@ -557,10 +614,11 @@ Barcodes Reader::decode(const BinaryBitmap& image, int maxSymbols) const
 		}
 	}
 	
-	// ENHANCED: Try perspective correction for Z-axis tilted barcodes
 	if ((!maxSymbols || Size(resH) < maxSymbols) && _opts.tryAngledScanning()) {
+		OD_DIAG("[1D_READER] trying perspective correction");
 		auto resP = DoDecodePerspective(_readers, image, _opts.tryHarder(), 
 										maxSymbols - Size(resH), _opts.minLineCount(), _opts.returnErrors());
+		OD_DIAG("[1D_READER] perspective found=" + std::to_string(resP.size()));
 		for (auto& r : resP) {
 			if (!Contains(resH, r)) {
 				resH.push_back(std::move(r));
@@ -570,6 +628,7 @@ Barcodes Reader::decode(const BinaryBitmap& image, int maxSymbols) const
 		}
 	}
 	
+	OD_DIAG("[1D_READER] decode(multi) END totalFound=" + std::to_string(resH.size()));
 	return resH;
 }
 

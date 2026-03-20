@@ -76,7 +76,7 @@ export interface DetectBarcodesOptions {
   enableZxing?: boolean;
   /**
    * When false, the PP-OCRv5 fallback is never invoked even when ZXing fails.
-   * Useful for testing ZXing in isolation. Default: true.
+   * Useful for testing ZXing in isolation. Default: false.
    */
   enableOcr?: boolean;
   /**
@@ -91,7 +91,7 @@ export interface DetectBarcodesOptions {
   /**
    * Run ZXing directly on the full scan-box region in parallel with NanoDet.
    * If NanoDet misses a barcode, the direct ZXing pass may still decode it.
-   * Default: false.
+   * Default: true.
    */
   enableDirectZxing?: boolean;
 
@@ -126,6 +126,13 @@ export interface DetectBarcodesOptions {
   enableDamagedBarcode?: boolean;
 
   /**
+   * Enable NanoDet object-detection model for barcode region localization.
+   * When false, ZXing runs directly on the full camera frame (faster, simpler).
+   * Default: false.
+   */
+  enableNanoDet?: boolean;
+
+  /**
    * Enable the consensus algorithm. Buffers the last N reads and only reports
    * a barcode when at least `consensusCount` identical values are seen.
    * Default: false.
@@ -137,6 +144,27 @@ export interface DetectBarcodesOptions {
    * a barcode as confirmed. Default: 3.
    */
   consensusCount?: number;
+
+  // ── Camera2 ISP settings (Android only) ─────────────────────────────────
+
+  /**
+   * Camera2 ISP configuration applied at the hardware level before frames
+   * reach the barcode pipeline. Controls noise reduction, edge enhancement,
+   * tonemapping, exposure compensation, and color correction.
+   * Only effective on Android; ignored on iOS.
+   *
+   * Pass `'barcode'` for a barcode-optimized preset, `'high_quality'` for
+   * max processing, or a custom ISPConfig object.
+   */
+  ispSettings?: 'barcode' | 'high_quality' | {
+    noiseReduction?: 'off' | 'fast' | 'high_quality';
+    edgeEnhancement?: 'off' | 'fast' | 'high_quality';
+    tonemap?: 'fast' | 'high_quality' | 'gamma22' | 'srgb';
+    exposureCompensation?: number;
+    colorCorrection?: 'transform_matrix' | 'fast' | 'high_quality';
+    shadingMode?: 'off' | 'fast' | 'high_quality';
+    hotPixelMode?: 'off' | 'fast' | 'high_quality';
+  };
 }
 
 export interface ZXingNanoDetFrameProcessorPlugin {
